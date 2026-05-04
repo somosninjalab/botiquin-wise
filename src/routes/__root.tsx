@@ -85,4 +85,3 @@ function RootComponent() {
     </AuthProvider>
   );
 }
-}
