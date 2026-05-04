@@ -14,16 +14,279 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      medication_followers: {
+        Row: {
+          created_at: string
+          id: string
+          medication_id: string
+          threshold_pct: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medication_id: string
+          threshold_pct?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medication_id?: string
+          threshold_pct?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_followers_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_prices: {
+        Row: {
+          currency: string
+          id: string
+          in_stock: boolean
+          medication_id: string
+          pharmacy_id: string
+          price: number
+          product_url: string | null
+          scraped_at: string
+        }
+        Insert: {
+          currency?: string
+          id?: string
+          in_stock?: boolean
+          medication_id: string
+          pharmacy_id: string
+          price: number
+          product_url?: string | null
+          scraped_at?: string
+        }
+        Update: {
+          currency?: string
+          id?: string
+          in_stock?: boolean
+          medication_id?: string
+          pharmacy_id?: string
+          price?: number
+          product_url?: string | null
+          scraped_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_prices_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_prices_pharmacy_id_fkey"
+            columns: ["pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          active_ingredient: string
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          indication: string | null
+          manufacturer: string | null
+          name: string
+          presentation: string | null
+          slug: string
+        }
+        Insert: {
+          active_ingredient: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          indication?: string | null
+          manufacturer?: string | null
+          name: string
+          presentation?: string | null
+          slug: string
+        }
+        Update: {
+          active_ingredient?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          indication?: string | null
+          manufacturer?: string | null
+          name?: string
+          presentation?: string | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      pharmacies: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          instant_alerts: boolean
+          ip_first_seen: string | null
+          phone: string | null
+          region: string | null
+          updated_at: string
+          user_id: string
+          weekly_digest: boolean
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          instant_alerts?: boolean
+          ip_first_seen?: string | null
+          phone?: string | null
+          region?: string | null
+          updated_at?: string
+          user_id: string
+          weekly_digest?: boolean
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          instant_alerts?: boolean
+          ip_first_seen?: string | null
+          phone?: string | null
+          region?: string | null
+          updated_at?: string
+          user_id?: string
+          weekly_digest?: boolean
+        }
+        Relationships: []
+      }
+      search_events: {
+        Row: {
+          category: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          medication_id: string | null
+          query: string | null
+          region: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          medication_id?: string | null
+          query?: string | null
+          region?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          medication_id?: string | null
+          query?: string | null
+          region?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_events_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +413,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
