@@ -1,0 +1,59 @@
+import { Link } from "@tanstack/react-router";
+import { Pill, Bell, LayoutDashboard, LogIn, LogOut, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+
+export function SiteHeader() {
+  const { user, isAdmin } = useAuth();
+
+  return (
+    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-[var(--shadow-soft)]">
+            <Pill className="h-5 w-5" />
+          </span>
+          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            ¡Alerta: Medicina!
+          </span>
+        </Link>
+
+        <nav className="hidden md:flex items-center gap-1 text-sm">
+          <Link to="/" className="px-3 py-2 rounded-md hover:bg-muted transition-colors">Inicio</Link>
+          <Link to="/buscar" className="px-3 py-2 rounded-md hover:bg-muted transition-colors">Buscar</Link>
+          <Link to="/como-funciona" className="px-3 py-2 rounded-md hover:bg-muted transition-colors">Cómo funciona</Link>
+          {user && (
+            <Link to="/mis-alertas" className="px-3 py-2 rounded-md hover:bg-muted transition-colors flex items-center gap-1">
+              <Bell className="h-4 w-4" /> Mis alertas
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/admin" className="px-3 py-2 rounded-md hover:bg-muted transition-colors flex items-center gap-1">
+              <LayoutDashboard className="h-4 w-4" /> Admin
+            </Link>
+          )}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              <Link to="/mis-alertas" className="hidden sm:flex">
+                <Button variant="ghost" size="sm"><User className="h-4 w-4 mr-1" /> {user.email?.split("@")[0]}</Button>
+              </Link>
+              <Button variant="outline" size="sm" onClick={() => supabase.auth.signOut()}>
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Link to="/auth">
+              <Button size="sm" className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">
+                <LogIn className="h-4 w-4 mr-1" /> Entrar
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
