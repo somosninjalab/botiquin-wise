@@ -11,5 +11,5 @@ export const Route = createFileRoute("/buscar")({
 
 function RedirectToHome() {
   const { q } = Route.useSearch();
-  return <Navigate to="/" search={{ q, pharm: "all", med: "all" }} replace />;
+  return <Navigate to="/" search={{ q, pharm: "all", med: "all", cat: "all", ind: "all" }} replace />;
 }

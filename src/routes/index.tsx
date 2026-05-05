@@ -45,6 +45,8 @@ const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
   pharm: fallback(z.string(), "all").default("all"),
   med: fallback(z.string(), "all").default("all"),
+  cat: fallback(z.string(), "all").default("all"),
+  ind: fallback(z.string(), "all").default("all"),
 });
 
 export const Route = createFileRoute("/")({
@@ -53,9 +55,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { q, pharm, med } = Route.useSearch();
+  const { q, pharm, med, cat, ind } = Route.useSearch();
   const navigate = useNavigate({ from: "/" });
-  const isSearching = q.trim().length > 0 || pharm !== "all" || med !== "all";
+  const isSearching =
+    q.trim().length > 0 || pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all";
   const bcvRate = useBcvRate();
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
@@ -75,7 +78,18 @@ function Index() {
   useEffect(() => {
     setLoading(true);
     (async () => {
-      const m = await searchMedications(q, isSearching ? 80 : 8);
+      let m: MedicationRow[];
+      if (q.trim()) {
+        m = await searchMedications(q, 80);
+      } else if (cat !== "all" || ind !== "all") {
+        let qb = supabase.from("medications").select("*").order("name").limit(80);
+        if (cat !== "all") qb = qb.eq("category", cat);
+        if (ind !== "all") qb = qb.eq("indication", ind);
+        const { data } = await qb;
+        m = (data ?? []) as MedicationRow[];
+      } else {
+        m = await searchMedications("", isSearching ? 80 : 8);
+      }
       setMeds(m);
       const p = await getLatestPricesForMedications(m.map((x) => x.id));
       setPrices(p);
@@ -84,10 +98,12 @@ function Index() {
       }
       setLoading(false);
     })();
-  }, [q, isSearching]);
+  }, [q, cat, ind, isSearching]);
 
-  const updateSearch = (patch: Partial<{ q: string; pharm: string; med: string }>) => {
-    navigate({ search: (prev: { q: string; pharm: string; med: string }) => ({ ...prev, ...patch }) });
+  const updateSearch = (
+    patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>,
+  ) => {
+    navigate({ search: (prev: any) => ({ ...prev, ...patch }) });
   };
 
   // Latest price per (medication, pharmacy)
@@ -115,9 +131,11 @@ function Index() {
   const filteredMeds = useMemo(() => {
     let list = meds;
     if (med !== "all") list = list.filter((m) => m.id === med);
+    if (cat !== "all") list = list.filter((m) => m.category === cat);
+    if (ind !== "all") list = list.filter((m) => m.indication === ind);
     if (pharm !== "all") list = list.filter((m) => lowestByMed.has(m.id));
     return list;
-  }, [meds, med, pharm, lowestByMed]);
+  }, [meds, med, cat, ind, pharm, lowestByMed]);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, MedicationRow[]>();
@@ -195,6 +213,8 @@ function Index() {
           q={q}
           pharm={pharm}
           med={med}
+          cat={cat}
+          ind={ind}
           loading={loading}
           meds={meds}
           grouped={grouped}
@@ -277,6 +297,8 @@ function SearchResults(props: {
   q: string;
   pharm: string;
   med: string;
+  cat: string;
+  ind: string;
   loading: boolean;
   meds: MedicationRow[];
   grouped: [string, MedicationRow[]][];
@@ -284,13 +306,23 @@ function SearchResults(props: {
   prices: PriceRow[];
   pharmaciesMap: Record<string, string>;
   pharmacyOptions: [string, string][];
-  updateSearch: (p: Partial<{ q: string; pharm: string; med: string }>) => void;
+  updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
   bcvRate: number | null;
 }) {
   const {
-    q, pharm, med, loading, meds, grouped, lowestByMed, prices,
+    q, pharm, med, cat, ind, loading, meds, grouped, lowestByMed, prices,
     pharmaciesMap, pharmacyOptions, updateSearch, bcvRate,
   } = props;
+
+  // Etiquetas únicas presentes en los resultados actuales
+  const categories = useMemo(
+    () => Array.from(new Set(meds.map((m) => m.category).filter(Boolean) as string[])).sort(),
+    [meds],
+  );
+  const indications = useMemo(
+    () => Array.from(new Set(meds.map((m) => m.indication).filter(Boolean) as string[])).sort(),
+    [meds],
+  );
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
 
@@ -338,25 +370,86 @@ function SearchResults(props: {
                   </SelectContent>
                 </Select>
               </div>
-              {(q || pharm !== "all" || med !== "all") && (
+              {(q || pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all") && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => updateSearch({ q: "", pharm: "all", med: "all" })}
+                  onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all" })}
                 >
                   <X className="h-4 w-4 mr-1" /> Limpiar
                 </Button>
               )}
             </div>
           </div>
+          {/* Clasificadores: categoría e indicación */}
+          {(categories.length > 0 || indications.length > 0) && (
+            <div className="mt-3 space-y-2">
+              {categories.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Categoría</span>
+                  {categories.map((c) => {
+                    const active = cat === c;
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => updateSearch({ cat: active ? "all" : c })}
+                        className={`text-xs rounded-full px-2.5 py-1 border transition-colors ${
+                          active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-secondary text-secondary-foreground border-transparent hover:border-primary/40"
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {indications.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Indicación</span>
+                  {indications.map((i) => {
+                    const active = ind === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => updateSearch({ ind: active ? "all" : i })}
+                        className={`text-xs rounded-full px-2.5 py-1 border transition-colors ${
+                          active
+                            ? "bg-accent text-accent-foreground border-accent"
+                            : "bg-secondary text-secondary-foreground border-transparent hover:border-accent/40"
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           {/* Active filter chips */}
-          {(pharm !== "all" || med !== "all") && (
+          {(pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all") && (
             <div className="flex flex-wrap gap-2 mt-3">
               {pharm !== "all" && (
                 <Badge variant="secondary" className="gap-1">
                   <Store className="h-3 w-3" />
                   {pharmaciesMap[pharm] ?? "Farmacia"}
                   <button onClick={() => updateSearch({ pharm: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {cat !== "all" && (
+                <Badge variant="secondary" className="gap-1">{cat}
+                  <button onClick={() => updateSearch({ cat: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {ind !== "all" && (
+                <Badge variant="secondary" className="gap-1">{ind}
+                  <button onClick={() => updateSearch({ ind: "all" })} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
