@@ -86,7 +86,15 @@ export async function getLatestPricesForMedications(medIds: string[]) {
   return (data ?? []) as PriceRow[];
 }
 
-export function lowestCurrent(prices: PriceRow[], medId: string) {
+export function priceToVes(amount: number, currency: string, bcvRate: number | null): number | null {
+  if (!Number.isFinite(amount)) return null;
+  const c = (currency || "VES").toUpperCase();
+  if (c === "VES" || c === "VEF" || c === "BS" || c === "BSS") return amount;
+  if (c === "USD" && bcvRate && bcvRate > 0) return amount * bcvRate;
+  return null;
+}
+
+export function lowestCurrent(prices: PriceRow[], medId: string, bcvRate: number | null = null) {
   const seen = new Set<string>();
   const latestPerPharm: PriceRow[] = [];
   for (const p of prices) {
@@ -97,7 +105,8 @@ export function lowestCurrent(prices: PriceRow[], medId: string) {
     latestPerPharm.push(p);
   }
   if (!latestPerPharm.length) return null;
-  return latestPerPharm.reduce((min, p) => (p.price < min.price ? p : min), latestPerPharm[0]);
+  const comparable = (p: PriceRow) => priceToVes(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY;
+  return latestPerPharm.reduce((min, p) => (comparable(p) < comparable(min) ? p : min), latestPerPharm[0]);
 }
 
 export function priorPrice(prices: PriceRow[], medId: string, pharmId: string, currentTs: string) {
@@ -107,7 +116,10 @@ export function priorPrice(prices: PriceRow[], medId: string, pharmId: string, c
   return olderSorted[0] ?? null;
 }
 
-export function formatBs(n: number, currency = "USD") {
+export function formatBs(n: number, currency = "VES") {
+  if ((currency || "VES").toUpperCase() === "VES") {
+    return `Bs. ${new Intl.NumberFormat("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)}`;
+  }
   return new Intl.NumberFormat("es-VE", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 }
 
@@ -119,10 +131,6 @@ export function toUSD(amount: number, currency: string, bcvRate: number | null):
   if (c === "VES" || c === "VEF" || c === "BS" || c === "BSS") {
     if (!bcvRate || bcvRate <= 0) return null;
     return amount / bcvRate;
-  }
-  if (c === "COP") {
-    // Tasa aproximada COP por USD (fallback estable)
-    return amount / 4000;
   }
   return null;
 }
@@ -158,12 +166,5 @@ export function displayPrice(
     }
     return { primary: formatUSD(amount) };
   }
-  if (c === "COP") {
-    const usd = toUSD(amount, c, bcvRate);
-    if (usd != null && bcvRate && bcvRate > 0) {
-      return { primary: formatBs(usd * bcvRate, "VES"), secondary: formatUSD(usd) };
-    }
-    return { primary: formatBs(amount, "COP") };
-  }
-  return { primary: formatBs(amount, c) };
+  return { primary: "Precio no comparable", secondary: `${formatBs(amount, c)} registrado` };
 }

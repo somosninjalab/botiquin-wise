@@ -17,12 +17,12 @@ function siteHost(url: string | null): string | null {
   }
 }
 
-const extractionPrompt = `From this pharmacy product page or search result, extract the LOWEST listed price for the medication. Return strict JSON with fields:
-- price: numeric or string price (e.g. 12.50, "12,50", "Bs 1.234,56", "$ 4.99"). No symbols required.
-- currency: one of "USD", "VES", "COP", or the symbol/code seen on the page ("$", "Bs", "Bs.", "Bs.S", "BsS", "COP", "USD", "US$"). Empty string if unknown.
+const extractionPrompt = `From this pharmacy product page, extract the medication's actual listed price. Return strict JSON with fields:
+- price: numeric or string price exactly as shown (e.g. 242,55, "Bs 1.234,56", "$ 4.99"). Do not invent prices.
+- currency: one of "VES", "USD", or the symbol/code seen on the page ("Bs", "Bs.", "Bs.S", "BsS", "$", "USD", "US$"). Empty string if unknown.
 - in_stock: true unless explicitly marked out of stock / agotado / sin existencias.
 - product_url: canonical URL of the product, or empty string.
-If no price is visible, set price to 0.`;
+Ignore unrelated suggestions, carts, shipping, discounts without a final product price, and search pages with multiple products. If no product price is visible, set price to 0.`;
 
 // --- Normalization helpers --------------------------------------------------
 
@@ -78,10 +78,31 @@ function normalizeCurrency(raw: unknown, contextHost?: string | null): string {
 
 function guessByHost(host?: string | null): string {
   if (!host) return "USD";
-  if (/locatelcolombia|\.com\.co$/i.test(host)) return "COP";
   if (/\.com\.ve$|farmatodo|farmago|locatel\.com\.ve|cinecitta|farmaciasaas|tufarmaciaactual|maraplus/i.test(host))
     return "VES";
   return "USD";
+}
+
+function hostsMatch(candidateUrl: string, expectedHost: string | null): boolean {
+  if (!expectedHost) return false;
+  try {
+    const candidateHost = new URL(candidateUrl).host.replace(/^www\./, "");
+    return candidateHost === expectedHost.replace(/^www\./, "");
+  } catch {
+    return false;
+  }
+}
+
+function isSpecificProductUrl(url: string, host: string | null): boolean {
+  if (!hostsMatch(url, host)) return false;
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/+$/, "");
+    if (!path || path === "/") return false;
+    return /producto|product|\/p\/|\/p$|-\d+\/p$|\d{5,}/i.test(path);
+  } catch {
+    return false;
+  }
 }
 
 function asBool(v: unknown, dflt = true): boolean {
@@ -119,11 +140,13 @@ function normalizeExtraction(j: any, sourceUrl: string, host: string | null): Ex
   const price = parsePrice(rawPrice);
   if (price === null) return null;
   const currency = normalizeCurrency(rawCurrency, host) || "USD";
+  const productUrl = asUrl(rawUrl, sourceUrl);
+  if (!isSpecificProductUrl(productUrl, host)) return null;
   return {
     price,
     currency: currency.slice(0, 8),
     in_stock: asBool(rawStock, true),
-    product_url: asUrl(rawUrl, sourceUrl),
+    product_url: productUrl,
   };
 }
 
