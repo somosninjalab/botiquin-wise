@@ -308,6 +308,11 @@ function SearchResults(props: {
               </h2>
             </div>
             <div className="flex-1" />
+            {bcvRate && (
+              <span className="text-xs text-muted-foreground hidden md:inline">
+                Tasa BCV: Bs {bcvRate.toFixed(2)} / USD
+              </span>
+            )}
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
               <div className="flex items-center gap-2">
                 <Store className="h-4 w-4 text-muted-foreground" />
