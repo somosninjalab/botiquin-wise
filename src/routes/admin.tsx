@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { LayoutDashboard, Download } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ function AdminPage() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, follows: 0, meds: 0 });
+  const [scraping, setScraping] = useState(false);
+  const [scrapeMsg, setScrapeMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) navigate({ to: "/" });
@@ -136,7 +139,28 @@ function AdminPage() {
         <Button onClick={exportXlsx} className="gap-2">
           <Download className="h-4 w-4" /> Exportar registros (.xlsx)
         </Button>
+        <Button
+          variant="secondary"
+          disabled={scraping}
+          onClick={async () => {
+            setScraping(true);
+            setScrapeMsg(null);
+            try {
+              const r = await fetch("/api/public/hooks/scrape-prices?limit=10", { method: "POST" });
+              const j = await r.json();
+              setScrapeMsg(j.ok ? `✓ ${j.inserted}/${j.attempted} precios actualizados` : `Error: ${j.error || "desconocido"}`);
+            } catch (e: any) {
+              setScrapeMsg(`Error: ${e.message}`);
+            } finally {
+              setScraping(false);
+            }
+          }}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${scraping ? "animate-spin" : ""}`} /> {scraping ? "Actualizando precios…" : "Actualizar precios ahora"}
+        </Button>
       </div>
+      {scrapeMsg && <p className="text-sm text-muted-foreground mt-2">{scrapeMsg}</p>}
 
       <div className="grid sm:grid-cols-3 gap-4 mt-6">
         <Stat label="Usuarios registrados" value={stats.users} />
