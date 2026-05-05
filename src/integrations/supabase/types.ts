@@ -108,6 +108,7 @@ export type Database = {
           name: string
           presentation: string | null
           slug: string
+          symptoms_text: string
         }
         Insert: {
           active_ingredient: string
@@ -122,6 +123,7 @@ export type Database = {
           name: string
           presentation?: string | null
           slug: string
+          symptoms_text?: string
         }
         Update: {
           active_ingredient?: string
@@ -136,6 +138,7 @@ export type Database = {
           name?: string
           presentation?: string | null
           slug?: string
+          symptoms_text?: string
         }
         Relationships: []
       }
@@ -303,6 +306,7 @@ export type Database = {
           name: string
           presentation: string | null
           slug: string
+          symptoms_text: string
         }[]
         SetofOptions: {
           from: "*"
