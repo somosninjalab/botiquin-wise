@@ -28,6 +28,9 @@ import {
 } from "lucide-react";
 import {
   formatBs,
+  formatUSD,
+  toUSD,
+  displayPrice,
   getLatestPricesForMedications,
   lowestCurrent,
   priorPrice,
@@ -36,6 +39,7 @@ import {
   type PriceRow,
 } from "@/lib/medications";
 import { supabase } from "@/integrations/supabase/client";
+import { useBcvRate } from "@/hooks/useBcvRate";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -52,6 +56,7 @@ function Index() {
   const { q, pharm, med } = Route.useSearch();
   const navigate = useNavigate({ from: "/" });
   const isSearching = q.trim().length > 0 || pharm !== "all" || med !== "all";
+  const bcvRate = useBcvRate();
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
@@ -98,13 +103,14 @@ function Index() {
   // Lowest current price per medication respecting pharmacy filter
   const lowestByMed = useMemo(() => {
     const out = new Map<string, PriceRow>();
+    const usdPrice = (p: PriceRow) => toUSD(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY;
     for (const [, p] of latestByMedPharm) {
       if (pharm !== "all" && p.pharmacy_id !== pharm) continue;
       const cur = out.get(p.medication_id);
-      if (!cur || p.price < cur.price) out.set(p.medication_id, p);
+      if (!cur || usdPrice(p) < usdPrice(cur)) out.set(p.medication_id, p);
     }
     return out;
-  }, [latestByMedPharm, pharm]);
+  }, [latestByMedPharm, pharm, bcvRate]);
 
   const filteredMeds = useMemo(() => {
     let list = meds;
@@ -120,15 +126,17 @@ function Index() {
       if (!groups.has(cat)) groups.set(cat, []);
       groups.get(cat)!.push(m);
     }
+    const usdOf = (p?: PriceRow | null) =>
+      p ? (toUSD(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
     for (const [, arr] of groups) {
       arr.sort((a, b) => {
-        const pa = lowestByMed.get(a.id)?.price ?? Number.POSITIVE_INFINITY;
-        const pb = lowestByMed.get(b.id)?.price ?? Number.POSITIVE_INFINITY;
+        const pa = usdOf(lowestByMed.get(a.id));
+        const pb = usdOf(lowestByMed.get(b.id));
         return pa - pb;
       });
     }
     return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredMeds, lowestByMed]);
+  }, [filteredMeds, lowestByMed, bcvRate]);
 
   const pharmacyOptions = Object.entries(pharmaciesMap).sort(([, a], [, b]) =>
     a.localeCompare(b),
@@ -195,6 +203,7 @@ function Index() {
           pharmaciesMap={pharmaciesMap}
           pharmacyOptions={pharmacyOptions}
           updateSearch={updateSearch}
+          bcvRate={bcvRate}
         />
       ) : (
         <>
@@ -223,7 +232,15 @@ function Index() {
                     {lo && (
                       <div className="mt-3 pt-3 border-t border-border/60">
                         <div className="text-xs text-muted-foreground">{pharmaciesMap[lo.pharmacy_id]}</div>
-                        <div className="text-xl font-bold text-primary">{formatBs(Number(lo.price), lo.currency)}</div>
+                        {(() => {
+                          const d = displayPrice(Number(lo.price), lo.currency, bcvRate);
+                          return (
+                            <>
+                              <div className="text-xl font-bold text-primary">{d.primary}</div>
+                              {d.secondary && <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>}
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                   </Card>
@@ -268,10 +285,11 @@ function SearchResults(props: {
   pharmaciesMap: Record<string, string>;
   pharmacyOptions: [string, string][];
   updateSearch: (p: Partial<{ q: string; pharm: string; med: string }>) => void;
+  bcvRate: number | null;
 }) {
   const {
     q, pharm, med, loading, meds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacyOptions, updateSearch,
+    pharmaciesMap, pharmacyOptions, updateSearch, bcvRate,
   } = props;
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
@@ -290,6 +308,11 @@ function SearchResults(props: {
               </h2>
             </div>
             <div className="flex-1" />
+            {bcvRate && (
+              <span className="text-xs text-muted-foreground hidden md:inline">
+                Tasa BCV: Bs {bcvRate.toFixed(2)} / USD
+              </span>
+            )}
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
               <div className="flex items-center gap-2">
                 <Store className="h-4 w-4 text-muted-foreground" />
@@ -416,9 +439,17 @@ function SearchResults(props: {
                               <div className="text-xs text-muted-foreground">Mejor precio</div>
                               <div className="text-xs font-medium">{pharmaciesMap[lo.pharmacy_id]}</div>
                             </div>
-                            <div className="text-xl font-bold text-primary">
-                              {formatBs(Number(lo.price), lo.currency)}
-                            </div>
+                            {(() => {
+                              const d = displayPrice(Number(lo.price), lo.currency, bcvRate);
+                              return (
+                                <div className="text-right">
+                                  <div className="text-xl font-bold text-primary">{d.primary}</div>
+                                  {d.secondary && (
+                                    <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <div className="mt-3 pt-3 border-t border-border/60 text-xs text-muted-foreground">

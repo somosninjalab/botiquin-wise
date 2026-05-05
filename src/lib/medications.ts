@@ -110,3 +110,46 @@ export function priorPrice(prices: PriceRow[], medId: string, pharmId: string, c
 export function formatBs(n: number, currency = "USD") {
   return new Intl.NumberFormat("es-VE", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 }
+
+/** Convierte cualquier moneda soportada a USD usando la tasa BCV (VES por USD). */
+export function toUSD(amount: number, currency: string, bcvRate: number | null): number | null {
+  if (!Number.isFinite(amount)) return null;
+  const c = (currency || "USD").toUpperCase();
+  if (c === "USD") return amount;
+  if (c === "VES" || c === "VEF" || c === "BS" || c === "BSS") {
+    if (!bcvRate || bcvRate <= 0) return null;
+    return amount / bcvRate;
+  }
+  // Otras monedas: por ahora no convertimos
+  return null;
+}
+
+export function formatUSD(amountUSD: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(amountUSD);
+}
+
+/**
+ * Devuelve el precio mostrado en USD. Si la moneda original era VES,
+ * incluye también el monto original en bolívares para referencia.
+ */
+export function displayPrice(
+  amount: number,
+  currency: string,
+  bcvRate: number | null,
+): { primary: string; secondary?: string } {
+  const c = (currency || "USD").toUpperCase();
+  const usd = toUSD(amount, c, bcvRate);
+  if (usd != null) {
+    const primary = formatUSD(usd);
+    if (c === "VES" || c === "VEF" || c === "BS" || c === "BSS") {
+      return { primary, secondary: formatBs(amount, "VES") };
+    }
+    return { primary };
+  }
+  // Fallback: mostrar tal cual si no se puede convertir
+  return { primary: formatBs(amount, c) };
+}
