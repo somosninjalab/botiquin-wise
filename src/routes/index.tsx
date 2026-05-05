@@ -169,34 +169,30 @@ function Index() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
-        <div className="absolute inset-0 -z-10 bg-background/40" />
-        <div className="container mx-auto px-4 py-16 md:py-20">
-          <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-card/80 backdrop-blur px-3 py-1 text-xs font-medium text-primary border border-primary/20">
-              <TrendingDown className="h-3.5 w-3.5" /> Precios actualizados de farmacias en Venezuela
+      {/* Hero estilo GoodRx: claro, centrado, búsqueda dominante */}
+      <section className="relative overflow-hidden border-b border-border/60">
+        <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.18 }} />
+        <div className="container mx-auto px-4 py-14 md:py-20">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 text-xs font-medium text-primary border border-primary/20">
+              <TrendingDown className="h-3.5 w-3.5" /> Precios reales de farmacias en Venezuela
             </span>
             <h1 className="mt-4 text-4xl md:text-6xl font-bold leading-tight text-foreground">
-              Encuentra tu medicamento al{" "}
+              Compara precios y{" "}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                mejor precio
-              </span>
+                ahorra hasta 60%
+              </span>{" "}
+              en tus medicinas
             </h1>
-            <p className="mt-4 text-lg text-foreground/80 max-w-2xl">
-              Comparamos en tiempo real Farmatodo, Farmacias SAAS, Maraplus, Locatel y más.
-              Recibe alertas cuando baje el precio del medicamento que necesitas.
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Busca cualquier medicamento y mira al instante cuánto cuesta en Farmatodo,
+              Locatel, SAAS, Farmago y más. Recibe alertas cuando baje el precio.
             </p>
-            <div className="mt-8 max-w-2xl">
-              <SearchBar
-                size="lg"
-                initial={q}
-                onSearch={(value) => updateSearch({ q: value })}
-              />
+            <div className="mt-8">
+              <SearchBar size="lg" initial={q} onSearch={(value) => updateSearch({ q: value })} />
             </div>
             {!isSearching && (
-              <div className="mt-6 flex flex-wrap gap-4 text-sm text-foreground/75">
+              <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> 100% gratuito</span>
                 <span className="flex items-center gap-1.5"><Bell className="h-4 w-4 text-primary" /> Alertas por email</span>
                 <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> Historial de precios</span>
@@ -225,9 +221,9 @@ function Index() {
         />
       ) : (
         <>
-          {/* Featured */}
-          <section className="container mx-auto px-4 py-16">
-            <div className="flex items-end justify-between mb-8">
+          {/* Destacados con mejor precio */}
+          <section className="container mx-auto px-4 py-12 md:py-14">
+            <div className="flex items-end justify-between mb-6">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold">Medicamentos destacados</h2>
                 <p className="text-muted-foreground mt-1">Los más buscados con su mejor precio actual.</p>
@@ -236,7 +232,7 @@ function Index() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {featured.map(({ med: m, lo, drop }) => (
                 <Link key={m.id} to="/medicamento/$slug" params={{ slug: m.slug }}>
-                  <Card className="p-5 h-full hover:shadow-[var(--shadow-elevated)] transition-all hover:-translate-y-0.5" style={{ background: "var(--gradient-card)" }}>
+                  <Card className="p-5 h-full hover:shadow-[var(--shadow-elevated)] hover:border-primary/40 transition-all">
                     <div className="flex items-start justify-between gap-2">
                       <div className="rounded-lg bg-primary/10 p-2 text-primary"><Pill className="h-5 w-5" /></div>
                       {drop > 1 && (
@@ -247,18 +243,23 @@ function Index() {
                     </div>
                     <h3 className="mt-3 font-semibold leading-tight line-clamp-2">{m.name}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{m.active_ingredient}</p>
-                    {lo && (
+                    {lo ? (
                       <div className="mt-3 pt-3 border-t border-border/60">
-                        <div className="text-xs text-muted-foreground">{pharmaciesMap[lo.pharmacy_id]}</div>
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Desde</div>
                         {(() => {
                           const d = displayPrice(Number(lo.price), lo.currency, bcvRate);
                           return (
                             <>
                               <div className="text-xl font-bold text-primary">{d.primary}</div>
                               {d.secondary && <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>}
+                              <div className="text-xs text-muted-foreground mt-1">en {pharmaciesMap[lo.pharmacy_id]}</div>
                             </>
                           );
                         })()}
+                      </div>
+                    ) : (
+                      <div className="mt-3 pt-3 border-t border-border/60 text-xs text-muted-foreground">
+                        Próximamente con precios
                       </div>
                     )}
                   </Card>
@@ -267,15 +268,32 @@ function Index() {
             </div>
           </section>
 
-          {/* Value props */}
-          <section className="container mx-auto px-4 py-16">
-            <div className="grid md:grid-cols-3 gap-6">
+          {/* Lista popular tipo "drug list" GoodRx */}
+          <section className="bg-muted/40 border-y border-border/60">
+            <div className="container mx-auto px-4 py-12 md:py-14">
+              <div className="flex items-end justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold">Medicamentos populares</h2>
+                  <p className="text-muted-foreground mt-1">Explora nuestro catálogo y compara precios.</p>
+                </div>
+              </div>
+              <PopularList />
+            </div>
+          </section>
+
+          {/* Cómo funciona */}
+          <section className="container mx-auto px-4 py-14 md:py-16">
+            <h2 className="text-2xl md:text-3xl font-bold text-center">Cómo funciona</h2>
+            <p className="text-muted-foreground mt-2 text-center max-w-xl mx-auto">
+              Tres pasos simples para pagar menos por tus medicinas.
+            </p>
+            <div className="grid md:grid-cols-3 gap-6 mt-10">
               {[
-                { icon: TrendingDown, title: "Compara en segundos", text: "Un buscador único para varias farmacias. Encuentra el precio más bajo al instante." },
-                { icon: Bell, title: "Alertas inteligentes", text: "Recibe un email cuando baje el precio de los medicamentos que sigues." },
-                { icon: MapPin, title: "Pensado para ti", text: "Mostramos resultados relevantes a tu región y guardamos tu historial." },
+                { icon: TrendingDown, title: "1. Busca tu medicamento", text: "Por nombre comercial, principio activo o síntoma." },
+                { icon: Pill, title: "2. Compara farmacias", text: "Vemos Farmatodo, Locatel, SAAS, Maraplus y más, en bolívares y dólares." },
+                { icon: Bell, title: "3. Recibe alertas", text: "Te avisamos por email cuando baje el precio." },
               ].map((f, i) => (
-                <Card key={i} className="p-6">
+                <Card key={i} className="p-6 text-center">
                   <div className="rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 inline-flex p-3">
                     <f.icon className="h-6 w-6 text-primary" />
                   </div>
@@ -287,6 +305,66 @@ function Index() {
           </section>
         </>
       )}
+    </div>
+  );
+}
+
+function PopularList() {
+  const [items, setItems] = useState<MedicationRow[]>([]);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("medications")
+        .select("*")
+        .order("name")
+        .limit(60);
+      setItems((data ?? []) as MedicationRow[]);
+    })();
+  }, []);
+  // Group by leading letter, A–Z chip nav.
+  const groups = useMemo(() => {
+    const m = new Map<string, MedicationRow[]>();
+    for (const it of items) {
+      const k = (it.name[0] ?? "#").toUpperCase();
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push(it);
+    }
+    return Array.from(m.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [items]);
+  if (!items.length) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 rounded-md" />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-6">
+      {groups.map(([letter, arr]) => (
+        <div key={letter}>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
+              {letter}
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {arr.map((m) => (
+              <Link
+                key={m.id}
+                to="/medicamento/$slug"
+                params={{ slug: m.slug }}
+                className="group flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm hover:border-primary/50 hover:bg-primary/5 transition-colors"
+              >
+                <span className="truncate font-medium group-hover:text-primary">{m.name}</span>
+                <span className="text-xs text-muted-foreground truncate ml-2">{m.active_ingredient}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
