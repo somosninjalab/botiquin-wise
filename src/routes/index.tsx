@@ -25,6 +25,7 @@ import {
   Store,
   Tag,
   ArrowDownAZ,
+  Stethoscope,
 } from "lucide-react";
 import {
   priceToVes,
@@ -280,6 +281,9 @@ function Index() {
               <PopularList />
             </div>
           </section>
+
+          {/* Browse por condición / categoría — patrón GoodRx */}
+          <BrowseByCondition onPick={(patch) => updateSearch(patch)} />
 
           {/* Cómo funciona */}
           <section className="container mx-auto px-4 py-14 md:py-16">
