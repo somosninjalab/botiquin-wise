@@ -35,11 +35,15 @@ export const Route = createRootRoute({
       { title: "¡Alerta: Medicina! — Compara precios de medicamentos" },
       { name: "description", content: "Compara en tiempo real los precios de medicamentos en Farmatodo, SAAS, Maraplus y Locatel. Recibe alertas cuando bajen de precio." },
       { name: "author", content: "Alerta Medicina" },
-      { property: "og:title", content: "¡Alerta: Medicina!" },
-      { property: "og:description", content: "Compara precios de medicamentos y recibe alertas de bajadas." },
+      { property: "og:title", content: "¡Alerta: Medicina! — Compara precios de medicamentos" },
+      { property: "og:description", content: "Compara en tiempo real los precios de medicamentos en Farmatodo, SAAS, Maraplus y Locatel. Recibe alertas cuando bajen de precio." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "¡Alerta: Medicina! — Compara precios de medicamentos" },
+      { name: "twitter:description", content: "Compara en tiempo real los precios de medicamentos en Farmatodo, SAAS, Maraplus y Locatel. Recibe alertas cuando bajen de precio." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d049554d-6efb-4d1e-8da8-49cfa392c68e/id-preview-fba2e9dd--29cb77fa-e781-4931-bd63-2ff7e180ffda.lovable.app-1777954305268.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d049554d-6efb-4d1e-8da8-49cfa392c68e/id-preview-fba2e9dd--29cb77fa-e781-4931-bd63-2ff7e180ffda.lovable.app-1777954305268.png" },
     ],
     links: [
       {
