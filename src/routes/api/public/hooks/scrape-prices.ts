@@ -174,9 +174,12 @@ async function mapAndScrape(
     limit: 5,
     includeSubdomains: false,
   } as any);
-  const links: string[] = mapRes?.links ?? mapRes?.data?.links ?? [];
+  const rawLinks: any[] = mapRes?.links ?? mapRes?.data?.links ?? [];
+  // Firecrawl v2 returns either strings or { url, title, description } objects.
+  const links: string[] = rawLinks
+    .map((l) => (typeof l === "string" ? l : l?.url))
+    .filter((u): u is string => typeof u === "string" && /^https?:\/\//.test(u));
   if (!links.length) return null;
-  // Try the top candidate URL only (keep cost low).
   const candidate = links[0];
   const scrapeRes: any = await fc.scrape(candidate, {
     formats: [{ type: "json", prompt: extractionPrompt } as any] as any,
