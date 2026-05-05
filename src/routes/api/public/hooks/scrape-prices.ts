@@ -292,7 +292,7 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
 
         let medsQuery = supabaseAdmin
           .from("medications")
-          .select("id,name,active_ingredient,presentation")
+          .select("id,name,active_ingredient,presentation,brand_names")
           .order("name");
         if (medSlug) medsQuery = medsQuery.eq("slug", medSlug);
         const { data: meds } = await medsQuery.limit(limit);
