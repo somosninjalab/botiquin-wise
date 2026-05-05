@@ -45,6 +45,8 @@ const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
   pharm: fallback(z.string(), "all").default("all"),
   med: fallback(z.string(), "all").default("all"),
+  cat: fallback(z.string(), "all").default("all"),
+  ind: fallback(z.string(), "all").default("all"),
 });
 
 export const Route = createFileRoute("/")({
@@ -53,9 +55,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { q, pharm, med } = Route.useSearch();
+  const { q, pharm, med, cat, ind } = Route.useSearch();
   const navigate = useNavigate({ from: "/" });
-  const isSearching = q.trim().length > 0 || pharm !== "all" || med !== "all";
+  const isSearching =
+    q.trim().length > 0 || pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all";
   const bcvRate = useBcvRate();
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
@@ -75,7 +78,18 @@ function Index() {
   useEffect(() => {
     setLoading(true);
     (async () => {
-      const m = await searchMedications(q, isSearching ? 80 : 8);
+      let m: MedicationRow[];
+      if (q.trim()) {
+        m = await searchMedications(q, 80);
+      } else if (cat !== "all" || ind !== "all") {
+        let qb = supabase.from("medications").select("*").order("name").limit(80);
+        if (cat !== "all") qb = qb.eq("category", cat);
+        if (ind !== "all") qb = qb.eq("indication", ind);
+        const { data } = await qb;
+        m = (data ?? []) as MedicationRow[];
+      } else {
+        m = await searchMedications("", isSearching ? 80 : 8);
+      }
       setMeds(m);
       const p = await getLatestPricesForMedications(m.map((x) => x.id));
       setPrices(p);
@@ -84,10 +98,12 @@ function Index() {
       }
       setLoading(false);
     })();
-  }, [q, isSearching]);
+  }, [q, cat, ind, isSearching]);
 
-  const updateSearch = (patch: Partial<{ q: string; pharm: string; med: string }>) => {
-    navigate({ search: (prev: { q: string; pharm: string; med: string }) => ({ ...prev, ...patch }) });
+  const updateSearch = (
+    patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>,
+  ) => {
+    navigate({ search: (prev: any) => ({ ...prev, ...patch }) });
   };
 
   // Latest price per (medication, pharmacy)
@@ -115,9 +131,11 @@ function Index() {
   const filteredMeds = useMemo(() => {
     let list = meds;
     if (med !== "all") list = list.filter((m) => m.id === med);
+    if (cat !== "all") list = list.filter((m) => m.category === cat);
+    if (ind !== "all") list = list.filter((m) => m.indication === ind);
     if (pharm !== "all") list = list.filter((m) => lowestByMed.has(m.id));
     return list;
-  }, [meds, med, pharm, lowestByMed]);
+  }, [meds, med, cat, ind, pharm, lowestByMed]);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, MedicationRow[]>();
