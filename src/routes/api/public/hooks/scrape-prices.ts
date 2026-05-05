@@ -58,24 +58,29 @@ function parsePrice(raw: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-/** Normalize many currency inputs to ISO-3 code. Returns "" if unknown. */
+/**
+ * Normaliza la moneda. Para hosts conocidos, el host es AUTORITATIVO
+ * porque el LLM frecuentemente confunde "$" o "Bs" y devuelve "USD" por defecto.
+ */
 function normalizeCurrency(raw: unknown, contextHost?: string | null): string {
+  const hostGuess = guessByHost(contextHost);
+  // Si conocemos el host con certeza, no confiamos en el LLM.
+  if (hostGuess && hostGuess !== "USD") return hostGuess;
   const s = String(raw ?? "").trim().toUpperCase().replace(/\./g, "");
-  if (!s) return guessByHost(contextHost);
-  if (/USD|US\$|^\$$|^US$/.test(s)) return "USD";
+  if (!s) return hostGuess || "USD";
   if (/^VES$|^VEF$|^BS$|^BSS$|BOL[IÍ]VAR/i.test(s)) return "VES";
   if (/^COP$|PESO/i.test(s)) return "COP";
   if (/^EUR$|€/.test(s)) return "EUR";
-  // Already an ISO-3 looking code → keep it.
+  if (/USD|US\$|^\$$|^US$/.test(s)) return "USD";
   if (/^[A-Z]{3}$/.test(s)) return s;
-  return guessByHost(contextHost);
+  return hostGuess || "USD";
 }
 
 function guessByHost(host?: string | null): string {
   if (!host) return "USD";
-  if (/\.com\.ve$|farmatodo\.com\.ve|farmago\.com\.ve|locatel\.com\.ve|cinecitta|farmaciasaas|tufarmaciaactual|maraplus|xana\.com/i.test(host))
+  if (/locatelcolombia|\.com\.co$/i.test(host)) return "COP";
+  if (/\.com\.ve$|farmatodo|farmago|locatel\.com\.ve|cinecitta|farmaciasaas|tufarmaciaactual|maraplus/i.test(host))
     return "VES";
-  if (/\.com\.co$|locatelcolombia/i.test(host)) return "COP";
   return "USD";
 }
 
