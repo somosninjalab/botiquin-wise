@@ -297,6 +297,8 @@ function SearchResults(props: {
   q: string;
   pharm: string;
   med: string;
+  cat: string;
+  ind: string;
   loading: boolean;
   meds: MedicationRow[];
   grouped: [string, MedicationRow[]][];
@@ -304,13 +306,23 @@ function SearchResults(props: {
   prices: PriceRow[];
   pharmaciesMap: Record<string, string>;
   pharmacyOptions: [string, string][];
-  updateSearch: (p: Partial<{ q: string; pharm: string; med: string }>) => void;
+  updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
   bcvRate: number | null;
 }) {
   const {
-    q, pharm, med, loading, meds, grouped, lowestByMed, prices,
+    q, pharm, med, cat, ind, loading, meds, grouped, lowestByMed, prices,
     pharmaciesMap, pharmacyOptions, updateSearch, bcvRate,
   } = props;
+
+  // Etiquetas únicas presentes en los resultados actuales
+  const categories = useMemo(
+    () => Array.from(new Set(meds.map((m) => m.category).filter(Boolean) as string[])).sort(),
+    [meds],
+  );
+  const indications = useMemo(
+    () => Array.from(new Set(meds.map((m) => m.indication).filter(Boolean) as string[])).sort(),
+    [meds],
+  );
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
 
