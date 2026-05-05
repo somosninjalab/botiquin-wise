@@ -53,14 +53,18 @@ function MedicamentoPage() {
     return Array.from(map.values()).sort((a, b) => usd(a) - usd(b));
   }, [prices, bcvRate]);
 
-  // Chart data: per-day promedio en USD por farmacia
+  // Chart data: per-day en bolívares por farmacia
   const chartData = useMemo(() => {
     const byDay = new Map<string, Record<string, number>>();
     prices.forEach((p) => {
       const day = p.scraped_at.slice(0, 10);
       const row = byDay.get(day) ?? {};
       const usd = toUSD(Number(p.price), p.currency, bcvRate);
-      if (usd != null) row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number(usd.toFixed(2));
+      if (usd != null && bcvRate) {
+        row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number((usd * bcvRate).toFixed(2));
+      } else if (p.currency?.toUpperCase().startsWith("VE") || p.currency?.toUpperCase().startsWith("BS")) {
+        row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number(p.price);
+      }
       byDay.set(day, row);
     });
     return Array.from(byDay.entries())
