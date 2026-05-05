@@ -11,6 +11,7 @@ type MedRow = {
   brand_names?: string[] | null;
 };
 type Extracted = { price: number; currency: string; in_stock: boolean; product_url: string };
+type ExtractedFull = Extracted & { image_url: string | null };
 
 // Per-currency sanity ranges. Anything outside is rejected — typical retail
 // medication prices in Venezuela are between Bs. 50 and Bs. 5,000,000.
@@ -41,6 +42,7 @@ const extractionPrompt = `From this pharmacy product page, extract the medicatio
 - currency: one of "VES", "USD", or the symbol/code seen on the page ("Bs", "Bs.", "Bs.S", "BsS", "$", "USD", "US$"). Empty string if unknown.
 - in_stock: true unless explicitly marked out of stock / agotado / sin existencias.
 - product_url: canonical URL of the product, or empty string.
+- image_url: absolute URL of the main product photo (the medication packaging image). Empty string if none.
 Ignore unrelated suggestions, carts, shipping, discounts without a final product price, and search pages with multiple products. If no product price is visible, set price to 0.`;
 
 // --- Normalization helpers --------------------------------------------------
@@ -182,6 +184,22 @@ function normalizeExtraction(j: any, sourceUrl: string, host: string | null): Ex
   };
 }
 
+function pickImageUrl(j: any, sourceUrl: string): string | null {
+  const raw =
+    j?.image_url ?? j?.image ?? j?.imageUrl ?? j?.thumbnail ?? j?.photo ?? j?.picture ?? "";
+  const s = String(raw ?? "").trim();
+  if (!s) return null;
+  try {
+    const u = new URL(s, sourceUrl).toString();
+    if (!/^https?:\/\//i.test(u)) return null;
+    // skip obvious tracking pixels / sprites
+    if (/sprite|pixel|blank|placeholder/i.test(u)) return null;
+    return u;
+  } catch {
+    return null;
+  }
+}
+
 function extractDose(med: MedRow): string {
   return (med.name.match(/\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|ui)/i)?.[0] ?? "").trim();
 }
@@ -288,7 +306,7 @@ async function scrapeUrl(
   url: string,
   host: string | null,
   med: MedRow,
-): Promise<Extracted | null> {
+): Promise<ExtractedFull | null> {
   try {
     const res: any = await fc.scrape(url, {
       formats: ["markdown", { type: "json", prompt: extractionPrompt } as any] as any,
@@ -309,7 +327,10 @@ async function scrapeUrl(
       console.warn(`[scrape:out-of-range] ${url} ${norm.price} ${norm.currency}`);
       return null;
     }
-    return norm;
+    const ogImage =
+      res?.metadata?.ogImage ?? res?.metadata?.["og:image"] ?? res?.data?.metadata?.ogImage ?? null;
+    const image_url = pickImageUrl(j, url) ?? (ogImage ? pickImageUrl({ image_url: ogImage }, url) : null);
+    return { ...norm, image_url };
   } catch {
     return null;
   }
@@ -319,7 +340,7 @@ async function scrapeOne(
   fc: Firecrawl,
   med: MedRow,
   pharm: PharmRow,
-): Promise<Extracted | null> {
+): Promise<ExtractedFull | null> {
   const host = siteHost(pharm.website_url);
   if (!host || !pharm.website_url) return null;
   const variants = buildQueryVariants(med);
@@ -399,6 +420,15 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
               return { pharm, r };
             }),
           );
+          // Guarda la primera imagen encontrada para este medicamento si aún no tiene.
+          const firstImage = results.find((x) => x.r?.image_url)?.r?.image_url ?? null;
+          if (firstImage) {
+            await supabaseAdmin
+              .from("medications")
+              .update({ image_url: firstImage })
+              .eq("id", med.id)
+              .is("image_url", null);
+          }
           for (const { pharm, r } of results) {
             if (!r) {
               byPharmacy[pharm.slug].failed++;

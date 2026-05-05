@@ -653,9 +653,19 @@ function SearchResults(props: {
                           </div>
                         )}
                         <div className="flex items-start justify-between">
-                          <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                            <Pill className="h-5 w-5" />
-                          </div>
+                          {m.image_url ? (
+                            <img
+                              src={m.image_url}
+                              alt={m.name}
+                              loading="lazy"
+                              className="h-14 w-14 rounded-lg object-contain bg-white border border-border"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                            />
+                          ) : (
+                            <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                              <Pill className="h-5 w-5" />
+                            </div>
+                          )}
                           {drop > 1 && (
                             <span className="text-xs font-bold rounded-full bg-accent/15 text-accent px-2 py-0.5">
                               ↓ {drop.toFixed(0)}%
