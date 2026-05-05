@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { displayPrice, toUSD, type MedicationRow, type PriceRow } from "@/lib/medications";
+import { displayPrice, priceToVes, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { useBcvRate } from "@/hooks/useBcvRate";
 
 export const Route = createFileRoute("/medicamento/$slug")({
@@ -49,8 +49,8 @@ function MedicamentoPage() {
   const latestByPharm = useMemo(() => {
     const map = new Map<string, PriceRow>();
     [...prices].reverse().forEach((p) => { if (!map.has(p.pharmacy_id)) map.set(p.pharmacy_id, p); });
-    const usd = (p: PriceRow) => toUSD(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY;
-    return Array.from(map.values()).sort((a, b) => usd(a) - usd(b));
+    const ves = (p: PriceRow) => priceToVes(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY;
+    return Array.from(map.values()).sort((a, b) => ves(a) - ves(b));
   }, [prices, bcvRate]);
 
   // Chart data: per-day en bolívares por farmacia
@@ -59,11 +59,9 @@ function MedicamentoPage() {
     prices.forEach((p) => {
       const day = p.scraped_at.slice(0, 10);
       const row = byDay.get(day) ?? {};
-      const usd = toUSD(Number(p.price), p.currency, bcvRate);
-      if (usd != null && bcvRate) {
-        row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number((usd * bcvRate).toFixed(2));
-      } else if (p.currency?.toUpperCase().startsWith("VE") || p.currency?.toUpperCase().startsWith("BS")) {
-        row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number(p.price);
+      const ves = priceToVes(Number(p.price), p.currency, bcvRate);
+      if (ves != null) {
+        row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number(ves.toFixed(2));
       }
       byDay.set(day, row);
     });
