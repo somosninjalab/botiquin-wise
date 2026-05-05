@@ -10,6 +10,7 @@ export type MedicationRow = {
   indication: string | null;
   manufacturer: string | null;
   image_url: string | null;
+  brand_names?: string[] | null;
 };
 
 export type PriceRow = {
@@ -26,7 +27,10 @@ export type PriceRow = {
 export async function searchMedications(q: string, limit = 30) {
   let query = supabase.from("medications").select("*").order("name").limit(limit);
   if (q.trim()) {
-    query = query.or(`name.ilike.%${q}%,active_ingredient.ilike.%${q}%,indication.ilike.%${q}%`);
+    const safe = q.replace(/[,()]/g, " ");
+    query = query.or(
+      `name.ilike.%${safe}%,active_ingredient.ilike.%${safe}%,indication.ilike.%${safe}%,brand_names_text.ilike.%${safe}%`
+    );
   }
   const { data, error } = await query;
   if (error) throw error;
