@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 
+const MisAlertasRoute = MisAlertasRouteImport.update({
+  id: '/mis-alertas',
+  path: '/mis-alertas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BuscarRoute = BuscarRouteImport.update({
   id: '/buscar',
   path: '/buscar',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
+  '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
+  '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
 }
 export interface FileRoutesById {
@@ -52,25 +60,40 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
+  '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/buscar' | '/medicamento/$slug'
+  fullPaths: '/' | '/auth' | '/buscar' | '/mis-alertas' | '/medicamento/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/buscar' | '/medicamento/$slug'
-  id: '__root__' | '/' | '/auth' | '/buscar' | '/medicamento/$slug'
+  to: '/' | '/auth' | '/buscar' | '/mis-alertas' | '/medicamento/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/buscar'
+    | '/mis-alertas'
+    | '/medicamento/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
+  MisAlertasRoute: typeof MisAlertasRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mis-alertas': {
+      id: '/mis-alertas'
+      path: '/mis-alertas'
+      fullPath: '/mis-alertas'
+      preLoaderRoute: typeof MisAlertasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/buscar': {
       id: '/buscar'
       path: '/buscar'
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
+  MisAlertasRoute: MisAlertasRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
 }
 export const routeTree = rootRouteImport
