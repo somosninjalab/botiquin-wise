@@ -25,16 +25,43 @@ export type PriceRow = {
 };
 
 export async function searchMedications(q: string, limit = 30) {
-  let query = supabase.from("medications").select("*").order("name").limit(limit);
-  if (q.trim()) {
-    const safe = q.replace(/[,()]/g, " ");
-    query = query.or(
-      `name.ilike.%${safe}%,active_ingredient.ilike.%${safe}%,indication.ilike.%${safe}%,brand_names_text.ilike.%${safe}%`
-    );
+  if (!q.trim()) {
+    const { data, error } = await supabase
+      .from("medications").select("*").order("name").limit(limit);
+    if (error) throw error;
+    return (data ?? []) as MedicationRow[];
   }
-  const { data, error } = await query;
+  const safe = q.replace(/[,()]/g, " ");
+  // 1) direct matches across name, principio activo, indicación y marcas
+  const { data: direct, error } = await supabase
+    .from("medications")
+    .select("*")
+    .or(
+      `name.ilike.%${safe}%,active_ingredient.ilike.%${safe}%,indication.ilike.%${safe}%,brand_names_text.ilike.%${safe}%`
+    )
+    .order("name")
+    .limit(limit);
   if (error) throw error;
-  return (data ?? []) as MedicationRow[];
+  const directRows = (direct ?? []) as MedicationRow[];
+
+  // 2) Si hubo coincidencia, expandir por principio activo para incluir alternativas
+  const ingredients = Array.from(
+    new Set(directRows.map((m) => m.active_ingredient).filter(Boolean)),
+  );
+  if (!ingredients.length) return directRows;
+
+  const { data: byIng } = await supabase
+    .from("medications")
+    .select("*")
+    .in("active_ingredient", ingredients)
+    .order("name")
+    .limit(limit);
+
+  // Merge sin duplicados, manteniendo primero las coincidencias directas
+  const map = new Map<string, MedicationRow>();
+  for (const m of directRows) map.set(m.id, m);
+  for (const m of (byIng ?? []) as MedicationRow[]) if (!map.has(m.id)) map.set(m.id, m);
+  return Array.from(map.values()).slice(0, limit);
 }
 
 export async function getLatestPricesForMedications(medIds: string[]) {
