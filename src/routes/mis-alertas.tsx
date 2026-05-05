@@ -36,7 +36,8 @@ function MisAlertasPage() {
 
   const updatePref = async (field: "weekly_digest" | "instant_alerts", val: boolean) => {
     if (!user) return;
-    await supabase.from("profiles").update({ [field]: val }).eq("user_id", user.id);
+    const patch = field === "weekly_digest" ? { weekly_digest: val } : { instant_alerts: val };
+    await supabase.from("profiles").update(patch).eq("user_id", user.id);
     setProfile({ ...profile, [field]: val });
     toast.success("Preferencia actualizada");
   };
