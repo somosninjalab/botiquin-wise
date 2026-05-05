@@ -89,32 +89,149 @@ function MedicamentoPage() {
 
   if (!med) return <div className="container mx-auto px-4 py-16">Cargando…</div>;
 
+  const lowestVes = latestByPharm[0]
+    ? priceToVes(Number(latestByPharm[0].price), latestByPharm[0].currency, bcvRate)
+    : null;
+  const highestVes = latestByPharm.length
+    ? priceToVes(
+        Number(latestByPharm[latestByPharm.length - 1].price),
+        latestByPharm[latestByPharm.length - 1].currency,
+        bcvRate,
+      )
+    : null;
+  const savings =
+    lowestVes != null && highestVes != null && highestVes > lowestVes
+      ? Math.round(((highestVes - lowestVes) / highestVes) * 100)
+      : 0;
+
   return (
-    <div className="container mx-auto px-4 py-10 max-w-6xl">
-      <Link to="/buscar" search={{ q: "" }} className="text-sm text-muted-foreground hover:underline">← Volver a buscar</Link>
-      <div className="mt-4 flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-3 text-primary"><Pill className="h-6 w-6" /></div>
-            <div>
-              <h1 className="text-3xl font-bold">{med.name}</h1>
-              <p className="text-muted-foreground">{med.active_ingredient} · {med.presentation}</p>
+    <div className="container mx-auto px-4 py-8 md:py-10 max-w-6xl">
+      <Link to="/" search={{ q: "", pharm: "all", med: "all", cat: "all", ind: "all" }} className="text-sm text-muted-foreground hover:underline">
+        ← Volver al inicio
+      </Link>
+
+      {/* Hero del medicamento */}
+      <div className="mt-4 rounded-2xl border border-border bg-card p-6 md:p-8">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-primary/10 p-3 text-primary"><Pill className="h-6 w-6" /></div>
+              <div className="min-w-0">
+                <h1 className="text-2xl md:text-3xl font-bold">{med.name}</h1>
+                <p className="text-muted-foreground text-sm md:text-base">
+                  {med.active_ingredient}{med.presentation ? ` · ${med.presentation}` : ""}
+                </p>
+              </div>
             </div>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              {med.category && <span className="rounded-full bg-secondary px-3 py-1">{med.category}</span>}
+              {med.indication && <span className="rounded-full bg-secondary px-3 py-1">{med.indication}</span>}
+              {med.manufacturer && <span className="rounded-full bg-secondary px-3 py-1">{med.manufacturer}</span>}
+            </div>
+            {med.brand_names && med.brand_names.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-3">
+                <span className="font-medium text-foreground">Marcas:</span> {med.brand_names.join(", ")}
+              </p>
+            )}
           </div>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            {med.category && <span className="rounded-full bg-secondary px-3 py-1">{med.category}</span>}
-            {med.indication && <span className="rounded-full bg-secondary px-3 py-1">{med.indication}</span>}
-            {med.manufacturer && <span className="rounded-full bg-secondary px-3 py-1">{med.manufacturer}</span>}
+          <div className="flex flex-col items-stretch md:items-end gap-3 shrink-0">
+            {latestByPharm[0] && (
+              <div className="text-right">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Mejor precio hoy</div>
+                {(() => {
+                  const p = latestByPharm[0];
+                  const d = displayPrice(Number(p.price), p.currency, bcvRate);
+                  return (
+                    <>
+                      <div className="text-3xl font-bold text-primary">{d.primary}</div>
+                      {d.secondary && <div className="text-xs text-muted-foreground">≈ {d.secondary}</div>}
+                      <div className="text-xs text-muted-foreground mt-1">en {pharmMap[p.pharmacy_id]}</div>
+                    </>
+                  );
+                })()}
+                {savings > 0 && (
+                  <div className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                    Ahorras hasta {savings}%
+                  </div>
+                )}
+              </div>
+            )}
+            <Button
+              onClick={toggleFollow}
+              className={following ? "" : "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"}
+              variant={following ? "outline" : "default"}
+            >
+              {following ? <><BellOff className="h-4 w-4 mr-2" /> Dejar de seguir</> : <><Bell className="h-4 w-4 mr-2" /> Avísame si baja</>}
+            </Button>
           </div>
         </div>
-        <Button onClick={toggleFollow} className={following ? "" : "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"} variant={following ? "outline" : "default"}>
-          {following ? <><BellOff className="h-4 w-4 mr-2" /> Dejar de seguir</> : <><Bell className="h-4 w-4 mr-2" /> Recibir alertas</>}
-        </Button>
       </div>
 
-      <div className="mt-8 grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-6">
-          <h2 className="font-semibold mb-4">Evolución de precios (últimos 30 días)</h2>
+      {/* Tabla de comparación tipo GoodRx */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold">Compara precios en farmacias</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Precios actualizados. Pulsa "Ver" para ir directo a la farmacia.
+        </p>
+        <Card className="mt-4 overflow-hidden p-0">
+          {latestByPharm.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              Aún no hay precios para este medicamento. Vuelve pronto.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {latestByPharm.map((p, i) => {
+                const d = displayPrice(Number(p.price), p.currency, bcvRate);
+                const isLowest = i === 0;
+                return (
+                  <li
+                    key={p.id}
+                    className={`grid grid-cols-12 items-center gap-3 p-4 ${isLowest ? "bg-primary/5" : ""}`}
+                  >
+                    <div className="col-span-12 sm:col-span-5 flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-md bg-secondary flex items-center justify-center text-sm font-bold text-secondary-foreground shrink-0">
+                        {(pharmMap[p.pharmacy_id] ?? "?").slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{pharmMap[p.pharmacy_id]}</div>
+                        <div className={`text-xs ${p.in_stock ? "text-success" : "text-muted-foreground"}`}>
+                          {p.in_stock ? "En stock" : "Sin stock"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-span-6 sm:col-span-4">
+                      {isLowest && (
+                        <span className="inline-block text-[10px] font-bold uppercase tracking-wide rounded-full bg-primary text-primary-foreground px-2 py-0.5 mb-1">
+                          Precio más bajo
+                        </span>
+                      )}
+                      <div className={`font-bold ${isLowest ? "text-primary text-xl" : "text-lg"}`}>{d.primary}</div>
+                      {d.secondary && <div className="text-[11px] text-muted-foreground">≈ {d.secondary}</div>}
+                    </div>
+                    <div className="col-span-6 sm:col-span-3 text-right">
+                      {p.product_url ? (
+                        <a href={p.product_url} target="_blank" rel="noreferrer">
+                          <Button size="sm" variant={isLowest ? "default" : "outline"} className={isLowest ? "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground" : ""}>
+                            Ver <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                          </Button>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Sin enlace</span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+      </div>
+
+      {/* Histórico */}
+      {chartData.length > 1 && (
+        <Card className="mt-8 p-6">
+          <h2 className="font-semibold mb-1">Evolución de precios</h2>
+          <p className="text-sm text-muted-foreground mb-4">Histórico en bolívares por farmacia.</p>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
@@ -130,39 +247,7 @@ function MedicamentoPage() {
             </ResponsiveContainer>
           </div>
         </Card>
-
-        <Card className="p-6">
-          <h2 className="font-semibold mb-4">Precios actuales</h2>
-          <ul className="space-y-3">
-            {latestByPharm.map((p, i) => (
-              <li key={p.id} className={`flex items-center justify-between rounded-lg border p-3 ${i === 0 ? "border-primary bg-primary/5" : "border-border"}`}>
-                <div>
-                  <div className="font-medium">{pharmMap[p.pharmacy_id]}</div>
-                  <div className="text-xs text-muted-foreground">{p.in_stock ? "En stock" : "Sin stock"}</div>
-                </div>
-                <div className="text-right">
-                  {(() => {
-                    const d = displayPrice(Number(p.price), p.currency, bcvRate);
-                    return (
-                      <>
-                        <div className={`font-bold ${i === 0 ? "text-primary text-lg" : ""}`}>{d.primary}</div>
-                        {d.secondary && (
-                          <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>
-                        )}
-                      </>
-                    );
-                  })()}
-                  {p.product_url && (
-                    <a href={p.product_url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
-                      Ver <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+      )}
     </div>
   );
 }
