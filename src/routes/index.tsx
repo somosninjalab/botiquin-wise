@@ -82,7 +82,7 @@ function Index() {
   }, [q, isSearching]);
 
   const updateSearch = (patch: Partial<{ q: string; pharm: string; med: string }>) => {
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+    navigate({ search: (prev: { q: string; pharm: string; med: string }) => ({ ...prev, ...patch }) });
   };
 
   // Latest price per (medication, pharmacy)
