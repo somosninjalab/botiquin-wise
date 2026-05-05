@@ -29,6 +29,7 @@ import {
 import {
   formatBs,
   formatUSD,
+  priceToVes,
   toUSD,
   displayPrice,
   getLatestPricesForMedications,
@@ -119,11 +120,11 @@ function Index() {
   // Lowest current price per medication respecting pharmacy filter
   const lowestByMed = useMemo(() => {
     const out = new Map<string, PriceRow>();
-    const usdPrice = (p: PriceRow) => toUSD(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY;
+    const vesPrice = (p: PriceRow) => priceToVes(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY;
     for (const [, p] of latestByMedPharm) {
       if (pharm !== "all" && p.pharmacy_id !== pharm) continue;
       const cur = out.get(p.medication_id);
-      if (!cur || usdPrice(p) < usdPrice(cur)) out.set(p.medication_id, p);
+      if (!cur || vesPrice(p) < vesPrice(cur)) out.set(p.medication_id, p);
     }
     return out;
   }, [latestByMedPharm, pharm, bcvRate]);
@@ -144,12 +145,12 @@ function Index() {
       if (!groups.has(cat)) groups.set(cat, []);
       groups.get(cat)!.push(m);
     }
-    const usdOf = (p?: PriceRow | null) =>
-      p ? (toUSD(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+    const vesOf = (p?: PriceRow | null) =>
+      p ? (priceToVes(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
     for (const [, arr] of groups) {
       arr.sort((a, b) => {
-        const pa = usdOf(lowestByMed.get(a.id));
-        const pb = usdOf(lowestByMed.get(b.id));
+        const pa = vesOf(lowestByMed.get(a.id));
+        const pb = vesOf(lowestByMed.get(b.id));
         return pa - pb;
       });
     }
@@ -162,7 +163,7 @@ function Index() {
 
   // Featured for landing
   const featured = meds.slice(0, 8).map((m) => {
-    const lo = lowestCurrent(prices, m.id);
+    const lo = lowestCurrent(prices, m.id, bcvRate);
     if (!lo) return { med: m, lo: null, drop: 0 };
     const prev = priorPrice(prices, m.id, lo.pharmacy_id, lo.scraped_at);
     const drop = prev && prev.price > lo.price ? ((prev.price - lo.price) / prev.price) * 100 : 0;
