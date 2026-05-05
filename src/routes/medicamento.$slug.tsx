@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { formatBs, type MedicationRow, type PriceRow } from "@/lib/medications";
+import { displayPrice, toUSD, type MedicationRow, type PriceRow } from "@/lib/medications";
+import { useBcvRate } from "@/hooks/useBcvRate";
 
 export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/medicamento/$slug")({
 function MedicamentoPage() {
   const { slug } = Route.useParams();
   const { user } = useAuth();
+  const bcvRate = useBcvRate();
   const [med, setMed] = useState<MedicationRow | null>(null);
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [pharms, setPharms] = useState<{ id: string; name: string }[]>([]);
@@ -47,22 +49,24 @@ function MedicamentoPage() {
   const latestByPharm = useMemo(() => {
     const map = new Map<string, PriceRow>();
     [...prices].reverse().forEach((p) => { if (!map.has(p.pharmacy_id)) map.set(p.pharmacy_id, p); });
-    return Array.from(map.values()).sort((a, b) => a.price - b.price);
-  }, [prices]);
+    const usd = (p: PriceRow) => toUSD(Number(p.price), p.currency, bcvRate) ?? Number.POSITIVE_INFINITY;
+    return Array.from(map.values()).sort((a, b) => usd(a) - usd(b));
+  }, [prices, bcvRate]);
 
-  // Chart data: per-day average across pharmacies, plus per-pharmacy lines
+  // Chart data: per-day promedio en USD por farmacia
   const chartData = useMemo(() => {
     const byDay = new Map<string, Record<string, number>>();
     prices.forEach((p) => {
       const day = p.scraped_at.slice(0, 10);
       const row = byDay.get(day) ?? {};
-      row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number(p.price);
+      const usd = toUSD(Number(p.price), p.currency, bcvRate);
+      if (usd != null) row[pharmMap[p.pharmacy_id] ?? p.pharmacy_id] = Number(usd.toFixed(2));
       byDay.set(day, row);
     });
     return Array.from(byDay.entries())
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([day, vals]) => ({ day, ...vals }));
-  }, [prices, pharmMap]);
+  }, [prices, pharmMap, bcvRate]);
 
   const colors = ["hsl(165 50% 50%)", "hsl(30 80% 60%)", "hsl(220 70% 55%)", "hsl(285 60% 55%)"];
 
@@ -135,7 +139,17 @@ function MedicamentoPage() {
                   <div className="text-xs text-muted-foreground">{p.in_stock ? "En stock" : "Sin stock"}</div>
                 </div>
                 <div className="text-right">
-                  <div className={`font-bold ${i === 0 ? "text-primary text-lg" : ""}`}>{formatBs(Number(p.price), p.currency)}</div>
+                  {(() => {
+                    const d = displayPrice(Number(p.price), p.currency, bcvRate);
+                    return (
+                      <>
+                        <div className={`font-bold ${i === 0 ? "text-primary text-lg" : ""}`}>{d.primary}</div>
+                        {d.secondary && (
+                          <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>
+                        )}
+                      </>
+                    );
+                  })()}
                   {p.product_url && (
                     <a href={p.product_url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
                       Ver <ExternalLink className="h-3 w-3" />
