@@ -44,11 +44,21 @@ export async function searchMedications(q: string, limit = 30) {
   if (error) throw error;
   const directRows = (direct ?? []) as MedicationRow[];
 
-  // 2) Si hubo coincidencia, expandir por principio activo para incluir alternativas
+  // 2) Si no hubo coincidencia directa, intentar búsqueda difusa (tolera errores tipográficos)
+  let baseRows = directRows;
+  if (!baseRows.length && q.trim().length >= 3) {
+    const { data: fuzzy } = await supabase.rpc("search_medications_fuzzy", {
+      q: safe,
+      lim: limit,
+    });
+    baseRows = ((fuzzy ?? []) as MedicationRow[]);
+  }
+
+  // 3) Expandir por principio activo para incluir alternativas equivalentes
   const ingredients = Array.from(
-    new Set(directRows.map((m) => m.active_ingredient).filter(Boolean)),
+    new Set(baseRows.map((m) => m.active_ingredient).filter(Boolean)),
   );
-  if (!ingredients.length) return directRows;
+  if (!ingredients.length) return baseRows;
 
   const { data: byIng } = await supabase
     .from("medications")
@@ -59,7 +69,7 @@ export async function searchMedications(q: string, limit = 30) {
 
   // Merge sin duplicados, manteniendo primero las coincidencias directas
   const map = new Map<string, MedicationRow>();
-  for (const m of directRows) map.set(m.id, m);
+  for (const m of baseRows) map.set(m.id, m);
   for (const m of (byIng ?? []) as MedicationRow[]) if (!map.has(m.id)) map.set(m.id, m);
   return Array.from(map.values()).slice(0, limit);
 }
