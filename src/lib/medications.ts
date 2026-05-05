@@ -145,14 +145,25 @@ export function displayPrice(
   bcvRate: number | null,
 ): { primary: string; secondary?: string } {
   const c = (currency || "USD").toUpperCase();
-  const usd = toUSD(amount, c, bcvRate);
-  if (usd != null) {
-    const primary = formatUSD(usd);
-    if (c === "VES" || c === "VEF" || c === "BS" || c === "BSS") {
-      return { primary, secondary: formatBs(amount, "VES") };
-    }
-    return { primary };
+  // Mostrar SIEMPRE en bolívares como precio principal.
+  if (c === "VES" || c === "VEF" || c === "BS" || c === "BSS") {
+    const primary = formatBs(amount, "VES");
+    const usd = toUSD(amount, c, bcvRate);
+    return usd != null ? { primary, secondary: formatUSD(usd) } : { primary };
   }
-  // Fallback: mostrar tal cual si no se puede convertir
+  if (c === "USD") {
+    if (bcvRate && bcvRate > 0) {
+      const bs = amount * bcvRate;
+      return { primary: formatBs(bs, "VES"), secondary: formatUSD(amount) };
+    }
+    return { primary: formatUSD(amount) };
+  }
+  if (c === "COP") {
+    const usd = toUSD(amount, c, bcvRate);
+    if (usd != null && bcvRate && bcvRate > 0) {
+      return { primary: formatBs(usd * bcvRate, "VES"), secondary: formatUSD(usd) };
+    }
+    return { primary: formatBs(amount, "COP") };
+  }
   return { primary: formatBs(amount, c) };
 }
