@@ -27,10 +27,7 @@ import {
   ArrowDownAZ,
 } from "lucide-react";
 import {
-  formatBs,
-  formatUSD,
   priceToVes,
-  toUSD,
   displayPrice,
   getLatestPricesForMedications,
   lowestCurrent,
