@@ -203,6 +203,7 @@ function Index() {
           pharmaciesMap={pharmaciesMap}
           pharmacyOptions={pharmacyOptions}
           updateSearch={updateSearch}
+          bcvRate={bcvRate}
         />
       ) : (
         <>
@@ -284,10 +285,11 @@ function SearchResults(props: {
   pharmaciesMap: Record<string, string>;
   pharmacyOptions: [string, string][];
   updateSearch: (p: Partial<{ q: string; pharm: string; med: string }>) => void;
+  bcvRate: number | null;
 }) {
   const {
     q, pharm, med, loading, meds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacyOptions, updateSearch,
+    pharmaciesMap, pharmacyOptions, updateSearch, bcvRate,
   } = props;
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
