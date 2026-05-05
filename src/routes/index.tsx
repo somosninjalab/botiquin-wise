@@ -370,25 +370,86 @@ function SearchResults(props: {
                   </SelectContent>
                 </Select>
               </div>
-              {(q || pharm !== "all" || med !== "all") && (
+              {(q || pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all") && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => updateSearch({ q: "", pharm: "all", med: "all" })}
+                  onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all" })}
                 >
                   <X className="h-4 w-4 mr-1" /> Limpiar
                 </Button>
               )}
             </div>
           </div>
+          {/* Clasificadores: categoría e indicación */}
+          {(categories.length > 0 || indications.length > 0) && (
+            <div className="mt-3 space-y-2">
+              {categories.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Categoría</span>
+                  {categories.map((c) => {
+                    const active = cat === c;
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => updateSearch({ cat: active ? "all" : c })}
+                        className={`text-xs rounded-full px-2.5 py-1 border transition-colors ${
+                          active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-secondary text-secondary-foreground border-transparent hover:border-primary/40"
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {indications.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Indicación</span>
+                  {indications.map((i) => {
+                    const active = ind === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => updateSearch({ ind: active ? "all" : i })}
+                        className={`text-xs rounded-full px-2.5 py-1 border transition-colors ${
+                          active
+                            ? "bg-accent text-accent-foreground border-accent"
+                            : "bg-secondary text-secondary-foreground border-transparent hover:border-accent/40"
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           {/* Active filter chips */}
-          {(pharm !== "all" || med !== "all") && (
+          {(pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all") && (
             <div className="flex flex-wrap gap-2 mt-3">
               {pharm !== "all" && (
                 <Badge variant="secondary" className="gap-1">
                   <Store className="h-3 w-3" />
                   {pharmaciesMap[pharm] ?? "Farmacia"}
                   <button onClick={() => updateSearch({ pharm: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {cat !== "all" && (
+                <Badge variant="secondary" className="gap-1">{cat}
+                  <button onClick={() => updateSearch({ cat: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {ind !== "all" && (
+                <Badge variant="secondary" className="gap-1">{ind}
+                  <button onClick={() => updateSearch({ ind: "all" })} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
