@@ -120,7 +120,10 @@ export function toUSD(amount: number, currency: string, bcvRate: number | null):
     if (!bcvRate || bcvRate <= 0) return null;
     return amount / bcvRate;
   }
-  // Otras monedas: por ahora no convertimos
+  if (c === "COP") {
+    // Tasa aproximada COP por USD (fallback estable)
+    return amount / 4000;
+  }
   return null;
 }
 
