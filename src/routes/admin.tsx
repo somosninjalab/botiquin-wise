@@ -17,6 +17,7 @@ function AdminPage() {
   const [stats, setStats] = useState({ users: 0, follows: 0, meds: 0 });
   const [scraping, setScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState<string | null>(null);
+  const [scrapeStats, setScrapeStats] = useState<Array<{ slug: string; name: string; attempted: number; inserted: number; failed: number }> | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) navigate({ to: "/" });
@@ -148,6 +149,7 @@ function AdminPage() {
               const r = await fetch("/api/public/hooks/scrape-prices?limit=10", { method: "POST" });
               const j = await r.json();
               setScrapeMsg(j.ok ? `✓ ${j.inserted}/${j.attempted} precios actualizados` : `Error: ${j.error || "desconocido"}`);
+              setScrapeStats(j.byPharmacy ?? null);
             } catch (e: any) {
               setScrapeMsg(`Error: ${e.message}`);
             } finally {
@@ -160,6 +162,24 @@ function AdminPage() {
         </Button>
       </div>
       {scrapeMsg && <p className="text-sm text-muted-foreground mt-2">{scrapeMsg}</p>}
+      {scrapeStats && (
+        <Card className="p-4 mt-3">
+          <h3 className="font-semibold mb-2 text-sm">Resultados por farmacia</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {scrapeStats.map((s) => {
+              const ok = s.inserted > 0;
+              return (
+                <div key={s.slug} className={`rounded-md border p-2 text-sm ${ok ? "border-emerald-500/30 bg-emerald-500/5" : "border-destructive/30 bg-destructive/5"}`}>
+                  <div className="font-medium">{s.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {s.inserted}/{s.attempted} ok · {s.failed} fallidas
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <div className="grid sm:grid-cols-3 gap-4 mt-6">
         <Stat label="Usuarios registrados" value={stats.users} />

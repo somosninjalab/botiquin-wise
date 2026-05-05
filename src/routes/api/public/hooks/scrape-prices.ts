@@ -174,9 +174,12 @@ async function mapAndScrape(
     limit: 5,
     includeSubdomains: false,
   } as any);
-  const links: string[] = mapRes?.links ?? mapRes?.data?.links ?? [];
+  const rawLinks: any[] = mapRes?.links ?? mapRes?.data?.links ?? [];
+  // Firecrawl v2 returns either strings or { url, title, description } objects.
+  const links: string[] = rawLinks
+    .map((l) => (typeof l === "string" ? l : l?.url))
+    .filter((u): u is string => typeof u === "string" && /^https?:\/\//.test(u));
   if (!links.length) return null;
-  // Try the top candidate URL only (keep cost low).
   const candidate = links[0];
   const scrapeRes: any = await fc.scrape(candidate, {
     formats: [{ type: "json", prompt: extractionPrompt } as any] as any,
@@ -217,12 +220,18 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         let inserted = 0;
         let attempted = 0;
         const errors: string[] = [];
+        const byPharmacy: Record<string, { name: string; attempted: number; inserted: number; failed: number }> = {};
+        for (const p of pharmList) byPharmacy[p.slug] = { name: p.name, attempted: 0, inserted: 0, failed: 0 };
 
         for (const med of medList) {
           for (const pharm of pharmList) {
             attempted++;
+            byPharmacy[pharm.slug].attempted++;
             const result = await scrapeOne(fc, med, pharm);
-            if (!result) continue;
+            if (!result) {
+              byPharmacy[pharm.slug].failed++;
+              continue;
+            }
             const { error } = await supabaseAdmin.from("medication_prices").insert({
               medication_id: med.id,
               pharmacy_id: pharm.id,
@@ -231,8 +240,13 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
               in_stock: result.in_stock,
               product_url: result.product_url || null,
             });
-            if (error) errors.push(`${pharm.slug}/${med.name}: ${error.message}`);
-            else inserted++;
+            if (error) {
+              errors.push(`${pharm.slug}/${med.name}: ${error.message}`);
+              byPharmacy[pharm.slug].failed++;
+            } else {
+              inserted++;
+              byPharmacy[pharm.slug].inserted++;
+            }
           }
         }
 
@@ -242,6 +256,7 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
           inserted,
           medications: medList.length,
           pharmacies: pharmList.length,
+          byPharmacy: Object.entries(byPharmacy).map(([slug, v]) => ({ slug, ...v })),
           errors: errors.slice(0, 10),
         });
       },
