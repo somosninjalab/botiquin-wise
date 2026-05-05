@@ -390,21 +390,27 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         for (const p of pharmList) byPharmacy[p.slug] = { name: p.name, attempted: 0, inserted: 0, failed: 0 };
 
         for (const med of medList) {
-          for (const pharm of pharmList) {
-            attempted++;
-            byPharmacy[pharm.slug].attempted++;
-            const result = await scrapeOne(fc, med, pharm);
-            if (!result) {
+          // Procesar farmacias en paralelo: cada una es independiente.
+          const results = await Promise.all(
+            pharmList.map(async (pharm) => {
+              attempted++;
+              byPharmacy[pharm.slug].attempted++;
+              const r = await scrapeOne(fc, med, pharm);
+              return { pharm, r };
+            }),
+          );
+          for (const { pharm, r } of results) {
+            if (!r) {
               byPharmacy[pharm.slug].failed++;
               continue;
             }
             const { error } = await supabaseAdmin.from("medication_prices").insert({
               medication_id: med.id,
               pharmacy_id: pharm.id,
-              price: result.price,
-              currency: result.currency,
-              in_stock: result.in_stock,
-              product_url: result.product_url || null,
+              price: r.price,
+              currency: r.currency,
+              in_stock: r.in_stock,
+              product_url: r.product_url || null,
             });
             if (error) {
               errors.push(`${pharm.slug}/${med.name}: ${error.message}`);
