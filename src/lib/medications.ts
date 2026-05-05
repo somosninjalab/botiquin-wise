@@ -32,12 +32,12 @@ export async function searchMedications(q: string, limit = 30) {
     return (data ?? []) as MedicationRow[];
   }
   const safe = q.replace(/[,()]/g, " ");
-  // 1) direct matches across name, principio activo, indicación y marcas
+  // 1) coincidencias directas en nombre, principio activo, indicación, categoría, marcas y síntomas
   const { data: direct, error } = await supabase
     .from("medications")
     .select("*")
     .or(
-      `name.ilike.%${safe}%,active_ingredient.ilike.%${safe}%,indication.ilike.%${safe}%,brand_names_text.ilike.%${safe}%`
+      `name.ilike.%${safe}%,active_ingredient.ilike.%${safe}%,indication.ilike.%${safe}%,category.ilike.%${safe}%,brand_names_text.ilike.%${safe}%,symptoms_text.ilike.%${safe}%`
     )
     .order("name")
     .limit(limit);
