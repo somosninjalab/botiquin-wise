@@ -98,6 +98,7 @@ export type Database = {
         Row: {
           active_ingredient: string
           brand_names: string[]
+          brand_names_text: string
           category: string | null
           created_at: string
           id: string
@@ -111,6 +112,7 @@ export type Database = {
         Insert: {
           active_ingredient: string
           brand_names?: string[]
+          brand_names_text?: string
           category?: string | null
           created_at?: string
           id?: string
@@ -124,6 +126,7 @@ export type Database = {
         Update: {
           active_ingredient?: string
           brand_names?: string[]
+          brand_names_text?: string
           category?: string | null
           created_at?: string
           id?: string
