@@ -44,19 +44,58 @@ async function scrapeOne(
     } as any);
     const items: any[] = res?.web ?? res?.data ?? res?.results?.web ?? [];
     const first = items[0];
-    if (!first) return null;
-    const j = first.json ?? first.extract ?? first.data?.json;
-    if (!j || typeof j.price !== "number" || j.price <= 0) return null;
-    return {
-      price: Number(j.price),
-      currency: String(j.currency || "USD").toUpperCase().slice(0, 8),
-      in_stock: j.in_stock !== false,
-      product_url: String(j.product_url || first.url || ""),
-    };
+    if (first) {
+      const j = first.json ?? first.extract ?? first.data?.json;
+      if (j && typeof j.price === "number" && j.price > 0) {
+        return {
+          price: Number(j.price),
+          currency: String(j.currency || "USD").toUpperCase().slice(0, 8),
+          in_stock: j.in_stock !== false,
+          product_url: String(j.product_url || first.url || ""),
+        };
+      }
+    }
+    // Fallback: map the site for candidate product URLs, then scrape the best one.
+    return await mapAndScrape(fc, med, pharm.website_url!);
   } catch (e) {
     console.error(`[scrape] ${pharm.slug} / ${med.name}`, (e as Error).message);
-    return null;
+    try {
+      return await mapAndScrape(fc, med, pharm.website_url!);
+    } catch (e2) {
+      console.error(`[scrape:fallback] ${pharm.slug} / ${med.name}`, (e2 as Error).message);
+      return null;
+    }
   }
+}
+
+async function mapAndScrape(
+  fc: Firecrawl,
+  med: MedRow,
+  websiteUrl: string
+): Promise<{ price: number; currency: string; in_stock: boolean; product_url: string } | null> {
+  // Use medication name as the search term for sitemap-based URL discovery.
+  const searchTerm = med.active_ingredient || med.name;
+  const mapRes: any = await fc.map(websiteUrl, {
+    search: searchTerm,
+    limit: 5,
+    includeSubdomains: false,
+  } as any);
+  const links: string[] = mapRes?.links ?? mapRes?.data?.links ?? [];
+  if (!links.length) return null;
+  // Try the top candidate URL only (keep cost low).
+  const candidate = links[0];
+  const scrapeRes: any = await fc.scrape(candidate, {
+    formats: [{ type: "json", prompt: extractionPrompt } as any] as any,
+    onlyMainContent: true,
+  } as any);
+  const j = scrapeRes?.json ?? scrapeRes?.data?.json ?? scrapeRes?.extract;
+  if (!j || typeof j.price !== "number" || j.price <= 0) return null;
+  return {
+    price: Number(j.price),
+    currency: String(j.currency || "USD").toUpperCase().slice(0, 8),
+    in_stock: j.in_stock !== false,
+    product_url: String(j.product_url || candidate),
+  };
 }
 
 export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
