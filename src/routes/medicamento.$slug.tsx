@@ -115,7 +115,16 @@ function MedicamentoPage() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-primary/10 p-3 text-primary"><Pill className="h-6 w-6" /></div>
+              {med.image_url ? (
+                <img
+                  src={med.image_url}
+                  alt={med.name}
+                  className="h-20 w-20 rounded-xl object-contain bg-white border border-border"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                />
+              ) : (
+                <div className="rounded-xl bg-primary/10 p-3 text-primary"><Pill className="h-6 w-6" /></div>
+              )}
               <div className="min-w-0">
                 <h1 className="text-2xl md:text-3xl font-bold">{med.name}</h1>
                 <p className="text-muted-foreground text-sm md:text-base">
