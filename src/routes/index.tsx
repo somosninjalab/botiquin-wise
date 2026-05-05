@@ -213,6 +213,8 @@ function Index() {
           q={q}
           pharm={pharm}
           med={med}
+          cat={cat}
+          ind={ind}
           loading={loading}
           meds={meds}
           grouped={grouped}
