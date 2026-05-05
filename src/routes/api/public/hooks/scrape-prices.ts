@@ -217,12 +217,18 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         let inserted = 0;
         let attempted = 0;
         const errors: string[] = [];
+        const byPharmacy: Record<string, { name: string; attempted: number; inserted: number; failed: number }> = {};
+        for (const p of pharmList) byPharmacy[p.slug] = { name: p.name, attempted: 0, inserted: 0, failed: 0 };
 
         for (const med of medList) {
           for (const pharm of pharmList) {
             attempted++;
+            byPharmacy[pharm.slug].attempted++;
             const result = await scrapeOne(fc, med, pharm);
-            if (!result) continue;
+            if (!result) {
+              byPharmacy[pharm.slug].failed++;
+              continue;
+            }
             const { error } = await supabaseAdmin.from("medication_prices").insert({
               medication_id: med.id,
               pharmacy_id: pharm.id,
@@ -231,8 +237,13 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
               in_stock: result.in_stock,
               product_url: result.product_url || null,
             });
-            if (error) errors.push(`${pharm.slug}/${med.name}: ${error.message}`);
-            else inserted++;
+            if (error) {
+              errors.push(`${pharm.slug}/${med.name}: ${error.message}`);
+              byPharmacy[pharm.slug].failed++;
+            } else {
+              inserted++;
+              byPharmacy[pharm.slug].inserted++;
+            }
           }
         }
 
@@ -242,6 +253,7 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
           inserted,
           medications: medList.length,
           pharmacies: pharmList.length,
+          byPharmacy: Object.entries(byPharmacy).map(([slug, v]) => ({ slug, ...v })),
           errors: errors.slice(0, 10),
         });
       },
