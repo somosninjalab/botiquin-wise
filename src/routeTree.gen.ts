@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
+import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
 
 const MisAlertasRoute = MisAlertasRouteImport.update({
   id: '/mis-alertas',
@@ -52,6 +53,12 @@ const MedicamentoSlugRoute = MedicamentoSlugRouteImport.update({
   path: '/medicamento/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksScrapePricesRoute =
+  ApiPublicHooksScrapePricesRouteImport.update({
+    id: '/api/public/hooks/scrape-prices',
+    path: '/api/public/hooks/scrape-prices',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +78,7 @@ export interface FileRoutesByTo {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +89,7 @@ export interface FileRoutesById {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +101,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mis-alertas'
     | '/medicamento/$slug'
+    | '/api/public/hooks/scrape-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +111,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mis-alertas'
     | '/medicamento/$slug'
+    | '/api/public/hooks/scrape-prices'
   id:
     | '__root__'
     | '/'
@@ -109,6 +121,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mis-alertas'
     | '/medicamento/$slug'
+    | '/api/public/hooks/scrape-prices'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +132,7 @@ export interface RootRouteChildren {
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   MisAlertasRoute: typeof MisAlertasRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
+  ApiPublicHooksScrapePricesRoute: typeof ApiPublicHooksScrapePricesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedicamentoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/scrape-prices': {
+      id: '/api/public/hooks/scrape-prices'
+      path: '/api/public/hooks/scrape-prices'
+      fullPath: '/api/public/hooks/scrape-prices'
+      preLoaderRoute: typeof ApiPublicHooksScrapePricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,16 +204,8 @@ const rootRouteChildren: RootRouteChildren = {
   ComoFuncionaRoute: ComoFuncionaRoute,
   MisAlertasRoute: MisAlertasRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
+  ApiPublicHooksScrapePricesRoute: ApiPublicHooksScrapePricesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
