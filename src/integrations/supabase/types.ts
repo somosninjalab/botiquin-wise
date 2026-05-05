@@ -288,6 +288,29 @@ export type Database = {
         }
         Returns: boolean
       }
+      search_medications_fuzzy: {
+        Args: { lim?: number; q: string }
+        Returns: {
+          active_ingredient: string
+          brand_names: string[]
+          brand_names_text: string
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          indication: string | null
+          manufacturer: string | null
+          name: string
+          presentation: string | null
+          slug: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "medications"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "user"
