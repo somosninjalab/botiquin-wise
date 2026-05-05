@@ -224,8 +224,8 @@ function pageMatchesMed(content: string, med: MedRow): boolean {
   const ai = norm(med.active_ingredient);
   const brands = (med.brand_names ?? []).map(norm).filter(Boolean);
   const dose = norm(extractDose(med));
-  const aiHit = ai && text.includes(ai);
-  const brandHit = brands.some((b) => b && text.includes(b));
+  const aiHit = !!ai && text.includes(ai);
+  const brandHit = brands.some((b) => !!b && text.includes(b));
   if (!aiHit && !brandHit) return false;
   // Si el med trae dosis, exigir que aparezca para evitar agarrar otra concentración
   // muy distinta. Permisivo: aceptamos si hay AI hit aunque dosis no concuerde,
