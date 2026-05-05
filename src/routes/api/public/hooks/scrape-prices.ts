@@ -3,7 +3,13 @@ import Firecrawl from "@mendable/firecrawl-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type PharmRow = { id: string; slug: string; name: string; website_url: string | null };
-type MedRow = { id: string; name: string; active_ingredient: string; presentation: string | null };
+type MedRow = {
+  id: string;
+  name: string;
+  active_ingredient: string;
+  presentation: string | null;
+  brand_names?: string[] | null;
+};
 type Extracted = { price: number; currency: string; in_stock: boolean; product_url: string };
 
 // Strip protocol + www to use as a `site:` filter.
@@ -99,7 +105,12 @@ function isSpecificProductUrl(url: string, host: string | null): boolean {
     const u = new URL(url);
     const path = u.pathname.replace(/\/+$/, "");
     if (!path || path === "/") return false;
-    return /producto|product|\/p\/|\/p$|-\d+\/p$|\d{5,}/i.test(path);
+    // Reject obvious non-product pages.
+    if (/\/(lander|search|login|signup|cart|checkout|category|categoria|inicio|home|nosotros|about|contacto|sucursales)(\/|$)/i.test(path)) {
+      return false;
+    }
+    if (path.split("/").filter(Boolean).length < 1) return false;
+    return /producto|product|\/p\/|\/p$|-\d+\/p$|\d{5,}|\/shop\//i.test(path);
   } catch {
     return false;
   }
@@ -150,71 +161,115 @@ function normalizeExtraction(j: any, sourceUrl: string, host: string | null): Ex
   };
 }
 
-async function scrapeOne(
+function buildQueryVariants(med: MedRow): string[] {
+  const variants = new Set<string>();
+  const dose = (med.name.match(/\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|ui)/i)?.[0] ?? "").trim();
+  const ai = med.active_ingredient.trim();
+  if (ai) {
+    variants.add(dose ? `${ai} ${dose}` : ai);
+    variants.add(ai);
+  }
+  variants.add(med.name);
+  for (const b of med.brand_names ?? []) {
+    if (!b) continue;
+    variants.add(dose ? `${b} ${dose}` : b);
+  }
+  return Array.from(variants).filter(Boolean).slice(0, 5);
+}
+
+async function searchCandidates(
   fc: Firecrawl,
-  med: MedRow,
-  pharm: PharmRow
-): Promise<Extracted | null> {
-  const host = siteHost(pharm.website_url);
-  if (!host) return null;
-  const query = `${med.name} ${med.active_ingredient}`.trim();
+  host: string,
+  query: string,
+  limit = 4,
+): Promise<string[]> {
   try {
-    const res: any = await fc.search(`site:${host} ${query}`, {
-      limit: 1,
-      scrapeOptions: {
-        formats: [
-          { type: "json", prompt: extractionPrompt } as any,
-          "markdown",
-        ] as any,
-        onlyMainContent: true,
-      } as any,
-    } as any);
+    const res: any = await fc.search(`site:${host} ${query}`, { limit } as any);
     const items: any[] = res?.web ?? res?.data ?? res?.results?.web ?? [];
-    const first = items[0];
-    if (first) {
-      const j = first.json ?? first.extract ?? first.data?.json;
-      const norm = normalizeExtraction(j, first.url || pharm.website_url || "", host);
-      if (norm) return norm;
-    }
-    // Fallback: map the site for candidate product URLs, then scrape the best one.
-    return await mapAndScrape(fc, med, pharm.website_url!);
-  } catch (e) {
-    console.error(`[scrape] ${pharm.slug} / ${med.name}`, (e as Error).message);
-    try {
-      return await mapAndScrape(fc, med, pharm.website_url!);
-    } catch (e2) {
-      console.error(`[scrape:fallback] ${pharm.slug} / ${med.name}`, (e2 as Error).message);
-      return null;
-    }
+    return items
+      .map((x) => x?.url)
+      .filter((u): u is string => typeof u === "string" && /^https?:\/\//.test(u));
+  } catch {
+    return [];
   }
 }
 
-async function mapAndScrape(
+async function mapCandidates(
+  fc: Firecrawl,
+  websiteUrl: string,
+  query: string,
+  limit = 6,
+): Promise<string[]> {
+  try {
+    const mapRes: any = await fc.map(websiteUrl, {
+      search: query,
+      limit,
+      includeSubdomains: false,
+    } as any);
+    const rawLinks: any[] = mapRes?.links ?? mapRes?.data?.links ?? [];
+    return rawLinks
+      .map((l) => (typeof l === "string" ? l : l?.url))
+      .filter((u): u is string => typeof u === "string" && /^https?:\/\//.test(u));
+  } catch {
+    return [];
+  }
+}
+
+async function scrapeUrl(
+  fc: Firecrawl,
+  url: string,
+  host: string | null,
+): Promise<Extracted | null> {
+  try {
+    const res: any = await fc.scrape(url, {
+      formats: [{ type: "json", prompt: extractionPrompt } as any] as any,
+      onlyMainContent: true,
+    } as any);
+    const j = res?.json ?? res?.data?.json ?? res?.extract;
+    return normalizeExtraction(j, url, host);
+  } catch {
+    return null;
+  }
+}
+
+async function scrapeOne(
   fc: Firecrawl,
   med: MedRow,
-  websiteUrl: string
+  pharm: PharmRow,
 ): Promise<Extracted | null> {
-  // Use medication name as the search term for sitemap-based URL discovery.
-  const searchTerm = med.active_ingredient || med.name;
-  const host = siteHost(websiteUrl);
-  const mapRes: any = await fc.map(websiteUrl, {
-    search: searchTerm,
-    limit: 5,
-    includeSubdomains: false,
-  } as any);
-  const rawLinks: any[] = mapRes?.links ?? mapRes?.data?.links ?? [];
-  // Firecrawl v2 returns either strings or { url, title, description } objects.
-  const links: string[] = rawLinks
-    .map((l) => (typeof l === "string" ? l : l?.url))
-    .filter((u): u is string => typeof u === "string" && /^https?:\/\//.test(u));
-  if (!links.length) return null;
-  const candidate = links[0];
-  const scrapeRes: any = await fc.scrape(candidate, {
-    formats: [{ type: "json", prompt: extractionPrompt } as any] as any,
-    onlyMainContent: true,
-  } as any);
-  const j = scrapeRes?.json ?? scrapeRes?.data?.json ?? scrapeRes?.extract;
-  return normalizeExtraction(j, candidate, host);
+  const host = siteHost(pharm.website_url);
+  if (!host || !pharm.website_url) return null;
+  const variants = buildQueryVariants(med);
+
+  // 1) For each variant, gather candidate product URLs from search + sitemap-map.
+  const seen = new Set<string>();
+  const candidates: string[] = [];
+  for (const q of variants) {
+    const [s, m] = await Promise.all([
+      searchCandidates(fc, host, q, 4),
+      mapCandidates(fc, pharm.website_url, q, 6),
+    ]);
+    for (const u of [...s, ...m]) {
+      if (seen.has(u)) continue;
+      if (!isSpecificProductUrl(u, host)) continue;
+      seen.add(u);
+      candidates.push(u);
+      if (candidates.length >= 6) break;
+    }
+    if (candidates.length >= 3) break;
+  }
+  if (!candidates.length) {
+    console.warn(`[scrape:no-candidates] ${pharm.slug} / ${med.name}`);
+    return null;
+  }
+
+  // 2) Try candidates one by one until we get a valid extraction.
+  for (const url of candidates) {
+    const norm = await scrapeUrl(fc, url, host);
+    if (norm) return norm;
+  }
+  console.warn(`[scrape:no-extract] ${pharm.slug} / ${med.name} (${candidates.length} urls)`);
+  return null;
 }
 
 export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
