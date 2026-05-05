@@ -2,9 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/admin")({ component: AdminPage });
 
@@ -38,10 +40,103 @@ function AdminPage() {
 
   if (!isAdmin) return null;
 
+  async function exportXlsx() {
+    const [{ data: profiles }, { data: roles }, { data: followers }, { data: searches }, { data: meds }] = await Promise.all([
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("medication_followers").select("id, user_id, threshold_pct, created_at, medications(name, active_ingredient, slug, category)"),
+      supabase.from("search_events").select("*").order("created_at", { ascending: false }).limit(5000),
+      supabase.from("medications").select("id, name, active_ingredient, category"),
+    ]);
+
+    const rolesByUser = new Map<string, string[]>();
+    (roles ?? []).forEach((r: any) => {
+      const arr = rolesByUser.get(r.user_id) ?? [];
+      arr.push(r.role);
+      rolesByUser.set(r.user_id, arr);
+    });
+
+    const followsByUser = new Map<string, string[]>();
+    (followers ?? []).forEach((f: any) => {
+      const label = f.medications ? `${f.medications.name} (${f.medications.active_ingredient})` : f.medication_id;
+      const arr = followsByUser.get(f.user_id) ?? [];
+      arr.push(label);
+      followsByUser.set(f.user_id, arr);
+    });
+
+    const searchesByUser = new Map<string, string[]>();
+    (searches ?? []).forEach((s: any) => {
+      if (!s.user_id) return;
+      const label = s.query || "(detalle medicamento)";
+      const arr = searchesByUser.get(s.user_id) ?? [];
+      arr.push(label);
+      searchesByUser.set(s.user_id, arr);
+    });
+
+    const usersSheet = (profiles ?? []).map((p: any) => ({
+      "Nombre": p.full_name ?? "",
+      "Email": p.email ?? "",
+      "Teléfono": p.phone ?? "",
+      "Ciudad": p.city ?? "",
+      "Región": p.region ?? "",
+      "País": p.country ?? "",
+      "IP registro": p.ip_first_seen ?? "",
+      "Resumen semanal": p.weekly_digest ? "Sí" : "No",
+      "Alertas inmediatas": p.instant_alerts ? "Sí" : "No",
+      "Roles": (rolesByUser.get(p.user_id) ?? ["user"]).join(", "),
+      "Medicamentos seguidos": (followsByUser.get(p.user_id) ?? []).join(" | "),
+      "Búsquedas realizadas": (searchesByUser.get(p.user_id) ?? []).slice(0, 50).join(" | "),
+      "Total búsquedas": (searchesByUser.get(p.user_id) ?? []).length,
+      "Registrado": p.created_at,
+    }));
+
+    const followsSheet = (followers ?? []).map((f: any) => ({
+      "Usuario ID": f.user_id,
+      "Medicamento": f.medications?.name ?? "",
+      "Principio activo": f.medications?.active_ingredient ?? "",
+      "Categoría": f.medications?.category ?? "",
+      "Umbral %": f.threshold_pct,
+      "Desde": f.created_at,
+    }));
+
+    const searchesSheet = (searches ?? []).map((s: any) => ({
+      "Fecha": s.created_at,
+      "Búsqueda": s.query ?? "",
+      "Categoría": s.category ?? "",
+      "Ciudad": s.city ?? "",
+      "Región": s.region ?? "",
+      "País": s.country ?? "",
+      "Usuario ID": s.user_id ?? "(anónimo)",
+      "Medicamento ID": s.medication_id ?? "",
+    }));
+
+    const medsSheet = (meds ?? []).map((m: any) => ({
+      "Medicamento": m.name,
+      "Principio activo": m.active_ingredient,
+      "Categoría": m.category ?? "",
+    }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(usersSheet), "Usuarios");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(followsSheet), "Seguimientos");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(searchesSheet), "Búsquedas");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(medsSheet), "Catálogo");
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `alerta-medicina-registros-${stamp}.xlsx`);
+  }
+
   return (
     <div className="container mx-auto px-4 py-10 max-w-6xl">
-      <h1 className="text-3xl font-bold flex items-center gap-2"><LayoutDashboard className="h-7 w-7 text-primary" /> Panel administrativo</h1>
-      <p className="text-muted-foreground mt-1">Métricas del comparador.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><LayoutDashboard className="h-7 w-7 text-primary" /> Panel administrativo</h1>
+          <p className="text-muted-foreground mt-1">Métricas del comparador.</p>
+        </div>
+        <Button onClick={exportXlsx} className="gap-2">
+          <Download className="h-4 w-4" /> Exportar registros (.xlsx)
+        </Button>
+      </div>
 
       <div className="grid sm:grid-cols-3 gap-4 mt-6">
         <Stat label="Usuarios registrados" value={stats.users} />
