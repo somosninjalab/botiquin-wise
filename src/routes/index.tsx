@@ -30,6 +30,7 @@ import {
   formatBs,
   formatUSD,
   toUSD,
+  displayPrice,
   getLatestPricesForMedications,
   lowestCurrent,
   priorPrice,
@@ -230,7 +231,15 @@ function Index() {
                     {lo && (
                       <div className="mt-3 pt-3 border-t border-border/60">
                         <div className="text-xs text-muted-foreground">{pharmaciesMap[lo.pharmacy_id]}</div>
-                        <div className="text-xl font-bold text-primary">{formatBs(Number(lo.price), lo.currency)}</div>
+                        {(() => {
+                          const d = displayPrice(Number(lo.price), lo.currency, bcvRate);
+                          return (
+                            <>
+                              <div className="text-xl font-bold text-primary">{d.primary}</div>
+                              {d.secondary && <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>}
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                   </Card>
@@ -423,9 +432,17 @@ function SearchResults(props: {
                               <div className="text-xs text-muted-foreground">Mejor precio</div>
                               <div className="text-xs font-medium">{pharmaciesMap[lo.pharmacy_id]}</div>
                             </div>
-                            <div className="text-xl font-bold text-primary">
-                              {formatBs(Number(lo.price), lo.currency)}
-                            </div>
+                            {(() => {
+                              const d = displayPrice(Number(lo.price), lo.currency, bcvRate);
+                              return (
+                                <div className="text-right">
+                                  <div className="text-xl font-bold text-primary">{d.primary}</div>
+                                  {d.secondary && (
+                                    <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <div className="mt-3 pt-3 border-t border-border/60 text-xs text-muted-foreground">
