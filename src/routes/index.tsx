@@ -25,6 +25,7 @@ import {
   Store,
   Tag,
   ArrowDownAZ,
+  Stethoscope,
 } from "lucide-react";
 import {
   priceToVes,
@@ -281,6 +282,9 @@ function Index() {
             </div>
           </section>
 
+          {/* Browse por condición / categoría — patrón GoodRx */}
+          <BrowseByCondition onPick={(patch) => updateSearch(patch)} />
+
           {/* Cómo funciona */}
           <section className="container mx-auto px-4 py-14 md:py-16">
             <h2 className="text-2xl md:text-3xl font-bold text-center">Cómo funciona</h2>
@@ -306,6 +310,69 @@ function Index() {
         </>
       )}
     </div>
+  );
+}
+
+function BrowseByCondition({
+  onPick,
+}: {
+  onPick: (patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
+}) {
+  const [conditions, setConditions] = useState<{ ind: string; cat: string | null; count: number }[]>([]);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("medications")
+        .select("indication,category")
+        .not("indication", "is", null);
+      const map = new Map<string, { ind: string; cat: string | null; count: number }>();
+      for (const r of (data ?? []) as { indication: string | null; category: string | null }[]) {
+        if (!r.indication) continue;
+        const key = r.indication;
+        const cur = map.get(key);
+        if (cur) cur.count++;
+        else map.set(key, { ind: key, cat: r.category, count: 1 });
+      }
+      setConditions(Array.from(map.values()).sort((a, b) => b.count - a.count));
+    })();
+  }, []);
+  if (!conditions.length) return null;
+  return (
+    <section className="container mx-auto px-4 py-12 md:py-14">
+      <div className="flex items-end justify-between mb-6">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <Stethoscope className="h-6 w-6 text-primary" />
+            Explora por condición
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Encuentra tratamientos para lo que necesitas resolver.
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {conditions.map((c) => (
+          <button
+            key={c.ind}
+            onClick={() => onPick({ ind: c.ind, cat: "all", q: "", pharm: "all", med: "all" })}
+            className="group text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 hover:shadow-[var(--shadow-soft)] transition-all"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="rounded-lg bg-accent/10 p-2 text-accent">
+                <Stethoscope className="h-4 w-4" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                {c.count} med{c.count === 1 ? "" : "s"}
+              </span>
+            </div>
+            <h3 className="mt-3 font-semibold leading-tight group-hover:text-primary line-clamp-2">
+              {c.ind}
+            </h3>
+            {c.cat && <p className="text-xs text-muted-foreground mt-1">{c.cat}</p>}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

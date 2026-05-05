@@ -12,6 +12,19 @@ type MedRow = {
 };
 type Extracted = { price: number; currency: string; in_stock: boolean; product_url: string };
 
+// Per-currency sanity ranges. Anything outside is rejected — typical retail
+// medication prices in Venezuela are between Bs. 50 and Bs. 5,000,000.
+const PRICE_RANGES: Record<string, { min: number; max: number }> = {
+  VES: { min: 30, max: 5_000_000 },
+  USD: { min: 0.3, max: 500 },
+  EUR: { min: 0.3, max: 500 },
+};
+
+// Hostnames where we know precios published on lander/home pages are noise.
+const HOST_BLACKLIST_PATHS: Record<string, RegExp> = {
+  "maraplus.com": /^\/(lander|home|inicio)?\/?$/i,
+};
+
 // Strip protocol + www to use as a `site:` filter.
 function siteHost(url: string | null): string | null {
   if (!url) return null;
@@ -106,11 +119,19 @@ function isSpecificProductUrl(url: string, host: string | null): boolean {
     const path = u.pathname.replace(/\/+$/, "");
     if (!path || path === "/") return false;
     // Reject obvious non-product pages.
-    if (/\/(lander|search|login|signup|cart|checkout|category|categoria|inicio|home|nosotros|about|contacto|sucursales)(\/|$)/i.test(path)) {
+    if (/\/(lander|search|login|signup|cart|checkout|category|categoria|categorias|categories|inicio|home|nosotros|about|contacto|sucursales|tag|tags|coleccion|collection|catalogo|catalog|brand|marca)(\/|$)/i.test(path)) {
+      return false;
+    }
+    // Reject host-specific noise paths.
+    const hostKey = (host ?? "").replace(/^www\./, "");
+    const bad = HOST_BLACKLIST_PATHS[hostKey];
+    if (bad && bad.test(path)) return false;
+    // Reject pages that are clearly listings (no slug detail).
+    if (u.search && /[?&](page|order|category|sort|max_price|min_price)=/i.test(u.search)) {
       return false;
     }
     if (path.split("/").filter(Boolean).length < 1) return false;
-    return /producto|product|\/p\/|\/p$|-\d+\/p$|\d{5,}|\/shop\//i.test(path);
+    return /producto|product|\/p\/|\/p$|-\d+\/p$|\d{5,}|\/shop\/[^/]+/i.test(path);
   } catch {
     return false;
   }
@@ -161,9 +182,13 @@ function normalizeExtraction(j: any, sourceUrl: string, host: string | null): Ex
   };
 }
 
+function extractDose(med: MedRow): string {
+  return (med.name.match(/\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|ui)/i)?.[0] ?? "").trim();
+}
+
 function buildQueryVariants(med: MedRow): string[] {
   const variants = new Set<string>();
-  const dose = (med.name.match(/\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|ui)/i)?.[0] ?? "").trim();
+  const dose = extractDose(med);
   const ai = med.active_ingredient.trim();
   if (ai) {
     variants.add(dose ? `${ai} ${dose}` : ai);
@@ -174,7 +199,50 @@ function buildQueryVariants(med: MedRow): string[] {
     if (!b) continue;
     variants.add(dose ? `${b} ${dose}` : b);
   }
-  return Array.from(variants).filter(Boolean).slice(0, 5);
+  return Array.from(variants).filter(Boolean).slice(0, 6);
+}
+
+/** Normaliza para matching tolerante: minúsculas, sin tildes, sin signos. */
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Verifica que el contenido de la página realmente corresponda al medicamento
+ * buscado. Acepta si menciona principio activo o cualquier marca, y opcionalmente
+ * la dosis cuando ésta forma parte del nombre.
+ */
+function pageMatchesMed(content: string, med: MedRow): boolean {
+  const text = norm(content);
+  if (!text) return false;
+  const ai = norm(med.active_ingredient);
+  const brands = (med.brand_names ?? []).map(norm).filter(Boolean);
+  const dose = norm(extractDose(med));
+  const aiHit = !!ai && text.includes(ai);
+  const brandHit = brands.some((b) => !!b && text.includes(b));
+  if (!aiHit && !brandHit) return false;
+  // Si el med trae dosis, exigir que aparezca para evitar agarrar otra concentración
+  // muy distinta. Permisivo: aceptamos si hay AI hit aunque dosis no concuerde,
+  // pero solo cuando no haya OTRA dosis del mismo principio activo en la página.
+  if (dose) {
+    if (text.includes(dose.replace(/\s+/g, ""))) return true;
+    if (text.includes(dose)) return true;
+    // Dosis no encontrada — aún así aceptamos si hay match de marca + AI.
+    return aiHit && brandHit;
+  }
+  return true;
+}
+
+function priceWithinRange(amount: number, currency: string): boolean {
+  const r = PRICE_RANGES[currency.toUpperCase()];
+  if (!r) return amount > 0;
+  return amount >= r.min && amount <= r.max;
 }
 
 async function searchCandidates(
@@ -219,14 +287,29 @@ async function scrapeUrl(
   fc: Firecrawl,
   url: string,
   host: string | null,
+  med: MedRow,
 ): Promise<Extracted | null> {
   try {
     const res: any = await fc.scrape(url, {
-      formats: [{ type: "json", prompt: extractionPrompt } as any] as any,
+      formats: ["markdown", { type: "json", prompt: extractionPrompt } as any] as any,
       onlyMainContent: true,
     } as any);
     const j = res?.json ?? res?.data?.json ?? res?.extract;
-    return normalizeExtraction(j, url, host);
+    const md: string =
+      res?.markdown ?? res?.data?.markdown ?? res?.metadata?.title ?? "";
+    const norm = normalizeExtraction(j, url, host);
+    if (!norm) return null;
+    // Validación de contenido: la página debe hablar del medicamento.
+    if (!pageMatchesMed(`${md}\n${res?.metadata?.title ?? ""}`, med)) {
+      console.warn(`[scrape:mismatch] ${url} no menciona ${med.active_ingredient}`);
+      return null;
+    }
+    // Validación de rango de precio.
+    if (!priceWithinRange(norm.price, norm.currency)) {
+      console.warn(`[scrape:out-of-range] ${url} ${norm.price} ${norm.currency}`);
+      return null;
+    }
+    return norm;
   } catch {
     return null;
   }
@@ -265,7 +348,7 @@ async function scrapeOne(
 
   // 2) Try candidates one by one until we get a valid extraction.
   for (const url of candidates) {
-    const norm = await scrapeUrl(fc, url, host);
+    const norm = await scrapeUrl(fc, url, host, med);
     if (norm) return norm;
   }
   console.warn(`[scrape:no-extract] ${pharm.slug} / ${med.name} (${candidates.length} urls)`);
@@ -307,21 +390,27 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         for (const p of pharmList) byPharmacy[p.slug] = { name: p.name, attempted: 0, inserted: 0, failed: 0 };
 
         for (const med of medList) {
-          for (const pharm of pharmList) {
-            attempted++;
-            byPharmacy[pharm.slug].attempted++;
-            const result = await scrapeOne(fc, med, pharm);
-            if (!result) {
+          // Procesar farmacias en paralelo: cada una es independiente.
+          const results = await Promise.all(
+            pharmList.map(async (pharm) => {
+              attempted++;
+              byPharmacy[pharm.slug].attempted++;
+              const r = await scrapeOne(fc, med, pharm);
+              return { pharm, r };
+            }),
+          );
+          for (const { pharm, r } of results) {
+            if (!r) {
               byPharmacy[pharm.slug].failed++;
               continue;
             }
             const { error } = await supabaseAdmin.from("medication_prices").insert({
               medication_id: med.id,
               pharmacy_id: pharm.id,
-              price: result.price,
-              currency: result.currency,
-              in_stock: result.in_stock,
-              product_url: result.product_url || null,
+              price: r.price,
+              currency: r.currency,
+              in_stock: r.in_stock,
+              product_url: r.product_url || null,
             });
             if (error) {
               errors.push(`${pharm.slug}/${med.name}: ${error.message}`);
