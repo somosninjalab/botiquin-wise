@@ -313,10 +313,6 @@ function Index() {
   );
 }
 
-function PopularList() {
-  return <PopularListInner />;
-}
-
 function BrowseByCondition({
   onPick,
 }: {
@@ -380,7 +376,7 @@ function BrowseByCondition({
   );
 }
 
-function PopularListInner() {
+function PopularList() {
   const [items, setItems] = useState<MedicationRow[]>([]);
   useEffect(() => {
     (async () => {
