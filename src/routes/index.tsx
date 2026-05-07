@@ -176,50 +176,50 @@ function Index() {
       {/* Hero pensado para mayores de 50: tipografía grande, mensaje claro y ejemplo visual */}
       <section className="relative overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.22 }} />
-        <div className="container mx-auto px-4 py-10 md:py-16">
-          <div className="grid md:grid-cols-2 gap-10 items-center max-w-6xl mx-auto">
+        <div className="container mx-auto px-4 py-6 md:py-16">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center max-w-6xl mx-auto">
             {/* Columna izquierda: mensaje grande y simple */}
             <div className="text-center md:text-left">
-              <span className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-base font-semibold text-primary border-2 border-primary/30 shadow-sm">
-                <Bell className="h-5 w-5" /> ¡Alerta: Medicina!
+              <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base font-semibold text-primary border-2 border-primary/30 shadow-sm">
+                <Bell className="h-4 w-4 md:h-5 md:w-5" /> ¡Alerta: Medicina!
               </span>
-              <h1 className="mt-5 text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.05] text-foreground tracking-tight">
+              <h1 className="mt-3 md:mt-5 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-[1.1] text-foreground tracking-tight">
                 Encuentra tu medicina al{" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   precio más bajo
                 </span>
               </h1>
-              <p className="mt-5 text-xl md:text-2xl text-muted-foreground leading-relaxed">
-                Escribe el nombre y vemos el precio en{" "}
+              <p className="mt-3 md:mt-5 text-base md:text-2xl text-muted-foreground leading-relaxed">
+                Compara precios en{" "}
                 <strong className="text-foreground">Farmatodo, Locatel, SAAS y Farmago</strong>{" "}
                 en segundos.
               </p>
-              <div className="mt-7">
+              <div className="mt-5 md:mt-7">
                 <SearchBar size="lg" initial={q} onSearch={(value) => updateSearch({ q: value })} />
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-xs md:text-sm text-muted-foreground">
                   Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
                 </p>
               </div>
               {isSearching && (
                 <a
                   href="#resultados"
-                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary/10 border-2 border-primary/40 px-5 py-3 text-lg md:text-xl font-bold text-primary animate-bounce"
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary/10 border-2 border-primary/40 px-4 py-2.5 md:px-5 md:py-3 text-base md:text-xl font-bold text-primary animate-bounce"
                 >
-                  <ChevronDown className="h-6 w-6" />
+                  <ChevronDown className="h-5 w-5 md:h-6 md:w-6" />
                   Baja para ver los resultados
                 </a>
               )}
               {!isSearching && (
-                <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-base text-muted-foreground">
-                  <span className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Gratis</span>
-                  <span className="flex items-center gap-2"><Bell className="h-5 w-5 text-primary" /> Te avisamos</span>
-                  <span className="flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /> Sin cuenta</span>
+                <div className="mt-4 md:mt-6 flex flex-wrap justify-center md:justify-start gap-x-4 md:gap-x-6 gap-y-2 text-sm md:text-base text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 md:h-5 md:w-5 text-primary" /> Gratis</span>
+                  <span className="flex items-center gap-1.5"><Bell className="h-4 w-4 md:h-5 md:w-5 text-primary" /> Te avisamos</span>
+                  <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 md:h-5 md:w-5 text-primary" /> Sin cuenta</span>
                 </div>
               )}
             </div>
 
             {/* Columna derecha: ejemplo visual de comparación */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <HeroExplainer />
               {/* Etiqueta decorativa */}
               <div className="hidden md:flex absolute -top-4 -right-4 items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-sm font-bold text-accent-foreground shadow-lg rotate-3">
