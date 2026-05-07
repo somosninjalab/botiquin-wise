@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      medication_aliases: {
+        Row: {
+          alias: string
+          created_at: string
+          id: string
+          medication_id: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          id?: string
+          medication_id: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          id?: string
+          medication_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_aliases_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medication_followers: {
         Row: {
           created_at: string
