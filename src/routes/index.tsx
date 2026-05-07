@@ -528,10 +528,11 @@ function SearchResults(props: {
   pharmacyOptions: [string, string][];
   updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
   bcvRate: number | null;
+  scrapingIds: Set<string>;
 }) {
   const {
     q, pharm, med, cat, ind, loading, meds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacyOptions, updateSearch, bcvRate,
+    pharmaciesMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
   } = props;
 
   // Etiquetas únicas presentes en los resultados actuales
