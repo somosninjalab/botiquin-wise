@@ -40,6 +40,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { HeroExplainer } from "@/components/HeroExplainer";
+import { useAuth } from "@/hooks/useAuth";
+import { ChevronDown } from "lucide-react";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -198,6 +200,15 @@ function Index() {
                   Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
                 </p>
               </div>
+              {isSearching && (
+                <a
+                  href="#resultados"
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary/10 border-2 border-primary/40 px-5 py-3 text-lg md:text-xl font-bold text-primary animate-bounce"
+                >
+                  <ChevronDown className="h-6 w-6" />
+                  Baja para ver los resultados
+                </a>
+              )}
               {!isSearching && (
                 <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-base text-muted-foreground">
                   <span className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Gratis</span>
@@ -486,7 +497,8 @@ function SearchResults(props: {
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
 
   return (
-    <section className="container mx-auto px-4 pt-8 pb-16">
+    <section id="resultados" className="container mx-auto px-4 pt-8 pb-16 scroll-mt-20">
+      <RegisterAlertCTA />
       {/* Sticky filter bar */}
       <div className="sticky top-2 z-20 mb-6">
         <Card className="p-4 backdrop-blur bg-card/95 border-border/80 shadow-[var(--shadow-elevated)]">
@@ -728,5 +740,33 @@ function SearchResults(props: {
         </div>
       )}
     </section>
+  );
+}
+
+function RegisterAlertCTA() {
+  const { user } = useAuth();
+  if (user) return null;
+  return (
+    <Link
+      to="/auth"
+      className="block mb-6 rounded-2xl border-2 border-accent/40 bg-gradient-to-r from-accent/15 via-primary/10 to-accent/15 p-5 md:p-6 hover:shadow-[var(--shadow-elevated)] transition-all"
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-md">
+          <Bell className="h-7 w-7" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg md:text-xl font-bold leading-tight">
+            Regístrate y te avisamos cuando baje el precio
+          </h3>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Recibe alertas gratis por email cuando cambien los precios de tus medicinas.
+          </p>
+        </div>
+        <Button className="hidden sm:inline-flex bg-gradient-to-r from-primary to-primary-glow text-primary-foreground h-11 px-5 text-base font-semibold">
+          Registrarme
+        </Button>
+      </div>
+    </Link>
   );
 }
