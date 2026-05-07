@@ -27,6 +27,7 @@ import {
   ArrowDownAZ,
   Stethoscope,
 } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import {
   priceToVes,
   displayPrice,
@@ -174,6 +175,13 @@ function Index() {
   return (
     <div>
       {/* Hero pensado para mayores de 50: tipografía grande, mensaje claro y ejemplo visual */}
+      {isSearching ? (
+        <section className="sticky top-16 md:top-20 z-30 bg-background/95 backdrop-blur border-b border-border/60">
+          <div className="container mx-auto px-4 py-3">
+            <SearchBar size="md" initial={q} onSearch={(value) => updateSearch({ q: value })} />
+          </div>
+        </section>
+      ) : (
       <section className="relative overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.22 }} />
         <div className="container mx-auto px-4 py-6 md:py-16">
@@ -229,6 +237,7 @@ function Index() {
           </div>
         </div>
       </section>
+      )}
 
       {isSearching ? (
         <SearchResults
@@ -495,28 +504,76 @@ function SearchResults(props: {
   );
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount =
+    (pharm !== "all" ? 1 : 0) + (med !== "all" ? 1 : 0) + (cat !== "all" ? 1 : 0) + (ind !== "all" ? 1 : 0);
 
   return (
-    <section id="resultados" className="container mx-auto px-4 pt-8 pb-16 scroll-mt-20">
+    <section id="resultados" className="container mx-auto px-4 pt-3 md:pt-4 pb-16 scroll-mt-20">
       <RegisterAlertCTA />
       {/* Sticky filter bar */}
-      <div className="sticky top-14 md:top-2 z-20 mb-6 -mx-4 px-4 md:mx-0 md:px-0">
-        <Card className="p-3 md:p-4 backdrop-blur bg-card/95 border-border/80 shadow-[var(--shadow-elevated)]">
-          <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
-            <div className="flex items-center gap-2 min-w-0">
-              <ArrowDownAZ className="h-4 w-4 text-primary shrink-0" />
-              <h2 className="font-semibold truncate">
-                {loading ? "Buscando…" : `${totalResults} resultado${totalResults === 1 ? "" : "s"}`}
-                {q && <span className="text-muted-foreground font-normal"> para "{q}"</span>}
-              </h2>
-            </div>
+      <div className="mb-4 -mx-4 px-4 md:mx-0 md:px-0">
+        <Card className="p-3 md:p-4 bg-card/95 border-border/80">
+          <div className="flex items-center gap-2">
+            <ArrowDownAZ className="h-4 w-4 text-primary shrink-0" />
+            <h2 className="font-semibold truncate text-sm md:text-base">
+              {loading ? "Buscando…" : `${totalResults} resultado${totalResults === 1 ? "" : "s"}`}
+              {q && <span className="text-muted-foreground font-normal"> para "{q}"</span>}
+            </h2>
             <div className="flex-1" />
-            {bcvRate && (
-              <span className="text-xs text-muted-foreground hidden md:inline">
-                Tasa BCV: Bs {bcvRate.toFixed(2)} / USD
-              </span>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-2 lg:items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="h-8 gap-1.5"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtros
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5">{activeFilterCount}</Badge>
+              )}
+            </Button>
+          </div>
+          {/* Active filter chips siempre visibles */}
+          {activeFilterCount > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {pharm !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  <Store className="h-3 w-3" />
+                  {pharmaciesMap[pharm] ?? "Farmacia"}
+                  <button onClick={() => updateSearch({ pharm: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {cat !== "all" && (
+                <Badge variant="secondary" className="gap-1">{cat}
+                  <button onClick={() => updateSearch({ cat: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {ind !== "all" && (
+                <Badge variant="secondary" className="gap-1">{ind}
+                  <button onClick={() => updateSearch({ ind: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {med !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  <Tag className="h-3 w-3" />
+                  {meds.find((m) => m.id === med)?.name ?? "Medicamento"}
+                  <button onClick={() => updateSearch({ med: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
+          {filtersOpen && (
+          <div className="mt-3 pt-3 border-t border-border/60 flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <Store className="h-4 w-4 text-muted-foreground" />
                 <Select value={pharm} onValueChange={(v) => updateSearch({ pharm: v })}>
@@ -541,21 +598,20 @@ function SearchResults(props: {
                   </SelectContent>
                 </Select>
               </div>
-              {(q || pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all") && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all" })}
-                  className="justify-self-start"
-                >
-                  <X className="h-4 w-4 mr-1" /> Limpiar
-                </Button>
-              )}
             </div>
-          </div>
+            {(q || activeFilterCount > 0) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all" })}
+                className="justify-self-start self-start"
+              >
+                <X className="h-4 w-4 mr-1" /> Limpiar todo
+              </Button>
+            )}
           {/* Clasificadores: categoría e indicación */}
           {(categories.length > 0 || indications.length > 0) && (
-            <div className="mt-3 space-y-2">
+            <div className="space-y-2">
               {categories.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Categoría</span>
@@ -600,42 +656,7 @@ function SearchResults(props: {
               )}
             </div>
           )}
-          {/* Active filter chips */}
-          {(pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all") && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {pharm !== "all" && (
-                <Badge variant="secondary" className="gap-1">
-                  <Store className="h-3 w-3" />
-                  {pharmaciesMap[pharm] ?? "Farmacia"}
-                  <button onClick={() => updateSearch({ pharm: "all" })} className="ml-1 hover:text-destructive">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
-              {cat !== "all" && (
-                <Badge variant="secondary" className="gap-1">{cat}
-                  <button onClick={() => updateSearch({ cat: "all" })} className="ml-1 hover:text-destructive">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
-              {ind !== "all" && (
-                <Badge variant="secondary" className="gap-1">{ind}
-                  <button onClick={() => updateSearch({ ind: "all" })} className="ml-1 hover:text-destructive">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
-              {med !== "all" && (
-                <Badge variant="secondary" className="gap-1">
-                  <Tag className="h-3 w-3" />
-                  {meds.find((m) => m.id === med)?.name ?? "Medicamento"}
-                  <button onClick={() => updateSearch({ med: "all" })} className="ml-1 hover:text-destructive">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
-            </div>
+          </div>
           )}
         </Card>
       </div>
