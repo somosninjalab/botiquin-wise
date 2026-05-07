@@ -253,6 +253,7 @@ export type Database = {
           medication_id: string | null
           query: string | null
           region: string | null
+          result_count: number | null
           user_id: string | null
         }
         Insert: {
@@ -264,6 +265,7 @@ export type Database = {
           medication_id?: string | null
           query?: string | null
           region?: string | null
+          result_count?: number | null
           user_id?: string | null
         }
         Update: {
@@ -275,6 +277,7 @@ export type Database = {
           medication_id?: string | null
           query?: string | null
           region?: string | null
+          result_count?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -343,6 +346,16 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      suggest_medications: {
+        Args: { lim?: number; q: string }
+        Returns: {
+          active_ingredient: string
+          id: string
+          name: string
+          similarity: number
+          slug: string
+        }[]
       }
     }
     Enums: {

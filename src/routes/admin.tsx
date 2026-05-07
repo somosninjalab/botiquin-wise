@@ -6,6 +6,7 @@ import { LayoutDashboard, Download, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/admin")({ component: AdminPage });
@@ -40,6 +41,10 @@ function AdminPage() {
   const byQuery = aggregate(events, (e) => e.query || "(detalle)").slice(0, 10);
   const byRegion = aggregate(events, (e) => e.region || e.country || "Desconocida").slice(0, 10);
   const byCategory = aggregate(events, (e) => e.category || "Sin categoría").slice(0, 10);
+  const failedSearches = aggregate(
+    events.filter((e) => e.query && (e.result_count === 0 || e.result_count === null)),
+    (e) => e.query as string,
+  ).slice(0, 15);
 
   if (!isAdmin) return null;
 
@@ -192,6 +197,31 @@ function AdminPage() {
         <ChartCard title="Top regiones" data={byRegion} />
         <ChartCard title="Top categorías / especialidades" data={byCategory} />
       </div>
+
+      {failedSearches.length > 0 && (
+        <Card className="p-5 mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-semibold">Búsquedas sin resultados</h3>
+              <p className="text-xs text-muted-foreground">
+                Términos que los usuarios buscaron y no encontramos. Considera agregarlos al catálogo o como alias.
+              </p>
+            </div>
+            <Badge variant="secondary">{failedSearches.length}</Badge>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {failedSearches.map((f) => (
+              <span
+                key={f.name}
+                className="inline-flex items-center gap-2 rounded-full border border-destructive/30 bg-destructive/5 px-3 py-1.5 text-sm"
+              >
+                <span className="font-medium">{f.name}</span>
+                <span className="text-xs text-muted-foreground">×{f.value}</span>
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

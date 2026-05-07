@@ -35,6 +35,8 @@ import {
   lowestCurrent,
   priorPrice,
   searchMedications,
+  suggestMedications,
+  type SuggestionRow,
   type MedicationRow,
   type PriceRow,
 } from "@/lib/medications";
@@ -97,7 +99,10 @@ function Index() {
       const p = await getLatestPricesForMedications(m.map((x) => x.id));
       setPrices(p);
       if (q.trim()) {
-        await supabase.from("search_events").insert({ query: q.slice(0, 200) });
+        await supabase.from("search_events").insert({
+          query: q.slice(0, 200),
+          result_count: m.length,
+        });
       }
       setLoading(false);
     })();
@@ -669,13 +674,7 @@ function SearchResults(props: {
           ))}
         </div>
       ) : totalResults === 0 ? (
-        <Card className="p-10 text-center">
-          <Pill className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-semibold text-lg">Sin resultados</h3>
-          <p className="text-muted-foreground mt-1">
-            Intenta con el principio activo o ajusta los filtros.
-          </p>
-        </Card>
+        <NoResults query={q} updateSearch={updateSearch} />
       ) : (
         <div className="space-y-10">
           {grouped.map(([category, items]) => (
@@ -790,5 +789,72 @@ function RegisterAlertCTA() {
         </Button>
       </div>
     </Link>
+  );
+}
+
+function NoResults({
+  query,
+  updateSearch,
+}: {
+  query: string;
+  updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<SuggestionRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setSuggestions([]);
+    if (!query.trim()) return;
+    setLoading(true);
+    (async () => {
+      const s = await suggestMedications(query, 6);
+      if (!cancelled) {
+        setSuggestions(s);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [query]);
+
+  return (
+    <Card className="p-8 md:p-10 text-center">
+      <Pill className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+      <h3 className="font-semibold text-lg">Sin resultados para "{query}"</h3>
+      <p className="text-muted-foreground mt-1">
+        Intenta con el principio activo (ej. <em>paracetamol</em>) o una marca conocida.
+      </p>
+      {loading && (
+        <div className="mt-5 flex justify-center gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-32 rounded-full" />
+          ))}
+        </div>
+      )}
+      {!loading && suggestions.length > 0 && (
+        <div className="mt-6">
+          <p className="text-sm font-semibold text-foreground mb-3">¿Quisiste decir…?</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {suggestions.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => updateSearch({ q: s.active_ingredient })}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 px-4 py-2 text-sm font-medium text-foreground transition-colors"
+              >
+                <Pill className="h-4 w-4 text-primary" />
+                <span className="font-semibold">{s.active_ingredient}</span>
+                {s.name !== s.active_ingredient && (
+                  <span className="text-xs text-muted-foreground">{s.name}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {!loading && suggestions.length === 0 && query.trim().length >= 3 && (
+        <p className="text-xs text-muted-foreground mt-5">
+          Hemos registrado tu búsqueda. Iremos agregando los medicamentos más solicitados.
+        </p>
+      )}
+    </Card>
   );
 }
