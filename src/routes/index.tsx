@@ -509,7 +509,7 @@ function SearchResults(props: {
     (pharm !== "all" ? 1 : 0) + (med !== "all" ? 1 : 0) + (cat !== "all" ? 1 : 0) + (ind !== "all" ? 1 : 0);
 
   return (
-    <section id="resultados" className="container mx-auto px-4 pt-8 pb-16 scroll-mt-20">
+    <section id="resultados" className="container mx-auto px-4 pt-3 md:pt-4 pb-16 scroll-mt-20">
       <RegisterAlertCTA />
       {/* Sticky filter bar */}
       <div className="mb-4 -mx-4 px-4 md:mx-0 md:px-0">
