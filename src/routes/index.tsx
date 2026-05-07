@@ -295,6 +295,7 @@ function Index() {
           pharmacyOptions={pharmacyOptions}
           updateSearch={updateSearch}
           bcvRate={bcvRate}
+          scrapingIds={scrapingIds}
         />
       ) : (
         <>
