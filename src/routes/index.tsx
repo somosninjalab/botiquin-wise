@@ -39,6 +39,7 @@ import {
 } from "@/lib/medications";
 import { supabase } from "@/integrations/supabase/client";
 import { useBcvRate } from "@/hooks/useBcvRate";
+import heroExplainerVideo from "@/assets/hero-explainer.mp4.asset.json";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -208,34 +209,22 @@ function Index() {
 
             {/* Columna derecha: ejemplo visual de comparación */}
             <div className="relative">
-              <Card className="p-5 md:p-6 shadow-[var(--shadow-elevated)] border-2 border-primary/20 bg-card/95 backdrop-blur">
-                <div className="flex items-center gap-3 pb-3 border-b border-border/60">
-                  <div className="rounded-xl bg-primary/15 p-2.5 text-primary"><Pill className="h-6 w-6" /></div>
-                  <div>
-                    <div className="text-base font-bold leading-tight">Acetaminofén 500 mg</div>
-                    <div className="text-sm text-muted-foreground">Ejemplo de comparación</div>
-                  </div>
-                </div>
-                <ul className="mt-4 space-y-3 text-base">
-                  <li className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
-                    <span className="font-semibold">Farmatodo</span>
-                    <span className="text-muted-foreground line-through">Bs. 240,00</span>
-                  </li>
-                  <li className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
-                    <span className="font-semibold">Locatel</span>
-                    <span className="text-muted-foreground line-through">Bs. 198,00</span>
-                  </li>
-                  <li className="flex items-center justify-between rounded-xl border-2 border-primary/60 bg-primary/10 px-3 py-3">
-                    <span className="font-bold text-primary text-lg">SAAS</span>
-                    <div className="text-right">
-                      <div className="text-2xl font-extrabold text-primary leading-none">Bs. 96,00</div>
-                      <div className="text-xs font-bold text-accent mt-1">↓ Ahorras 60%</div>
-                    </div>
-                  </li>
-                </ul>
-                <div className="mt-4 flex items-center gap-2 rounded-lg bg-accent/10 px-3 py-2.5 text-sm text-foreground">
+              <Card className="overflow-hidden p-0 shadow-[var(--shadow-elevated)] border-2 border-primary/20 bg-card/95 backdrop-blur">
+                <video
+                  src={heroExplainerVideo.url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  aria-label="Video explicativo: cómo Alerta Medicina compara precios entre farmacias"
+                  className="w-full h-auto block aspect-video object-cover bg-muted"
+                />
+                <div className="flex items-center gap-2 px-4 py-3 bg-accent/10 text-base">
                   <Bell className="h-5 w-5 text-accent shrink-0" />
-                  <span>Te avisamos por correo cuando <strong>baje aún más</strong>.</span>
+                  <span className="text-foreground">
+                    Buscamos, comparamos y <strong>te avisamos</strong> cuando baje el precio.
+                  </span>
                 </div>
               </Card>
               {/* Etiqueta decorativa */}
