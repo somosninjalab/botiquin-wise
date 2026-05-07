@@ -70,6 +70,7 @@ function Index() {
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
 
   // Load pharmacies once
   useEffect(() => {
@@ -113,6 +114,7 @@ function Index() {
         const withPrices = new Set(p.map((x) => x.medication_id));
         const missing = m.filter((x) => !withPrices.has(x.id)).slice(0, 3);
         if (missing.length) {
+          setScrapingIds(new Set(missing.map((x) => x.id)));
           await Promise.all(
             missing.map(async (med) => {
               try {
@@ -127,6 +129,13 @@ function Index() {
                   setPrices(fresh);
                 }
               } catch { /* silencioso */ }
+              finally {
+                setScrapingIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(med.id);
+                  return next;
+                });
+              }
             }),
           );
         }
