@@ -105,6 +105,32 @@ function Index() {
         });
       }
       setLoading(false);
+
+      // Scrape on-demand: si la búsqueda devolvió medicamentos sin precios,
+      // disparamos el scrape (Farmatodo, SAAS, etc.) en segundo plano y
+      // recargamos los precios cuando termine cada uno.
+      if (q.trim() && m.length) {
+        const withPrices = new Set(p.map((x) => x.medication_id));
+        const missing = m.filter((x) => !withPrices.has(x.id)).slice(0, 3);
+        if (missing.length) {
+          await Promise.all(
+            missing.map(async (med) => {
+              try {
+                const res = await fetch(
+                  `/api/public/hooks/scrape-prices?med=${encodeURIComponent(med.slug)}&limit=1`,
+                  { method: "POST" },
+                );
+                if (!res.ok) return;
+                const j = (await res.json()) as { inserted?: number };
+                if ((j.inserted ?? 0) > 0) {
+                  const fresh = await getLatestPricesForMedications(m.map((x) => x.id));
+                  setPrices(fresh);
+                }
+              } catch { /* silencioso */ }
+            }),
+          );
+        }
+      }
     })();
   }, [q, cat, ind, isSearching]);
 
