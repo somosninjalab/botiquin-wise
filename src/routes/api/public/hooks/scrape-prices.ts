@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Firecrawl from "@mendable/firecrawl-js";
+import * as cheerio from "cheerio";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type PharmRow = { id: string; slug: string; name: string; website_url: string | null };
@@ -373,6 +374,12 @@ async function scrapeOne(
     if (norm) return norm;
   }
   console.warn(`[scrape:no-extract] ${pharm.slug} / ${med.name} (${candidates.length} urls)`);
+
+  // 3) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
+  for (const url of candidates) {
+    const fb = await scrapeFreeFallback(url, host, med);
+    if (fb) return fb;
+  }
   return null;
 }
 
