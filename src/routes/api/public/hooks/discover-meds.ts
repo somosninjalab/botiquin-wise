@@ -98,8 +98,21 @@ function extractMedFromTitle(title: string): { name: string; ai: string; dose: s
     if (norm.includes(cand)) { ai = cand; break; }
   }
   if (!ai) return null;
-  const dose = (t.match(DOSE_RE)?.[0] ?? "").replace(/\s+/g, " ").trim();
-  const form = (t.match(FORM_RE)?.[0] ?? "").trim();
+  // Normaliza dosis: minúsculas, sin espacio entre número y unidad ("650 MG" -> "650mg")
+  const doseRaw = (t.match(DOSE_RE)?.[0] ?? "").trim();
+  const dose = doseRaw
+    ? doseRaw
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/µg/g, "mcg")
+    : "";
+  // Normaliza forma a singular minúscula sin acentos
+  const formRaw = (t.match(FORM_RE)?.[0] ?? "").trim();
+  const form = formRaw
+    ? normalize(formRaw)
+        .toLowerCase()
+        .replace(/s$/, "")
+    : "";
   // Nombre limpio: principio activo capitalizado + dosis + forma
   const aiCap = ai.charAt(0).toUpperCase() + ai.slice(1);
   const presentation = [dose, form].filter(Boolean).join(" ");
