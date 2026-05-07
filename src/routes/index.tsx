@@ -674,13 +674,7 @@ function SearchResults(props: {
           ))}
         </div>
       ) : totalResults === 0 ? (
-        <Card className="p-10 text-center">
-          <Pill className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-semibold text-lg">Sin resultados</h3>
-          <p className="text-muted-foreground mt-1">
-            Intenta con el principio activo o ajusta los filtros.
-          </p>
-        </Card>
+        <NoResults query={q} updateSearch={updateSearch} />
       ) : (
         <div className="space-y-10">
           {grouped.map(([category, items]) => (
