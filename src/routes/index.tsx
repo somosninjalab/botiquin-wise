@@ -200,6 +200,15 @@ function Index() {
                   Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
                 </p>
               </div>
+              {isSearching && (
+                <a
+                  href="#resultados"
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary/10 border-2 border-primary/40 px-5 py-3 text-lg md:text-xl font-bold text-primary animate-bounce"
+                >
+                  <ChevronDown className="h-6 w-6" />
+                  Baja para ver los resultados
+                </a>
+              )}
               {!isSearching && (
                 <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-base text-muted-foreground">
                   <span className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Gratis</span>
