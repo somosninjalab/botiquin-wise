@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Pill, Bell, LayoutDashboard, LogIn, LogOut, User } from "lucide-react";
+import { Bell, LayoutDashboard, LogIn, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import logoUrl from "@/assets/logo.png";
 
 export function SiteHeader() {
   const { user, isAdmin } = useAuth();
@@ -11,9 +12,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-[var(--shadow-soft)]">
-            <Pill className="h-5 w-5" />
-          </span>
+          <img src={logoUrl} alt="¡Alerta: Medicina! logo" className="h-9 w-9 rounded-xl shadow-[var(--shadow-soft)]" />
           <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             ¡Alerta: Medicina!
           </span>
