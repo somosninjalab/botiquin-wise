@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
 import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
+import { Route as ApiPublicHooksNightlyGrowRouteImport } from './routes/api/public/hooks/nightly-grow'
 import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
 import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
 import { Route as ApiPublicHooksDiscoverMedsRouteImport } from './routes/api/public/hooks/discover-meds'
@@ -68,6 +69,12 @@ const ApiPublicHooksScrapePricesRoute =
     path: '/api/public/hooks/scrape-prices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksNightlyGrowRoute =
+  ApiPublicHooksNightlyGrowRouteImport.update({
+    id: '/api/public/hooks/nightly-grow',
+    path: '/api/public/hooks/nightly-grow',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEnrichMedsRoute =
   ApiPublicHooksEnrichMedsRouteImport.update({
     id: '/api/public/hooks/enrich-meds',
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
+  '/api/public/hooks/nightly-grow': typeof ApiPublicHooksNightlyGrowRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
 }
@@ -112,6 +120,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
+  '/api/public/hooks/nightly-grow': typeof ApiPublicHooksNightlyGrowRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
 }
@@ -127,6 +136,7 @@ export interface FileRoutesById {
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
+  '/api/public/hooks/nightly-grow': typeof ApiPublicHooksNightlyGrowRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
 }
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
+    | '/api/public/hooks/nightly-grow'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
   fileRoutesByTo: FileRoutesByTo
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
+    | '/api/public/hooks/nightly-grow'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
   id:
@@ -171,6 +183,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
+    | '/api/public/hooks/nightly-grow'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
   fileRoutesById: FileRoutesById
@@ -186,6 +199,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDiscoverMedsRoute: typeof ApiPublicHooksDiscoverMedsRoute
   ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
   ApiPublicHooksEnrichMedsRoute: typeof ApiPublicHooksEnrichMedsRoute
+  ApiPublicHooksNightlyGrowRoute: typeof ApiPublicHooksNightlyGrowRoute
   ApiPublicHooksScrapePricesRoute: typeof ApiPublicHooksScrapePricesRoute
   ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
 }
@@ -255,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksScrapePricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/nightly-grow': {
+      id: '/api/public/hooks/nightly-grow'
+      path: '/api/public/hooks/nightly-grow'
+      fullPath: '/api/public/hooks/nightly-grow'
+      preLoaderRoute: typeof ApiPublicHooksNightlyGrowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/enrich-meds': {
       id: '/api/public/hooks/enrich-meds'
       path: '/api/public/hooks/enrich-meds'
@@ -290,6 +311,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDiscoverMedsRoute: ApiPublicHooksDiscoverMedsRoute,
   ApiPublicHooksDiscoverOnDemandRoute: ApiPublicHooksDiscoverOnDemandRoute,
   ApiPublicHooksEnrichMedsRoute: ApiPublicHooksEnrichMedsRoute,
+  ApiPublicHooksNightlyGrowRoute: ApiPublicHooksNightlyGrowRoute,
   ApiPublicHooksScrapePricesRoute: ApiPublicHooksScrapePricesRoute,
   ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
 }

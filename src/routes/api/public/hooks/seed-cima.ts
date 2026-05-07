@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 // https://cima.aemps.es/cima/rest/medicamentos?nombre=<termino>&pagina=N
 // Cada término retorna hasta ~25 resultados; iteramos páginas hasta agotar.
 
-const SEED_TERMS = [
+export const SEED_TERMS = [
   "paracetamol","ibuprofeno","amoxicilina","azitromicina","cefalexina","ciprofloxacino","levofloxacino","claritromicina","metronidazol","clindamicina","doxiciclina","nitrofurantoina","eritromicina",
   "loratadina","cetirizina","desloratadina","fexofenadina","clorfeniramina","difenhidramina",
   "omeprazol","esomeprazol","pantoprazol","lansoprazol","ranitidina","famotidina","domperidona","metoclopramida","ondansetron","loperamida","simeticona","lactulosa","hioscina",
