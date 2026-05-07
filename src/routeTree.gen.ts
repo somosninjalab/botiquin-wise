@@ -17,6 +17,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
+import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
+import { Route as ApiPublicHooksDiscoverMedsRouteImport } from './routes/api/public/hooks/discover-meds'
 
 const MisAlertasRoute = MisAlertasRouteImport.update({
   id: '/mis-alertas',
@@ -59,6 +61,18 @@ const ApiPublicHooksScrapePricesRoute =
     path: '/api/public/hooks/scrape-prices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEnrichMedsRoute =
+  ApiPublicHooksEnrichMedsRouteImport.update({
+    id: '/api/public/hooks/enrich-meds',
+    path: '/api/public/hooks/enrich-meds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDiscoverMedsRoute =
+  ApiPublicHooksDiscoverMedsRouteImport.update({
+    id: '/api/public/hooks/discover-meds',
+    path: '/api/public/hooks/discover-meds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +82,8 @@ export interface FileRoutesByFullPath {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
+  '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
 }
 export interface FileRoutesByTo {
@@ -78,6 +94,8 @@ export interface FileRoutesByTo {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
+  '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
 }
 export interface FileRoutesById {
@@ -89,6 +107,8 @@ export interface FileRoutesById {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
+  '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
 }
 export interface FileRouteTypes {
@@ -101,6 +121,8 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mis-alertas'
     | '/medicamento/$slug'
+    | '/api/public/hooks/discover-meds'
+    | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/scrape-prices'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -111,6 +133,8 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mis-alertas'
     | '/medicamento/$slug'
+    | '/api/public/hooks/discover-meds'
+    | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/scrape-prices'
   id:
     | '__root__'
@@ -121,6 +145,8 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mis-alertas'
     | '/medicamento/$slug'
+    | '/api/public/hooks/discover-meds'
+    | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/scrape-prices'
   fileRoutesById: FileRoutesById
 }
@@ -132,6 +158,8 @@ export interface RootRouteChildren {
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   MisAlertasRoute: typeof MisAlertasRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
+  ApiPublicHooksDiscoverMedsRoute: typeof ApiPublicHooksDiscoverMedsRoute
+  ApiPublicHooksEnrichMedsRoute: typeof ApiPublicHooksEnrichMedsRoute
   ApiPublicHooksScrapePricesRoute: typeof ApiPublicHooksScrapePricesRoute
 }
 
@@ -193,6 +221,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksScrapePricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/enrich-meds': {
+      id: '/api/public/hooks/enrich-meds'
+      path: '/api/public/hooks/enrich-meds'
+      fullPath: '/api/public/hooks/enrich-meds'
+      preLoaderRoute: typeof ApiPublicHooksEnrichMedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/discover-meds': {
+      id: '/api/public/hooks/discover-meds'
+      path: '/api/public/hooks/discover-meds'
+      fullPath: '/api/public/hooks/discover-meds'
+      preLoaderRoute: typeof ApiPublicHooksDiscoverMedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +246,8 @@ const rootRouteChildren: RootRouteChildren = {
   ComoFuncionaRoute: ComoFuncionaRoute,
   MisAlertasRoute: MisAlertasRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
+  ApiPublicHooksDiscoverMedsRoute: ApiPublicHooksDiscoverMedsRoute,
+  ApiPublicHooksEnrichMedsRoute: ApiPublicHooksEnrichMedsRoute,
   ApiPublicHooksScrapePricesRoute: ApiPublicHooksScrapePricesRoute,
 }
 export const routeTree = rootRouteImport
