@@ -500,8 +500,8 @@ function SearchResults(props: {
     <section id="resultados" className="container mx-auto px-4 pt-8 pb-16 scroll-mt-20">
       <RegisterAlertCTA />
       {/* Sticky filter bar */}
-      <div className="sticky top-2 z-20 mb-6">
-        <Card className="p-4 backdrop-blur bg-card/95 border-border/80 shadow-[var(--shadow-elevated)]">
+      <div className="sticky top-14 md:top-2 z-20 mb-6 -mx-4 px-4 md:mx-0 md:px-0">
+        <Card className="p-3 md:p-4 backdrop-blur bg-card/95 border-border/80 shadow-[var(--shadow-elevated)]">
           <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
             <div className="flex items-center gap-2 min-w-0">
               <ArrowDownAZ className="h-4 w-4 text-primary shrink-0" />
@@ -516,11 +516,11 @@ function SearchResults(props: {
                 Tasa BCV: Bs {bcvRate.toFixed(2)} / USD
               </span>
             )}
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-2 lg:items-center">
+              <div className="flex items-center gap-2 min-w-0">
                 <Store className="h-4 w-4 text-muted-foreground" />
                 <Select value={pharm} onValueChange={(v) => updateSearch({ pharm: v })}>
-                  <SelectTrigger className="h-9 w-[180px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 w-full lg:w-[180px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas las farmacias</SelectItem>
                     {pharmacyOptions.map(([id, name]) => (
@@ -529,10 +529,10 @@ function SearchResults(props: {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <Tag className="h-4 w-4 text-muted-foreground" />
                 <Select value={med} onValueChange={(v) => updateSearch({ med: v })}>
-                  <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 w-full lg:w-[200px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los medicamentos</SelectItem>
                     {meds.map((m) => (
@@ -546,6 +546,7 @@ function SearchResults(props: {
                   variant="ghost"
                   size="sm"
                   onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all" })}
+                  className="justify-self-start"
                 >
                   <X className="h-4 w-4 mr-1" /> Limpiar
                 </Button>
