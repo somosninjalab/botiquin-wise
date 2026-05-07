@@ -174,6 +174,13 @@ function Index() {
   return (
     <div>
       {/* Hero pensado para mayores de 50: tipografía grande, mensaje claro y ejemplo visual */}
+      {isSearching ? (
+        <section className="sticky top-16 md:top-20 z-30 bg-background/95 backdrop-blur border-b border-border/60">
+          <div className="container mx-auto px-4 py-3">
+            <SearchBar size="md" initial={q} onSearch={(value) => updateSearch({ q: value })} />
+          </div>
+        </section>
+      ) : (
       <section className="relative overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.22 }} />
         <div className="container mx-auto px-4 py-6 md:py-16">
@@ -229,6 +236,7 @@ function Index() {
           </div>
         </div>
       </section>
+      )}
 
       {isSearching ? (
         <SearchResults
