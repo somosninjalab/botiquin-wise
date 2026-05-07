@@ -39,7 +39,7 @@ import {
 } from "@/lib/medications";
 import { supabase } from "@/integrations/supabase/client";
 import { useBcvRate } from "@/hooks/useBcvRate";
-import heroExplainerVideo from "@/assets/hero-explainer.mp4.asset.json";
+import { HeroExplainer } from "@/components/HeroExplainer";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -209,24 +209,7 @@ function Index() {
 
             {/* Columna derecha: ejemplo visual de comparación */}
             <div className="relative">
-              <Card className="overflow-hidden p-0 shadow-[var(--shadow-elevated)] border-2 border-primary/20 bg-card/95 backdrop-blur">
-                <video
-                  src={heroExplainerVideo.url}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  aria-label="Video explicativo: cómo Alerta Medicina compara precios entre farmacias"
-                  className="w-full h-auto block aspect-video object-cover bg-muted"
-                />
-                <div className="flex items-center gap-2 px-4 py-3 bg-accent/10 text-base">
-                  <Bell className="h-5 w-5 text-accent shrink-0" />
-                  <span className="text-foreground">
-                    Buscamos, comparamos y <strong>te avisamos</strong> cuando baje el precio.
-                  </span>
-                </div>
-              </Card>
+              <HeroExplainer />
               {/* Etiqueta decorativa */}
               <div className="hidden md:flex absolute -top-4 -right-4 items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-sm font-bold text-accent-foreground shadow-lg rotate-3">
                 <TrendingDown className="h-4 w-4" /> Precio real
