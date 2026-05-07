@@ -25,9 +25,9 @@ export function SearchBar({
     else navigate({ to: "/", search: { q: value } });
   };
   return (
-    <form onSubmit={onSubmit} className={`flex w-full gap-2 ${size === "lg" ? "" : ""}`}>
+    <form onSubmit={onSubmit} role="search" className="flex w-full gap-2">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground ${size === "lg" ? "h-5 w-5" : "h-4 w-4"}`} />
         <Input
           value={q}
           onChange={(e) => {
@@ -35,13 +35,27 @@ export function SearchBar({
             setQ(v);
             if (liveUpdate && onSearch) onSearch(v);
           }}
-          placeholder="Busca por nombre comercial o principio activo (ej. ibuprofeno)"
-          className={`pl-9 bg-card ${size === "lg" ? "h-14 text-base" : ""}`}
+          placeholder="Busca tu medicina (ej. ibuprofeno)"
+          className={`pl-10 bg-card ${size === "lg" ? "h-14 text-base" : "h-11 text-base"}`}
           maxLength={200}
+          type="search"
+          enterKeyHint="search"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          aria-label="Buscar medicamento"
         />
       </div>
-      <Button type="submit" className={`bg-gradient-to-r from-primary to-primary-glow text-primary-foreground ${size === "lg" ? "h-14 px-6 text-base" : ""}`}>
-        Buscar
+      <Button
+        type="submit"
+        aria-label="Buscar"
+        className={`bg-gradient-to-r from-primary to-primary-glow text-primary-foreground shrink-0 ${
+          size === "lg" ? "h-14 px-4 sm:px-6 text-base" : "h-11 px-4"
+        }`}
+      >
+        <Search className="h-5 w-5 sm:hidden" />
+        <span className="hidden sm:inline">Buscar</span>
       </Button>
     </form>
   );
