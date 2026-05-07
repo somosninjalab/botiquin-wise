@@ -4,6 +4,7 @@ import appCss from "../styles.css?url";
 import logoUrl from "@/assets/logo.png";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -79,7 +80,7 @@ function RootComponent() {
     <AuthProvider>
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
-        <main className="flex-1">
+        <main className="flex-1 pb-20 md:pb-0">
           <Outlet />
         </main>
         <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
@@ -87,6 +88,7 @@ function RootComponent() {
             ¡Alerta: Medicina! · Comparador gratuito de precios de medicamentos
           </div>
         </footer>
+        <MobileBottomNav />
       </div>
       <Toaster richColors position="top-right" />
     </AuthProvider>
