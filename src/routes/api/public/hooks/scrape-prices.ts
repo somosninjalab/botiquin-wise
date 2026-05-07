@@ -341,11 +341,6 @@ async function scrapeOne(
   fc: Firecrawl,
   med: MedRow,
   pharm: PharmRow,
-): Promise<ExtractedFull | null>;
-async function scrapeOne(
-  fc: Firecrawl,
-  med: MedRow,
-  pharm: PharmRow,
 ): Promise<ExtractedFull | null> {
   const host = siteHost(pharm.website_url);
   if (!host || !pharm.website_url) return null;
