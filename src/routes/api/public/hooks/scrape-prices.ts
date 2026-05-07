@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Firecrawl from "@mendable/firecrawl-js";
+import * as cheerio from "cheerio";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type PharmRow = { id: string; slug: string; name: string; website_url: string | null };
@@ -373,7 +374,162 @@ async function scrapeOne(
     if (norm) return norm;
   }
   console.warn(`[scrape:no-extract] ${pharm.slug} / ${med.name} (${candidates.length} urls)`);
+
+  // 3) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
+  for (const url of candidates) {
+    const fb = await scrapeFreeFallback(url, host, med);
+    if (fb) return fb;
+  }
   return null;
+}
+
+// --- Fallback gratuito: fetch directo + Cheerio + r.jina.ai --------------
+
+const BROWSER_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "es-VE,es;q=0.9,en;q=0.8",
+};
+
+async function fetchHtml(url: string, timeoutMs = 12000): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(url, { headers: BROWSER_HEADERS, signal: ctrl.signal, redirect: "follow" });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const ct = res.headers.get("content-type") ?? "";
+    if (!/html|xml|json/i.test(ct)) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
+async function fetchViaJina(url: string): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 15000);
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { "User-Agent": BROWSER_HEADERS["User-Agent"], "X-Return-Format": "html" },
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
+function flattenJsonLd(node: any, out: any[] = []): any[] {
+  if (!node) return out;
+  if (Array.isArray(node)) {
+    for (const n of node) flattenJsonLd(n, out);
+    return out;
+  }
+  if (typeof node === "object") {
+    out.push(node);
+    if (node["@graph"]) flattenJsonLd(node["@graph"], out);
+  }
+  return out;
+}
+
+function extractFromHtml(html: string, url: string): {
+  price: number | null;
+  currency: string;
+  in_stock: boolean;
+  image_url: string | null;
+  title: string;
+  text: string;
+} {
+  const $ = cheerio.load(html);
+  let price: number | null = null;
+  let currency = "";
+  let in_stock = true;
+  let image_url: string | null = null;
+
+  // 1) JSON-LD Product
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const json = JSON.parse($(el).contents().text() || "{}");
+      for (const node of flattenJsonLd(json)) {
+        const types = ([] as string[]).concat(node["@type"] ?? []);
+        if (!types.some((t) => /product/i.test(String(t)))) continue;
+        const offers = ([] as any[]).concat(node.offers ?? []);
+        for (const off of offers) {
+          const p = parsePrice(off?.price ?? off?.lowPrice);
+          if (p && price === null) {
+            price = p;
+            currency = String(off?.priceCurrency ?? "");
+            const av = String(off?.availability ?? "").toLowerCase();
+            if (av && /outofstock|discontinued|soldout/.test(av)) in_stock = false;
+          }
+        }
+        if (!image_url) {
+          const img = node.image;
+          const first = Array.isArray(img) ? img[0] : typeof img === "object" ? img?.url : img;
+          if (first) image_url = pickImageUrl({ image_url: first }, url);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  });
+
+  // 2) OpenGraph / meta fallback
+  if (price === null) {
+    const ogPrice =
+      $('meta[property="product:price:amount"]').attr("content") ??
+      $('meta[property="og:price:amount"]').attr("content") ??
+      $('meta[itemprop="price"]').attr("content");
+    const ogCurrency =
+      $('meta[property="product:price:currency"]').attr("content") ??
+      $('meta[property="og:price:currency"]').attr("content") ??
+      $('meta[itemprop="priceCurrency"]').attr("content");
+    const p = parsePrice(ogPrice);
+    if (p) {
+      price = p;
+      currency = String(ogCurrency ?? "");
+    }
+  }
+
+  if (!image_url) {
+    const og = $('meta[property="og:image"]').attr("content");
+    if (og) image_url = pickImageUrl({ image_url: og }, url);
+  }
+
+  const title = $("title").first().text() || $('meta[property="og:title"]').attr("content") || "";
+  const text = `${title}\n${$("body").text().slice(0, 4000)}`;
+
+  return { price, currency, in_stock, image_url, title, text };
+}
+
+async function scrapeFreeFallback(
+  url: string,
+  host: string | null,
+  med: MedRow,
+): Promise<ExtractedFull | null> {
+  let html = await fetchHtml(url);
+  if (!html) html = await fetchViaJina(url);
+  if (!html) return null;
+  const ext = extractFromHtml(html, url);
+  if (ext.price === null) return null;
+  const currency = normalizeCurrency(ext.currency, host);
+  if (!priceWithinRange(ext.price, currency)) return null;
+  if (!pageMatchesMed(ext.text, med)) {
+    console.warn(`[scrape-free:mismatch] ${url}`);
+    return null;
+  }
+  console.info(`[scrape-free:ok] ${url} ${ext.price} ${currency}`);
+  return {
+    price: ext.price,
+    currency: currency.slice(0, 8),
+    in_stock: ext.in_stock,
+    product_url: url,
+    image_url: ext.image_url,
+  };
 }
 
 export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
