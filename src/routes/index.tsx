@@ -783,7 +783,14 @@ function SearchResults(props: {
                           </div>
                         ) : (
                           <div className="mt-3 pt-3 border-t border-border/60 text-xs text-muted-foreground">
-                            Sin precios disponibles
+                            {scrapingIds.has(m.id) ? (
+                              <span className="inline-flex items-center gap-2">
+                                <span className="h-3 w-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                Buscando precios en farmacias…
+                              </span>
+                            ) : (
+                              "Sin precios disponibles"
+                            )}
                           </div>
                         )}
                       </Card>
