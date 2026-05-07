@@ -201,3 +201,23 @@ export function displayPrice(
   }
   return { primary: "Precio no comparable", secondary: `${formatBs(amount, c)} registrado` };
 }
+
+export type SuggestionRow = {
+  id: string;
+  name: string;
+  slug: string;
+  active_ingredient: string;
+  similarity: number;
+};
+
+/**
+ * Sugerencias "¿quisiste decir...?" — usa trigram con umbral bajo y agrupa
+ * por principio activo para no repetir presentaciones del mismo medicamento.
+ */
+export async function suggestMedications(q: string, limit = 6): Promise<SuggestionRow[]> {
+  const term = q.trim();
+  if (term.length < 2) return [];
+  const { data, error } = await supabase.rpc("suggest_medications", { q: term, lim: limit });
+  if (error) return [];
+  return (data ?? []) as SuggestionRow[];
+}
