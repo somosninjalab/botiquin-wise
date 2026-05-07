@@ -16,8 +16,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
+import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
 import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
 import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
+import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
 import { Route as ApiPublicHooksDiscoverMedsRouteImport } from './routes/api/public/hooks/discover-meds'
 
 const MisAlertasRoute = MisAlertasRouteImport.update({
@@ -55,6 +57,11 @@ const MedicamentoSlugRoute = MedicamentoSlugRouteImport.update({
   path: '/medicamento/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksSeedCimaRoute = ApiPublicHooksSeedCimaRouteImport.update({
+  id: '/api/public/hooks/seed-cima',
+  path: '/api/public/hooks/seed-cima',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksScrapePricesRoute =
   ApiPublicHooksScrapePricesRouteImport.update({
     id: '/api/public/hooks/scrape-prices',
@@ -65,6 +72,12 @@ const ApiPublicHooksEnrichMedsRoute =
   ApiPublicHooksEnrichMedsRouteImport.update({
     id: '/api/public/hooks/enrich-meds',
     path: '/api/public/hooks/enrich-meds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDiscoverOnDemandRoute =
+  ApiPublicHooksDiscoverOnDemandRouteImport.update({
+    id: '/api/public/hooks/discover-on-demand',
+    path: '/api/public/hooks/discover-on-demand',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksDiscoverMedsRoute =
@@ -83,8 +96,10 @@ export interface FileRoutesByFullPath {
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
+  '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
+  '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -95,8 +110,10 @@ export interface FileRoutesByTo {
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
+  '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
+  '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -108,8 +125,10 @@ export interface FileRoutesById {
   '/mis-alertas': typeof MisAlertasRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
+  '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
+  '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -122,8 +141,10 @@ export interface FileRouteTypes {
     | '/mis-alertas'
     | '/medicamento/$slug'
     | '/api/public/hooks/discover-meds'
+    | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/scrape-prices'
+    | '/api/public/hooks/seed-cima'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -134,8 +155,10 @@ export interface FileRouteTypes {
     | '/mis-alertas'
     | '/medicamento/$slug'
     | '/api/public/hooks/discover-meds'
+    | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/scrape-prices'
+    | '/api/public/hooks/seed-cima'
   id:
     | '__root__'
     | '/'
@@ -146,8 +169,10 @@ export interface FileRouteTypes {
     | '/mis-alertas'
     | '/medicamento/$slug'
     | '/api/public/hooks/discover-meds'
+    | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/scrape-prices'
+    | '/api/public/hooks/seed-cima'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,8 +184,10 @@ export interface RootRouteChildren {
   MisAlertasRoute: typeof MisAlertasRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
   ApiPublicHooksDiscoverMedsRoute: typeof ApiPublicHooksDiscoverMedsRoute
+  ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
   ApiPublicHooksEnrichMedsRoute: typeof ApiPublicHooksEnrichMedsRoute
   ApiPublicHooksScrapePricesRoute: typeof ApiPublicHooksScrapePricesRoute
+  ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -214,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedicamentoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/seed-cima': {
+      id: '/api/public/hooks/seed-cima'
+      path: '/api/public/hooks/seed-cima'
+      fullPath: '/api/public/hooks/seed-cima'
+      preLoaderRoute: typeof ApiPublicHooksSeedCimaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/scrape-prices': {
       id: '/api/public/hooks/scrape-prices'
       path: '/api/public/hooks/scrape-prices'
@@ -226,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/enrich-meds'
       fullPath: '/api/public/hooks/enrich-meds'
       preLoaderRoute: typeof ApiPublicHooksEnrichMedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/discover-on-demand': {
+      id: '/api/public/hooks/discover-on-demand'
+      path: '/api/public/hooks/discover-on-demand'
+      fullPath: '/api/public/hooks/discover-on-demand'
+      preLoaderRoute: typeof ApiPublicHooksDiscoverOnDemandRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/discover-meds': {
@@ -247,9 +288,20 @@ const rootRouteChildren: RootRouteChildren = {
   MisAlertasRoute: MisAlertasRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
   ApiPublicHooksDiscoverMedsRoute: ApiPublicHooksDiscoverMedsRoute,
+  ApiPublicHooksDiscoverOnDemandRoute: ApiPublicHooksDiscoverOnDemandRoute,
   ApiPublicHooksEnrichMedsRoute: ApiPublicHooksEnrichMedsRoute,
   ApiPublicHooksScrapePricesRoute: ApiPublicHooksScrapePricesRoute,
+  ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

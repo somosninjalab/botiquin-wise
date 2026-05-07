@@ -32,7 +32,7 @@ export async function searchMedications(q: string, limit = 30) {
     return (data ?? []) as MedicationRow[];
   }
   const safe = q.replace(/[,()]/g, " ");
-  // 1) coincidencias directas en nombre, principio activo, indicación, categoría, marcas y síntomas
+  // 1a) coincidencias directas en nombre, principio activo, indicación, categoría, marcas y síntomas
   const { data: direct, error } = await supabase
     .from("medications")
     .select("*")
@@ -42,7 +42,21 @@ export async function searchMedications(q: string, limit = 30) {
     .order("name")
     .limit(limit);
   if (error) throw error;
-  const directRows = (direct ?? []) as MedicationRow[];
+  let directRows = (direct ?? []) as MedicationRow[];
+
+  // 1b) coincidencias por alias (marcas comerciales: Tylenol, Atamel, Panadol...)
+  const { data: aliasHits } = await supabase
+    .from("medication_aliases")
+    .select("medication_id")
+    .ilike("alias", `%${safe}%`)
+    .limit(limit);
+  const aliasIds = Array.from(new Set((aliasHits ?? []).map((a: { medication_id: string }) => a.medication_id)));
+  if (aliasIds.length) {
+    const { data: aliasMeds } = await supabase
+      .from("medications").select("*").in("id", aliasIds).limit(limit);
+    const have = new Set(directRows.map((m) => m.id));
+    for (const m of (aliasMeds ?? []) as MedicationRow[]) if (!have.has(m.id)) directRows.push(m);
+  }
 
   // 2) Si no hubo coincidencia directa, intentar búsqueda difusa (tolera errores tipográficos)
   let baseRows = directRows;
@@ -52,6 +66,25 @@ export async function searchMedications(q: string, limit = 30) {
       lim: limit,
     });
     baseRows = ((fuzzy ?? []) as MedicationRow[]);
+  }
+
+  // 2b) Fallback en vivo: si seguimos sin nada, pedir al servidor que descubra
+  // este término en CIMA y/o pharmacies, lo cree, y reintentamos la búsqueda.
+  if (!baseRows.length && q.trim().length >= 3) {
+    try {
+      const res = await fetch(`/api/public/hooks/discover-on-demand`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ q: safe }),
+      });
+      if (res.ok) {
+        const j = (await res.json()) as { created?: number };
+        if ((j.created ?? 0) > 0) {
+          const { data: again } = await supabase.rpc("search_medications_fuzzy", { q: safe, lim: limit });
+          baseRows = ((again ?? []) as MedicationRow[]);
+        }
+      }
+    } catch { /* silencioso */ }
   }
 
   // 3) Expandir por principio activo para incluir alternativas equivalentes
