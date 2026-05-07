@@ -497,7 +497,8 @@ function SearchResults(props: {
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
 
   return (
-    <section className="container mx-auto px-4 pt-8 pb-16">
+    <section id="resultados" className="container mx-auto px-4 pt-8 pb-16 scroll-mt-20">
+      <RegisterAlertCTA />
       {/* Sticky filter bar */}
       <div className="sticky top-2 z-20 mb-6">
         <Card className="p-4 backdrop-blur bg-card/95 border-border/80 shadow-[var(--shadow-elevated)]">
