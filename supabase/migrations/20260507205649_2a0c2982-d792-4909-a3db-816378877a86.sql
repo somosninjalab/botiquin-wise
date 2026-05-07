@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "search update result count" ON public.search_events;
