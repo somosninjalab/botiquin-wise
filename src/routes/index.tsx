@@ -742,3 +742,31 @@ function SearchResults(props: {
     </section>
   );
 }
+
+function RegisterAlertCTA() {
+  const { user } = useAuth();
+  if (user) return null;
+  return (
+    <Link
+      to="/auth"
+      className="block mb-6 rounded-2xl border-2 border-accent/40 bg-gradient-to-r from-accent/15 via-primary/10 to-accent/15 p-5 md:p-6 hover:shadow-[var(--shadow-elevated)] transition-all"
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-md">
+          <Bell className="h-7 w-7" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg md:text-xl font-bold leading-tight">
+            Regístrate y te avisamos cuando baje el precio
+          </h3>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Recibe alertas gratis por email cuando cambien los precios de tus medicinas.
+          </p>
+        </div>
+        <Button className="hidden sm:inline-flex bg-gradient-to-r from-primary to-primary-glow text-primary-foreground h-11 px-5 text-base font-semibold">
+          Registrarme
+        </Button>
+      </div>
+    </Link>
+  );
+}
