@@ -39,16 +39,50 @@ function parseFromCima(item: { nombre?: string; pactivos?: string; labtitular?: 
 }
 
 async function fetchCima(term: string): Promise<any[]> {
-  const url = `https://cima.aemps.es/cima/rest/medicamentos?nombre=${encodeURIComponent(term)}`;
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 10000);
-    const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
-    clearTimeout(t);
-    if (!res.ok) return [];
-    const json = await res.json();
-    return Array.isArray(json?.resultados) ? json.resultados.slice(0, 20) : [];
-  } catch { return []; }
+  // CIMA es estricto: `nombre=` solo coincide por palabra completa (no tolera
+  // typos ni prefijos parciales). Probamos varias estrategias para maximizar
+  // descubrimiento: nombre exacto, principio activo, y prefijos del término.
+  const tryOne = async (url: string): Promise<any[]> => {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
+      clearTimeout(t);
+      if (!res.ok) return [];
+      const json = await res.json();
+      return Array.isArray(json?.resultados) ? json.resultados : [];
+    } catch { return []; }
+  };
+  const base = "https://cima.aemps.es/cima/rest/medicamentos";
+  const variants: string[] = [];
+  // 1) nombre exacto
+  variants.push(`${base}?nombre=${encodeURIComponent(term)}`);
+  // 2) principio activo exacto
+  variants.push(`${base}?practiv1=${encodeURIComponent(term)}`);
+  // 3) prefijos progresivamente más cortos (tolerancia a typos al final)
+  if (term.length >= 5) {
+    variants.push(`${base}?practiv1=${encodeURIComponent(term.slice(0, term.length - 1))}`);
+  }
+  if (term.length >= 6) {
+    variants.push(`${base}?practiv1=${encodeURIComponent(term.slice(0, term.length - 2))}`);
+  }
+  if (term.length >= 4) {
+    variants.push(`${base}?nombre=${encodeURIComponent(term.slice(0, Math.max(4, term.length - 2)))}`);
+  }
+  const all: any[] = [];
+  const seen = new Set<string>();
+  for (const url of variants) {
+    const items = await tryOne(url);
+    for (const it of items) {
+      const k = it?.nregistro ?? it?.nombre;
+      if (!k || seen.has(String(k))) continue;
+      seen.add(String(k));
+      all.push(it);
+      if (all.length >= 20) return all;
+    }
+    if (all.length >= 20) break;
+  }
+  return all;
 }
 
 export const Route = createFileRoute("/api/public/hooks/discover-on-demand")({
