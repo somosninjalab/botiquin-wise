@@ -40,6 +40,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { HeroExplainer } from "@/components/HeroExplainer";
+import { useAuth } from "@/hooks/useAuth";
+import { ChevronDown } from "lucide-react";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
