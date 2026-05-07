@@ -170,35 +170,79 @@ function Index() {
 
   return (
     <div>
-      {/* Hero estilo GoodRx: claro, centrado, búsqueda dominante */}
+      {/* Hero pensado para mayores de 50: tipografía grande, mensaje claro y ejemplo visual */}
       <section className="relative overflow-hidden border-b border-border/60">
-        <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.18 }} />
-        <div className="container mx-auto px-4 py-14 md:py-20">
-          <div className="max-w-3xl mx-auto text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 text-xs font-medium text-primary border border-primary/20">
-              <TrendingDown className="h-3.5 w-3.5" /> Precios reales de farmacias en Venezuela
-            </span>
-            <h1 className="mt-4 text-4xl md:text-6xl font-bold leading-tight text-foreground">
-              Compara precios y{" "}
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                ahorra hasta 60%
-              </span>{" "}
-              en tus medicinas
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Busca cualquier medicamento y mira al instante cuánto cuesta en Farmatodo,
-              Locatel, SAAS, Farmago y más. Recibe alertas cuando baje el precio.
-            </p>
-            <div className="mt-8">
-              <SearchBar size="lg" initial={q} onSearch={(value) => updateSearch({ q: value })} />
-            </div>
-            {!isSearching && (
-              <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> 100% gratuito</span>
-                <span className="flex items-center gap-1.5"><Bell className="h-4 w-4 text-primary" /> Alertas por email</span>
-                <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> Historial de precios</span>
+        <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.22 }} />
+        <div className="container mx-auto px-4 py-10 md:py-16">
+          <div className="grid md:grid-cols-2 gap-10 items-center max-w-6xl mx-auto">
+            {/* Columna izquierda: mensaje grande y simple */}
+            <div className="text-center md:text-left">
+              <span className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-base font-semibold text-primary border-2 border-primary/30 shadow-sm">
+                <Bell className="h-5 w-5" /> ¡Alerta: Medicina!
+              </span>
+              <h1 className="mt-5 text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.05] text-foreground tracking-tight">
+                Encuentra tu medicina al{" "}
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  precio más bajo
+                </span>
+              </h1>
+              <p className="mt-5 text-xl md:text-2xl text-muted-foreground leading-relaxed">
+                Escribe el nombre y vemos el precio en{" "}
+                <strong className="text-foreground">Farmatodo, Locatel, SAAS y Farmago</strong>{" "}
+                en segundos.
+              </p>
+              <div className="mt-7">
+                <SearchBar size="lg" initial={q} onSearch={(value) => updateSearch({ q: value })} />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
+                </p>
               </div>
-            )}
+              {!isSearching && (
+                <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-base text-muted-foreground">
+                  <span className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Gratis</span>
+                  <span className="flex items-center gap-2"><Bell className="h-5 w-5 text-primary" /> Te avisamos</span>
+                  <span className="flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /> Sin cuenta</span>
+                </div>
+              )}
+            </div>
+
+            {/* Columna derecha: ejemplo visual de comparación */}
+            <div className="relative">
+              <Card className="p-5 md:p-6 shadow-[var(--shadow-elevated)] border-2 border-primary/20 bg-card/95 backdrop-blur">
+                <div className="flex items-center gap-3 pb-3 border-b border-border/60">
+                  <div className="rounded-xl bg-primary/15 p-2.5 text-primary"><Pill className="h-6 w-6" /></div>
+                  <div>
+                    <div className="text-base font-bold leading-tight">Acetaminofén 500 mg</div>
+                    <div className="text-sm text-muted-foreground">Ejemplo de comparación</div>
+                  </div>
+                </div>
+                <ul className="mt-4 space-y-3 text-base">
+                  <li className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
+                    <span className="font-semibold">Farmatodo</span>
+                    <span className="text-muted-foreground line-through">Bs. 240,00</span>
+                  </li>
+                  <li className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
+                    <span className="font-semibold">Locatel</span>
+                    <span className="text-muted-foreground line-through">Bs. 198,00</span>
+                  </li>
+                  <li className="flex items-center justify-between rounded-xl border-2 border-primary/60 bg-primary/10 px-3 py-3">
+                    <span className="font-bold text-primary text-lg">SAAS</span>
+                    <div className="text-right">
+                      <div className="text-2xl font-extrabold text-primary leading-none">Bs. 96,00</div>
+                      <div className="text-xs font-bold text-accent mt-1">↓ Ahorras 60%</div>
+                    </div>
+                  </li>
+                </ul>
+                <div className="mt-4 flex items-center gap-2 rounded-lg bg-accent/10 px-3 py-2.5 text-sm text-foreground">
+                  <Bell className="h-5 w-5 text-accent shrink-0" />
+                  <span>Te avisamos por correo cuando <strong>baje aún más</strong>.</span>
+                </div>
+              </Card>
+              {/* Etiqueta decorativa */}
+              <div className="hidden md:flex absolute -top-4 -right-4 items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-sm font-bold text-accent-foreground shadow-lg rotate-3">
+                <TrendingDown className="h-4 w-4" /> Precio real
+              </div>
+            </div>
           </div>
         </div>
       </section>
