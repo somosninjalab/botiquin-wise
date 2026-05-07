@@ -6,6 +6,7 @@ import { LayoutDashboard, Download, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/admin")({ component: AdminPage });
