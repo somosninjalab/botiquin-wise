@@ -9,11 +9,11 @@ export function SiteHeader() {
   const { user, isAdmin } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <img src={logoUrl} alt="¡Alerta: Medicina! logo" className="h-9 w-9 rounded-xl shadow-[var(--shadow-soft)]" />
-          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="container mx-auto flex h-14 md:h-16 items-center justify-between px-4 gap-2">
+        <Link to="/" className="flex items-center gap-2 font-bold text-base md:text-lg min-w-0">
+          <img src={logoUrl} alt="" className="h-8 w-8 md:h-9 md:w-9 rounded-xl shadow-[var(--shadow-soft)] shrink-0" />
+          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">
             ¡Alerta: Medicina!
           </span>
         </Link>
