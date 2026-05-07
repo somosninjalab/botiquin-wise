@@ -70,6 +70,7 @@ function Index() {
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
 
   // Load pharmacies once
   useEffect(() => {
@@ -113,6 +114,7 @@ function Index() {
         const withPrices = new Set(p.map((x) => x.medication_id));
         const missing = m.filter((x) => !withPrices.has(x.id)).slice(0, 3);
         if (missing.length) {
+          setScrapingIds(new Set(missing.map((x) => x.id)));
           await Promise.all(
             missing.map(async (med) => {
               try {
@@ -127,6 +129,13 @@ function Index() {
                   setPrices(fresh);
                 }
               } catch { /* silencioso */ }
+              finally {
+                setScrapingIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(med.id);
+                  return next;
+                });
+              }
             }),
           );
         }
@@ -286,6 +295,7 @@ function Index() {
           pharmacyOptions={pharmacyOptions}
           updateSearch={updateSearch}
           bcvRate={bcvRate}
+          scrapingIds={scrapingIds}
         />
       ) : (
         <>
@@ -518,10 +528,11 @@ function SearchResults(props: {
   pharmacyOptions: [string, string][];
   updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
   bcvRate: number | null;
+  scrapingIds: Set<string>;
 }) {
   const {
     q, pharm, med, cat, ind, loading, meds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacyOptions, updateSearch, bcvRate,
+    pharmaciesMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
   } = props;
 
   // Etiquetas únicas presentes en los resultados actuales
@@ -774,7 +785,14 @@ function SearchResults(props: {
                           </div>
                         ) : (
                           <div className="mt-3 pt-3 border-t border-border/60 text-xs text-muted-foreground">
-                            Sin precios disponibles
+                            {scrapingIds.has(m.id) ? (
+                              <span className="inline-flex items-center gap-2">
+                                <span className="h-3 w-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                Buscando precios en farmacias…
+                              </span>
+                            ) : (
+                              "Sin precios disponibles"
+                            )}
                           </div>
                         )}
                       </Card>
