@@ -35,6 +35,8 @@ import {
   lowestCurrent,
   priorPrice,
   searchMedications,
+  suggestMedications,
+  type SuggestionRow,
   type MedicationRow,
   type PriceRow,
 } from "@/lib/medications";
@@ -97,7 +99,10 @@ function Index() {
       const p = await getLatestPricesForMedications(m.map((x) => x.id));
       setPrices(p);
       if (q.trim()) {
-        await supabase.from("search_events").insert({ query: q.slice(0, 200) });
+        await supabase.from("search_events").insert({
+          query: q.slice(0, 200),
+          result_count: m.length,
+        });
       }
       setLoading(false);
     })();
