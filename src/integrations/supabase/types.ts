@@ -198,6 +198,39 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          medication_id: string
+          new_price: number
+          pct_change: number
+          pharmacy_id: string
+          previous_price: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          medication_id: string
+          new_price: number
+          pct_change: number
+          pharmacy_id: string
+          previous_price: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          medication_id?: string
+          new_price?: number
+          pct_change?: number
+          pharmacy_id?: string
+          previous_price?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           birth_date: string | null
