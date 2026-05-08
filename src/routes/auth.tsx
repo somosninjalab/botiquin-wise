@@ -17,6 +17,18 @@ const signUpSchema = z.object({
   email: z.string().trim().email().max(255),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   password: z.string().min(8).max(100),
+  sex: z.enum(["femenino", "masculino", "otro", "prefiero_no_decir"], {
+    errorMap: () => ({ message: "Selecciona tu sexo" }),
+  }),
+  birth_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha de nacimiento inválida")
+    .refine((v) => {
+      const d = new Date(v);
+      const now = new Date();
+      const min = new Date(now.getFullYear() - 120, now.getMonth(), now.getDate());
+      return d <= now && d >= min;
+    }, "Fecha de nacimiento fuera de rango"),
 });
 const signInSchema = z.object({
   email: z.string().trim().email().max(255),
@@ -30,7 +42,14 @@ export default function AuthPage() {
 
   const [loading, setLoading] = useState(false);
 
-  const [up, setUp] = useState({ full_name: "", email: "", phone: "", password: "" });
+  const [up, setUp] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    sex: "" as "" | "femenino" | "masculino" | "otro" | "prefiero_no_decir",
+    birth_date: "",
+  });
   const [si, setSi] = useState({ email: "", password: "" });
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -52,6 +71,8 @@ export default function AuthPage() {
       await supabase.from("profiles").update({
         full_name: parsed.data.full_name,
         phone: parsed.data.phone || null,
+        sex: parsed.data.sex,
+        birth_date: parsed.data.birth_date,
       }).eq("user_id", data.user.id);
       // Capture IP-derived location
       try {
@@ -101,6 +122,35 @@ export default function AuthPage() {
               <div><Label>Nombre completo</Label><Input value={up.full_name} onChange={(e) => setUp({ ...up, full_name: e.target.value })} maxLength={100} required /></div>
               <div><Label>Email</Label><Input type="email" value={up.email} onChange={(e) => setUp({ ...up, email: e.target.value })} maxLength={255} required /></div>
               <div><Label>Teléfono (opcional)</Label><Input value={up.phone} onChange={(e) => setUp({ ...up, phone: e.target.value })} maxLength={30} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="su-sex">Sexo</Label>
+                  <select
+                    id="su-sex"
+                    value={up.sex}
+                    onChange={(e) => setUp({ ...up, sex: e.target.value as typeof up.sex })}
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="" disabled>Selecciona…</option>
+                    <option value="femenino">Femenino</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="otro">Otro</option>
+                    <option value="prefiero_no_decir">Prefiero no decir</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="su-dob">Fecha de nacimiento</Label>
+                  <Input
+                    id="su-dob"
+                    type="date"
+                    value={up.birth_date}
+                    onChange={(e) => setUp({ ...up, birth_date: e.target.value })}
+                    max={new Date().toISOString().slice(0, 10)}
+                    required
+                  />
+                </div>
+              </div>
               <div><Label>Contraseña (mín. 8)</Label><Input type="password" value={up.password} onChange={(e) => setUp({ ...up, password: e.target.value })} minLength={8} maxLength={100} required /></div>
               <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">Crear cuenta</Button>
             </form>
