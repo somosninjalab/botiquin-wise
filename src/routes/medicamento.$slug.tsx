@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellOff, ExternalLink, Pill } from "lucide-react";
+import { Bell, BellOff, ExternalLink, Pill, ShoppingCart, Check } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { displayPrice, priceToVes, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
+import { addToOrder, useOrder } from "@/lib/order-store";
 
 export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
@@ -23,6 +24,8 @@ function MedicamentoPage() {
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [pharms, setPharms] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [following, setFollowing] = useState(false);
+  const order = useOrder();
+  const inOrder = !!med && order.some((i) => i.medication_id === med.id);
 
   useEffect(() => {
     (async () => {
@@ -173,6 +176,23 @@ function MedicamentoPage() {
               variant={following ? "outline" : "default"}
             >
               {following ? <><BellOff className="h-4 w-4 mr-2" /> Dejar de seguir</> : <><Bell className="h-4 w-4 mr-2" /> Avísame si baja</>}
+            </Button>
+            <Button
+              onClick={() => {
+                if (!med) return;
+                addToOrder({
+                  medication_id: med.id,
+                  slug: med.slug,
+                  name: med.name,
+                  active_ingredient: med.active_ingredient,
+                  presentation: med.presentation,
+                  image_url: med.image_url,
+                });
+                toast.success(`${med.name} agregado a tu orden`);
+              }}
+              variant={inOrder ? "outline" : "secondary"}
+            >
+              {inOrder ? <><Check className="h-4 w-4 mr-2" /> En tu orden — agregar otro</> : <><ShoppingCart className="h-4 w-4 mr-2" /> Agregar a mi orden</>}
             </Button>
           </div>
         </div>
