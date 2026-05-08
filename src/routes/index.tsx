@@ -416,20 +416,20 @@ function BrowseByCondition({
 }: {
   onPick: (patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
 }) {
-  const [conditions, setConditions] = useState<{ ind: string; cat: string | null; count: number }[]>([]);
+  const [conditions, setConditions] = useState<{ ind: string; label: string; cat: string | null; count: number }[]>([]);
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("medications")
-        .select("indication,category")
+        .select("indication,indication_es,category")
         .not("indication", "is", null);
-      const map = new Map<string, { ind: string; cat: string | null; count: number }>();
-      for (const r of (data ?? []) as { indication: string | null; category: string | null }[]) {
+      const map = new Map<string, { ind: string; label: string; cat: string | null; count: number }>();
+      for (const r of (data ?? []) as { indication: string | null; indication_es: string | null; category: string | null }[]) {
         if (!r.indication) continue;
         const key = r.indication;
         const cur = map.get(key);
         if (cur) cur.count++;
-        else map.set(key, { ind: key, cat: r.category, count: 1 });
+        else map.set(key, { ind: key, label: r.indication_es || r.indication, cat: r.category, count: 1 });
       }
       setConditions(Array.from(map.values()).sort((a, b) => b.count - a.count));
     })();
@@ -464,7 +464,7 @@ function BrowseByCondition({
               </span>
             </div>
             <h3 className="mt-3 font-semibold leading-tight group-hover:text-primary line-clamp-2">
-              {c.ind}
+              {c.label}
             </h3>
             {c.cat && <p className="text-xs text-muted-foreground mt-1">{c.cat}</p>}
           </button>
