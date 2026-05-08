@@ -23,7 +23,7 @@ export function HeroExplainer() {
     <div
       className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-card to-accent/5 shadow-[var(--shadow-elevated)]"
       role="img"
-      aria-label="Animación: Alerta Medicina busca tu medicamento, compara Farmatodo, Locatel, SAAS y Farmago, y te avisa cuando baja el precio."
+      aria-label="Animación: Alerta Medicina busca tu medicamento, compara Farmatodo, Locatel, SAAS, Farmago y GoPharma, y te avisa cuando baja el precio."
     >
       {/* PASO 1 — Lupa buscando la medicina (0s → 4s) */}
       <div className="absolute inset-0 flex items-center justify-center hero-step-1">
