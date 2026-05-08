@@ -133,6 +133,7 @@ export type Database = {
           id: string
           image_url: string | null
           indication: string | null
+          indication_es: string | null
           manufacturer: string | null
           name: string
           presentation: string | null
@@ -148,6 +149,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           indication?: string | null
+          indication_es?: string | null
           manufacturer?: string | null
           name: string
           presentation?: string | null
@@ -163,6 +165,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           indication?: string | null
+          indication_es?: string | null
           manufacturer?: string | null
           name?: string
           presentation?: string | null
@@ -400,6 +403,7 @@ export type Database = {
           id: string
           image_url: string | null
           indication: string | null
+          indication_es: string | null
           manufacturer: string | null
           name: string
           presentation: string | null
