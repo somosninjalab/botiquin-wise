@@ -608,10 +608,20 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
           }
         }
 
+        // Tras insertar precios, calcula alertas de cambio significativo.
+        let alerts_inserted = 0;
+        try {
+          const u = new URL(request.url);
+          const r = await fetch(`${u.origin}/api/public/hooks/process-price-alerts?threshold=5&hours=72`, { method: "POST" });
+          const j: any = await r.json().catch(() => ({}));
+          alerts_inserted = j?.alerts_inserted ?? 0;
+        } catch { /* no-op */ }
+
         return Response.json({
           ok: true,
           attempted,
           inserted,
+          alerts_inserted,
           medications: medList.length,
           pharmacies: pharmList.length,
           byPharmacy: Object.entries(byPharmacy).map(([slug, v]) => ({ slug, ...v })),
