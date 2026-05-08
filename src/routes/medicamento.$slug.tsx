@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { displayPrice, priceToVes, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { useBcvRate } from "@/hooks/useBcvRate";
+import { PharmacyLogo } from "@/components/PharmacyLogo";
 
 export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
