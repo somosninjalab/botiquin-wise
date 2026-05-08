@@ -17,6 +17,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
+import { Route as ApiPublicHooksSitemapCrawlRouteImport } from './routes/api/public/hooks/sitemap-crawl'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
 import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
 import { Route as ApiPublicHooksNightlyGrowRouteImport } from './routes/api/public/hooks/nightly-grow'
@@ -64,6 +65,12 @@ const AdminPreciosRoute = AdminPreciosRouteImport.update({
   path: '/precios',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksSitemapCrawlRoute =
+  ApiPublicHooksSitemapCrawlRouteImport.update({
+    id: '/api/public/hooks/sitemap-crawl',
+    path: '/api/public/hooks/sitemap-crawl',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSeedCimaRoute = ApiPublicHooksSeedCimaRouteImport.update({
   id: '/api/public/hooks/seed-cima',
   path: '/api/public/hooks/seed-cima',
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/nightly-grow': typeof ApiPublicHooksNightlyGrowRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
+  '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/nightly-grow': typeof ApiPublicHooksNightlyGrowRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
+  '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -148,6 +157,7 @@ export interface FileRoutesById {
   '/api/public/hooks/nightly-grow': typeof ApiPublicHooksNightlyGrowRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
+  '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/nightly-grow'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
+    | '/api/public/hooks/sitemap-crawl'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/nightly-grow'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
+    | '/api/public/hooks/sitemap-crawl'
   id:
     | '__root__'
     | '/'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/nightly-grow'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
+    | '/api/public/hooks/sitemap-crawl'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -214,6 +227,7 @@ export interface RootRouteChildren {
   ApiPublicHooksNightlyGrowRoute: typeof ApiPublicHooksNightlyGrowRoute
   ApiPublicHooksScrapePricesRoute: typeof ApiPublicHooksScrapePricesRoute
   ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
+  ApiPublicHooksSitemapCrawlRoute: typeof ApiPublicHooksSitemapCrawlRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -273,6 +287,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/precios'
       preLoaderRoute: typeof AdminPreciosRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/api/public/hooks/sitemap-crawl': {
+      id: '/api/public/hooks/sitemap-crawl'
+      path: '/api/public/hooks/sitemap-crawl'
+      fullPath: '/api/public/hooks/sitemap-crawl'
+      preLoaderRoute: typeof ApiPublicHooksSitemapCrawlRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/seed-cima': {
       id: '/api/public/hooks/seed-cima'
@@ -343,6 +364,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNightlyGrowRoute: ApiPublicHooksNightlyGrowRoute,
   ApiPublicHooksScrapePricesRoute: ApiPublicHooksScrapePricesRoute,
   ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
+  ApiPublicHooksSitemapCrawlRoute: ApiPublicHooksSitemapCrawlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
