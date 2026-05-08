@@ -88,7 +88,12 @@ export const Scene3Winner = () => {
             boxShadow: "0 14px 30px -12px rgba(240,138,75,0.4)",
           }}
         >
-          <span style={{ display: "inline-block", transform: `rotate(${bellRing}deg)`, fontSize: 44 }}>🔔</span>
+          <span style={{ display: "inline-block", transform: `rotate(${bellRing}deg)`, transformOrigin: "top center" }}>
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+          </span>
           Te avisamos cuando baje el precio
         </div>
 
