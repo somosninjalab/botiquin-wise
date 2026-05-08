@@ -245,7 +245,7 @@ function Index() {
               </h1>
               <p className="mt-3 md:mt-5 text-base md:text-2xl text-muted-foreground leading-relaxed">
                 Compara precios en{" "}
-                <strong className="text-foreground">Farmatodo, Locatel, SAAS y Farmago</strong>{" "}
+                <strong className="text-foreground">Farmatodo, Locatel, SAAS, Farmago y GoPharma</strong>{" "}
                 en segundos.
               </p>
               <div className="mt-5 md:mt-7">
