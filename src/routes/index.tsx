@@ -69,14 +69,16 @@ function Index() {
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
+  const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
 
   // Load pharmacies once
   useEffect(() => {
     (async () => {
-      const { data: ph } = await supabase.from("pharmacies").select("id,name");
+      const { data: ph } = await supabase.from("pharmacies").select("id,name,slug");
       setPharmaciesMap(Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.name])));
+      setPharmacySlugMap(Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.slug])));
     })();
   }, []);
 
