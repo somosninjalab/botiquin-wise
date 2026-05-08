@@ -21,7 +21,7 @@ function MedicamentoPage() {
   const bcvRate = useBcvRate();
   const [med, setMed] = useState<MedicationRow | null>(null);
   const [prices, setPrices] = useState<PriceRow[]>([]);
-  const [pharms, setPharms] = useState<{ id: string; name: string }[]>([]);
+  const [pharms, setPharms] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [following, setFollowing] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ function MedicamentoPage() {
       setMed(m as MedicationRow);
       const [{ data: p }, { data: ph }] = await Promise.all([
         supabase.from("medication_prices").select("*").eq("medication_id", m.id).order("scraped_at", { ascending: true }),
-        supabase.from("pharmacies").select("id,name"),
+        supabase.from("pharmacies").select("id,name,slug"),
       ]);
       setPrices((p ?? []) as PriceRow[]);
       setPharms((ph ?? []) as any);
@@ -45,6 +45,7 @@ function MedicamentoPage() {
   }, [slug, user]);
 
   const pharmMap = useMemo(() => Object.fromEntries(pharms.map((p) => [p.id, p.name])), [pharms]);
+  const pharmSlugMap = useMemo(() => Object.fromEntries(pharms.map((p) => [p.id, p.slug])), [pharms]);
 
   // Latest per pharmacy
   const latestByPharm = useMemo(() => {
@@ -199,9 +200,12 @@ function MedicamentoPage() {
                     className={`grid grid-cols-12 items-center gap-3 p-4 ${isLowest ? "bg-primary/5" : ""}`}
                   >
                     <div className="col-span-12 sm:col-span-5 flex items-center gap-3 min-w-0">
-                      <div className="h-9 w-9 rounded-md bg-secondary flex items-center justify-center text-sm font-bold text-secondary-foreground shrink-0">
-                        {(pharmMap[p.pharmacy_id] ?? "?").slice(0, 2).toUpperCase()}
-                      </div>
+                      <PharmacyLogo
+                        slug={pharmSlugMap[p.pharmacy_id] ?? ""}
+                        name={pharmMap[p.pharmacy_id]}
+                        size={36}
+                        className="shrink-0 rounded-full"
+                      />
                       <div className="min-w-0">
                         <div className="font-semibold truncate">{pharmMap[p.pharmacy_id]}</div>
                         <div className={`text-xs ${p.in_stock ? "text-success" : "text-muted-foreground"}`}>
