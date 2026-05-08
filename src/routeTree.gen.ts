@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
+import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
 import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
 import { Route as ApiPublicHooksNightlyGrowRouteImport } from './routes/api/public/hooks/nightly-grow'
@@ -58,6 +59,11 @@ const MedicamentoSlugRoute = MedicamentoSlugRouteImport.update({
   path: '/medicamento/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPreciosRoute = AdminPreciosRouteImport.update({
+  id: '/precios',
+  path: '/precios',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiPublicHooksSeedCimaRoute = ApiPublicHooksSeedCimaRouteImport.update({
   id: '/api/public/hooks/seed-cima',
   path: '/api/public/hooks/seed-cima',
@@ -96,11 +102,12 @@ const ApiPublicHooksDiscoverMedsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/admin/precios': typeof AdminPreciosRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -111,11 +118,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/admin/precios': typeof AdminPreciosRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -127,11 +135,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/admin/precios': typeof AdminPreciosRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/como-funciona'
     | '/mis-alertas'
+    | '/admin/precios'
     | '/medicamento/$slug'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/como-funciona'
     | '/mis-alertas'
+    | '/admin/precios'
     | '/medicamento/$slug'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/como-funciona'
     | '/mis-alertas'
+    | '/admin/precios'
     | '/medicamento/$slug'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
@@ -190,7 +202,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
@@ -255,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedicamentoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/precios': {
+      id: '/admin/precios'
+      path: '/precios'
+      fullPath: '/admin/precios'
+      preLoaderRoute: typeof AdminPreciosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/public/hooks/seed-cima': {
       id: '/api/public/hooks/seed-cima'
       path: '/api/public/hooks/seed-cima'
@@ -300,9 +319,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminPreciosRoute: typeof AdminPreciosRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminPreciosRoute: AdminPreciosRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
