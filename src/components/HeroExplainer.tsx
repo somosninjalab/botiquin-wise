@@ -1,4 +1,5 @@
 import { Search, Pill, Bell, Check } from "lucide-react";
+import { PharmacyLogo } from "@/components/PharmacyLogo";
 
 /**
  * Animación visual del hero pensada para personas mayores de 50:
@@ -11,10 +12,10 @@ import { Search, Pill, Bell, Check } from "lucide-react";
  */
 
 const PHARMACIES = [
-  { name: "Farmatodo", color: "#E30613", price: "Bs. 240" },
-  { name: "Locatel",   color: "#0E8C3A", price: "Bs. 198" },
-  { name: "SAAS",      color: "#1F6FEB", price: "Bs. 96",  best: true },
-  { name: "Farmago",   color: "#F39200", price: "Bs. 215" },
+  { name: "Farmatodo", slug: "farmatodo", price: "Bs. 240" },
+  { name: "Locatel",   slug: "locatel",   price: "Bs. 198" },
+  { name: "SAAS",      slug: "saas",      price: "Bs. 96", best: true },
+  { name: "Farmago",   slug: "farmago",   price: "Bs. 215" },
 ];
 
 export function HeroExplainer() {
@@ -61,13 +62,7 @@ export function HeroExplainer() {
               style={{ animationDelay: `${4.2 + i * 0.25}s` }}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <span
-                  className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-white text-xs font-extrabold shrink-0"
-                  style={{ backgroundColor: p.color }}
-                  aria-hidden
-                >
-                  {p.name.charAt(0)}
-                </span>
+                <PharmacyLogo slug={p.slug} name={p.name} size={28} className="rounded-lg shrink-0" />
                 <span className="font-bold text-sm sm:text-base text-foreground truncate">{p.name}</span>
               </div>
               <span className="font-extrabold text-sm sm:text-base text-foreground tabular-nums">
@@ -83,13 +78,7 @@ export function HeroExplainer() {
         <div className="flex flex-col items-center gap-4 max-w-sm w-full">
           <div className="rounded-2xl bg-card border-4 border-primary shadow-[var(--shadow-elevated)] px-6 py-5 w-full hero-pop">
             <div className="flex items-center gap-3 mb-3">
-              <span
-                className="inline-flex items-center justify-center h-10 w-10 rounded-xl text-white text-base font-extrabold"
-                style={{ backgroundColor: "#1F6FEB" }}
-                aria-hidden
-              >
-                S
-              </span>
+              <PharmacyLogo slug="saas" name="SAAS" size={40} className="rounded-xl" />
               <div className="flex-1 min-w-0">
                 <div className="text-base font-bold text-foreground">SAAS</div>
                 <div className="text-xs text-muted-foreground">Mejor precio</div>
