@@ -100,7 +100,7 @@ function normalizeCurrency(raw: unknown, contextHost?: string | null): string {
 
 function guessByHost(host?: string | null): string {
   if (!host) return "USD";
-  if (/\.com\.ve$|farmatodo|farmago|locatel\.com\.ve|cinecitta|farmaciasaas|tufarmaciaactual|maraplus/i.test(host))
+  if (/\.com\.ve$|farmatodo|farmago|gopharma|locatel\.com\.ve|cinecitta|farmaciasaas|tufarmaciaactual|maraplus/i.test(host))
     return "VES";
   return "USD";
 }
