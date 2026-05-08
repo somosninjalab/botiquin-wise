@@ -1,5 +1,12 @@
 type Props = { slug: string; name?: string; size?: number; className?: string };
 
+import locatelLogo from "@/assets/pharmacies/locatel.png";
+
+// Real isotipos (favicon/logo image) per pharmacy when available.
+const LOGO_IMG: Record<string, string> = {
+  locatel: locatelLogo,
+};
+
 // Brand color + initial per pharmacy. Used as a recognizable "isotipo" badge
 // across cards, lists and tables. Inline SVG keeps it crisp at any size.
 const BRAND: Record<string, { bg: string; fg: string; letter: string }> = {
@@ -14,6 +21,20 @@ const BRAND: Record<string, { bg: string; fg: string; letter: string }> = {
 };
 
 export function PharmacyLogo({ slug, name, size = 36, className }: Props) {
+  const img = LOGO_IMG[slug];
+  if (img) {
+    return (
+      <img
+        src={img}
+        alt={name ?? slug}
+        width={size}
+        height={size}
+        className={className}
+        style={{ borderRadius: "50%", objectFit: "cover", background: "#FFFFFF" }}
+        loading="lazy"
+      />
+    );
+  }
   const b = BRAND[slug] ?? {
     bg: "#64748B",
     fg: "#FFFFFF",
