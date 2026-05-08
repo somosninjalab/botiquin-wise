@@ -117,7 +117,7 @@ function MiOrdenPage() {
     const { error } = await supabase.from("user_orders").insert({
       user_id: user.id,
       name: orderName.trim() || "Mi orden",
-      items: items as unknown as object,
+      items: items as unknown as never,
     });
     if (error) { toast.error("No se pudo guardar: " + error.message); return; }
     toast.success("Orden guardada");

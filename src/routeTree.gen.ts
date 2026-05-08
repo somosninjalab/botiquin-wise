@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
+import { Route as MiOrdenRouteImport } from './routes/mi-orden'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -29,6 +30,11 @@ import { Route as ApiPublicHooksDiscoverMedsRouteImport } from './routes/api/pub
 const MisAlertasRoute = MisAlertasRouteImport.update({
   id: '/mis-alertas',
   path: '/mis-alertas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MiOrdenRoute = MiOrdenRouteImport.update({
+  id: '/mi-orden',
+  path: '/mi-orden',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/mi-orden'
     | '/mis-alertas'
     | '/admin/precios'
     | '/medicamento/$slug'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/mi-orden'
     | '/mis-alertas'
     | '/admin/precios'
     | '/medicamento/$slug'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/mi-orden'
     | '/mis-alertas'
     | '/admin/precios'
     | '/medicamento/$slug'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
+  MiOrdenRoute: typeof MiOrdenRoute
   MisAlertasRoute: typeof MisAlertasRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
   ApiPublicHooksDiscoverMedsRoute: typeof ApiPublicHooksDiscoverMedsRoute
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       path: '/mis-alertas'
       fullPath: '/mis-alertas'
       preLoaderRoute: typeof MisAlertasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mi-orden': {
+      id: '/mi-orden'
+      path: '/mi-orden'
+      fullPath: '/mi-orden'
+      preLoaderRoute: typeof MiOrdenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/como-funciona': {
@@ -377,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
+  MiOrdenRoute: MiOrdenRoute,
   MisAlertasRoute: MisAlertasRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
   ApiPublicHooksDiscoverMedsRoute: ApiPublicHooksDiscoverMedsRoute,
