@@ -18,6 +18,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
+import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
 import { Route as ApiPublicHooksSitemapCrawlRouteImport } from './routes/api/public/hooks/sitemap-crawl'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
 import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
@@ -72,6 +73,12 @@ const AdminPreciosRoute = AdminPreciosRouteImport.update({
   path: '/precios',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksTranslateMedsRoute =
+  ApiPublicHooksTranslateMedsRouteImport.update({
+    id: '/api/public/hooks/translate-meds',
+    path: '/api/public/hooks/translate-meds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSitemapCrawlRoute =
   ApiPublicHooksSitemapCrawlRouteImport.update({
     id: '/api/public/hooks/sitemap-crawl',
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
+  '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -157,6 +165,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
+  '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,6 +186,7 @@ export interface FileRoutesById {
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
+  '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
+    | '/api/public/hooks/translate-meds'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
+    | '/api/public/hooks/translate-meds'
   id:
     | '__root__'
     | '/'
@@ -236,6 +248,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
+    | '/api/public/hooks/translate-meds'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -255,6 +268,7 @@ export interface RootRouteChildren {
   ApiPublicHooksScrapePricesRoute: typeof ApiPublicHooksScrapePricesRoute
   ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
   ApiPublicHooksSitemapCrawlRoute: typeof ApiPublicHooksSitemapCrawlRoute
+  ApiPublicHooksTranslateMedsRoute: typeof ApiPublicHooksTranslateMedsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -321,6 +335,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/precios'
       preLoaderRoute: typeof AdminPreciosRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/api/public/hooks/translate-meds': {
+      id: '/api/public/hooks/translate-meds'
+      path: '/api/public/hooks/translate-meds'
+      fullPath: '/api/public/hooks/translate-meds'
+      preLoaderRoute: typeof ApiPublicHooksTranslateMedsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/sitemap-crawl': {
       id: '/api/public/hooks/sitemap-crawl'
@@ -408,7 +429,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksScrapePricesRoute: ApiPublicHooksScrapePricesRoute,
   ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
   ApiPublicHooksSitemapCrawlRoute: ApiPublicHooksSitemapCrawlRoute,
+  ApiPublicHooksTranslateMedsRoute: ApiPublicHooksTranslateMedsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
