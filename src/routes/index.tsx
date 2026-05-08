@@ -562,9 +562,18 @@ function SearchResults(props: {
     () => Array.from(new Set(meds.map((m) => m.category).filter(Boolean) as string[])).sort(),
     [meds],
   );
+  // Mapa indication (EN) → label (ES si existe)
+  const indicationLabels = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const x of meds) {
+      if (!x.indication) continue;
+      if (!m.has(x.indication)) m.set(x.indication, x.indication_es || x.indication);
+    }
+    return m;
+  }, [meds]);
   const indications = useMemo(
-    () => Array.from(new Set(meds.map((m) => m.indication).filter(Boolean) as string[])).sort(),
-    [meds],
+    () => Array.from(indicationLabels.keys()).sort((a, b) => (indicationLabels.get(a)!).localeCompare(indicationLabels.get(b)!)),
+    [indicationLabels],
   );
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
@@ -623,7 +632,7 @@ function SearchResults(props: {
                 </Badge>
               )}
               {ind !== "all" && (
-                <Badge variant="secondary" className="gap-1">{ind}
+                <Badge variant="secondary" className="gap-1">{indicationLabels.get(ind) ?? ind}
                   <button onClick={() => updateSearch({ ind: "all" })} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -727,7 +736,7 @@ function SearchResults(props: {
                             : "bg-secondary text-secondary-foreground border-transparent hover:border-accent/40"
                         }`}
                       >
-                        {i}
+                        {indicationLabels.get(i) ?? i}
                       </button>
                     );
                   })}
