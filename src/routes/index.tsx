@@ -30,7 +30,8 @@ import {
 import { SlidersHorizontal } from "lucide-react";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { PriceAlertsFeed } from "@/components/PriceAlertsFeed";
-import { OrderSummaryHome } from "@/components/OrderSummaryHome";
+import { MiOrdenSection } from "@/components/MiOrdenSection";
+import { ShoppingCart } from "lucide-react";
 import {
   priceToVes,
   displayPrice,
@@ -305,8 +306,23 @@ function Index() {
         />
       ) : (
         <>
-          {/* Resumen de la orden del usuario */}
-          <OrderSummaryHome />
+          {/* Mi orden + lista de compras */}
+          <section className="container mx-auto px-4 pt-8">
+            <div className="flex items-end justify-between mb-4 gap-3 flex-wrap">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                  <ShoppingCart className="h-6 w-6 text-primary" /> Mi orden
+                </h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Arma tu lista y te decimos dónde comprarla más barata.
+                </p>
+              </div>
+              <Link to="/mi-orden">
+                <Button variant="outline" size="sm">Ver página completa</Button>
+              </Link>
+            </div>
+            <MiOrdenSection />
+          </section>
 
           {/* Alertas de precio recientes */}
           <PriceAlertsFeed />
