@@ -7,8 +7,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 type Row = { id: string; name: string; indication: string };
 
 async function translateBatch(items: Row[], apiKey: string): Promise<Record<string, string>> {
-  const list = items.map((r, i) => `${i + 1}. [${r.id}] ${r.indication.replace(/\s+/g, " ").slice(0, 600)}`).join("\n");
-  const prompt = `Traduce al español de Venezuela, claro y breve (máx 240 caracteres), las siguientes indicaciones médicas. Responde SOLO un JSON válido con la forma {"id": "texto traducido"}. No incluyas explicación.\n\n${list}`;
+  const list = items.map((r) => `[${r.id}] ${r.indication.replace(/\s+/g, " ").slice(0, 600)}`).join("\n");
+  const prompt = `Traduce al español de Venezuela cada indicación médica (claro y breve, máx 240 caracteres). Devuelve SOLO un JSON con la forma {"<id>": "traducción", ...}. No incluyas markdown ni explicaciones.\n\n${list}`;
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -16,15 +16,16 @@ async function translateBatch(items: Row[], apiKey: string): Promise<Record<stri
     body: JSON.stringify({
       model: "google/gemini-2.5-flash-lite",
       messages: [
-        { role: "system", content: "Eres un traductor médico al español de Venezuela. Devuelves solo JSON." },
+        { role: "system", content: "Eres un traductor médico al español de Venezuela. Devuelves solo JSON válido." },
         { role: "user", content: prompt },
       ],
-      response_format: { type: "json_object" },
     }),
   });
   if (!res.ok) throw new Error(`AI gateway ${res.status}: ${await res.text().catch(() => "")}`);
   const j = await res.json();
-  const content = j?.choices?.[0]?.message?.content ?? "{}";
+  const raw = j?.choices?.[0]?.message?.content ?? "{}";
+  const match = raw.match(/\{[\s\S]*\}/);
+  const content = match ? match[0] : "{}";
   try {
     const parsed = JSON.parse(content);
     const out: Record<string, string> = {};
