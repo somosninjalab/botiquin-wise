@@ -8,9 +8,10 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBcvRate } from "@/hooks/useBcvRate";
-import { useOrder, addToOrder, removeFromOrder, setQty, clearOrder, type OrderItem } from "@/lib/order-store";
+import { useOrder, removeFromOrder, setQty, clearOrder, type OrderItem } from "@/lib/order-store";
 import { searchMedications, priceToVes, formatBs, formatUSD, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
+import { AudiencePickerDialog, tryAddWithAudienceCheck } from "@/components/AudiencePickerDialog";
 
 type Pharm = { id: string; name: string; slug: string };
 
@@ -190,6 +191,7 @@ function AddMedicationForm() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<MedicationRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pickerMed, setPickerMed] = useState<MedicationRow | null>(null);
 
   useEffect(() => {
     if (!q.trim() || q.trim().length < 2) { setResults([]); return; }
@@ -218,14 +220,9 @@ function AddMedicationForm() {
                 <div className="text-sm font-medium truncate">{m.name}</div>
                 <div className="text-xs text-muted-foreground truncate">{m.active_ingredient}{m.presentation ? ` • ${m.presentation}` : ""}</div>
               </div>
-              <Button size="sm" onClick={() => {
-                addToOrder({
-                  medication_id: m.id, slug: m.slug, name: m.name,
-                  active_ingredient: m.active_ingredient, presentation: m.presentation, image_url: m.image_url,
-                });
-                toast.success(`${m.name} agregado`);
-                setQ("");
-                setResults([]);
+              <Button size="sm" onClick={async () => {
+                const opened = await tryAddWithAudienceCheck(m, (med) => setPickerMed(med));
+                if (!opened) { setQ(""); setResults([]); }
               }}>
                 <Plus className="h-4 w-4 mr-1" /> Agregar
               </Button>
@@ -233,6 +230,11 @@ function AddMedicationForm() {
           ))}
         </ul>
       )}
+      <AudiencePickerDialog
+        open={!!pickerMed}
+        med={pickerMed}
+        onClose={() => { setPickerMed(null); setQ(""); setResults([]); }}
+      />
     </Card>
   );
 }
