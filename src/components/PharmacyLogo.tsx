@@ -1,10 +1,13 @@
 type Props = { slug: string; name?: string; size?: number; className?: string };
 
 import locatelLogo from "@/assets/pharmacies/locatel.png";
+import saasLogo from "@/assets/pharmacies/saas.png";
 
 // Real isotipos (favicon/logo image) per pharmacy when available.
 const LOGO_IMG: Record<string, string> = {
   locatel: locatelLogo,
+  saas: saasLogo,
+  "farmacias-saas": saasLogo,
 };
 
 // Brand color + initial per pharmacy. Used as a recognizable "isotipo" badge
