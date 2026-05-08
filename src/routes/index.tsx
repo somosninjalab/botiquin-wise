@@ -30,6 +30,7 @@ import {
 import { SlidersHorizontal } from "lucide-react";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { PriceAlertsFeed } from "@/components/PriceAlertsFeed";
+import { OrderSummaryHome } from "@/components/OrderSummaryHome";
 import {
   priceToVes,
   displayPrice,
@@ -304,6 +305,9 @@ function Index() {
         />
       ) : (
         <>
+          {/* Resumen de la orden del usuario */}
+          <OrderSummaryHome />
+
           {/* Alertas de precio recientes */}
           <PriceAlertsFeed />
 
