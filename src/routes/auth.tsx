@@ -38,7 +38,16 @@ const signInSchema = z.object({
 export default function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  useEffect(() => { if (user) navigate({ to: "/mis-alertas" }); }, [user, navigate]);
+  useEffect(() => {
+    if (!user) return;
+    const target = typeof window !== "undefined" ? sessionStorage.getItem("redirectAfterAuth") : null;
+    if (target) {
+      sessionStorage.removeItem("redirectAfterAuth");
+      navigate({ to: target });
+    } else {
+      navigate({ to: "/mis-alertas" });
+    }
+  }, [user, navigate]);
 
   const [loading, setLoading] = useState(false);
 
