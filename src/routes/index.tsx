@@ -808,8 +808,8 @@ function SearchResults(props: {
                         <p className="text-xs text-muted-foreground">
                           {m.active_ingredient}{m.presentation ? ` · ${m.presentation}` : ""}
                         </p>
-                        {m.indication && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.indication}</p>
+                        {(m.indication_es || m.indication) && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.indication_es || m.indication}</p>
                         )}
                         {lo ? (
                           <div className="mt-3 pt-3 border-t border-border/60 flex items-end justify-between">
