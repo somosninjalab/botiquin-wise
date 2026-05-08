@@ -543,12 +543,15 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         const url = new URL(request.url);
         const limit = Math.min(Number(url.searchParams.get("limit") ?? 0) || 100, 100);
         const medSlug = url.searchParams.get("med");
+        const pharmSlug = url.searchParams.get("pharm");
 
         const fc = new Firecrawl({ apiKey });
 
-        const { data: pharms } = await supabaseAdmin
+        let pharmQuery = supabaseAdmin
           .from("pharmacies")
           .select("id,slug,name,website_url");
+        if (pharmSlug) pharmQuery = pharmQuery.eq("slug", pharmSlug);
+        const { data: pharms } = await pharmQuery;
 
         let medsQuery = supabaseAdmin
           .from("medications")
