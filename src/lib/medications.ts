@@ -8,6 +8,7 @@ export type MedicationRow = {
   presentation: string | null;
   category: string | null;
   indication: string | null;
+  indication_es?: string | null;
   manufacturer: string | null;
   image_url: string | null;
   brand_names?: string[] | null;

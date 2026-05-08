@@ -416,20 +416,20 @@ function BrowseByCondition({
 }: {
   onPick: (patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
 }) {
-  const [conditions, setConditions] = useState<{ ind: string; cat: string | null; count: number }[]>([]);
+  const [conditions, setConditions] = useState<{ ind: string; label: string; cat: string | null; count: number }[]>([]);
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("medications")
-        .select("indication,category")
+        .select("indication,indication_es,category")
         .not("indication", "is", null);
-      const map = new Map<string, { ind: string; cat: string | null; count: number }>();
-      for (const r of (data ?? []) as { indication: string | null; category: string | null }[]) {
+      const map = new Map<string, { ind: string; label: string; cat: string | null; count: number }>();
+      for (const r of (data ?? []) as { indication: string | null; indication_es: string | null; category: string | null }[]) {
         if (!r.indication) continue;
         const key = r.indication;
         const cur = map.get(key);
         if (cur) cur.count++;
-        else map.set(key, { ind: key, cat: r.category, count: 1 });
+        else map.set(key, { ind: key, label: r.indication_es || r.indication, cat: r.category, count: 1 });
       }
       setConditions(Array.from(map.values()).sort((a, b) => b.count - a.count));
     })();
@@ -464,7 +464,7 @@ function BrowseByCondition({
               </span>
             </div>
             <h3 className="mt-3 font-semibold leading-tight group-hover:text-primary line-clamp-2">
-              {c.ind}
+              {c.label}
             </h3>
             {c.cat && <p className="text-xs text-muted-foreground mt-1">{c.cat}</p>}
           </button>
@@ -562,9 +562,18 @@ function SearchResults(props: {
     () => Array.from(new Set(meds.map((m) => m.category).filter(Boolean) as string[])).sort(),
     [meds],
   );
+  // Mapa indication (EN) → label (ES si existe)
+  const indicationLabels = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const x of meds) {
+      if (!x.indication) continue;
+      if (!m.has(x.indication)) m.set(x.indication, x.indication_es || x.indication);
+    }
+    return m;
+  }, [meds]);
   const indications = useMemo(
-    () => Array.from(new Set(meds.map((m) => m.indication).filter(Boolean) as string[])).sort(),
-    [meds],
+    () => Array.from(indicationLabels.keys()).sort((a, b) => (indicationLabels.get(a)!).localeCompare(indicationLabels.get(b)!)),
+    [indicationLabels],
   );
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
@@ -623,7 +632,7 @@ function SearchResults(props: {
                 </Badge>
               )}
               {ind !== "all" && (
-                <Badge variant="secondary" className="gap-1">{ind}
+                <Badge variant="secondary" className="gap-1">{indicationLabels.get(ind) ?? ind}
                   <button onClick={() => updateSearch({ ind: "all" })} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -727,7 +736,7 @@ function SearchResults(props: {
                             : "bg-secondary text-secondary-foreground border-transparent hover:border-accent/40"
                         }`}
                       >
-                        {i}
+                        {indicationLabels.get(i) ?? i}
                       </button>
                     );
                   })}
@@ -799,8 +808,8 @@ function SearchResults(props: {
                         <p className="text-xs text-muted-foreground">
                           {m.active_ingredient}{m.presentation ? ` · ${m.presentation}` : ""}
                         </p>
-                        {m.indication && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.indication}</p>
+                        {(m.indication_es || m.indication) && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.indication_es || m.indication}</p>
                         )}
                         {lo ? (
                           <div className="mt-3 pt-3 border-t border-border/60 flex items-end justify-between">
