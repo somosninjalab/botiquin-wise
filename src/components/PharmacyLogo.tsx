@@ -5,6 +5,7 @@ import saasLogo from "@/assets/pharmacies/saas.png";
 import actualLogo from "@/assets/pharmacies/actual.png";
 import farmagoLogo from "@/assets/pharmacies/farmago.png";
 import gopharmaLogo from "@/assets/pharmacies/gopharma.png";
+import farmatodoLogo from "@/assets/pharmacies/farmatodo.png";
 
 // Real isotipos (favicon/logo image) per pharmacy when available.
 const LOGO_IMG: Record<string, string> = {
@@ -14,6 +15,7 @@ const LOGO_IMG: Record<string, string> = {
   actual: actualLogo,
   farmago: farmagoLogo,
   gopharma: gopharmaLogo,
+  farmatodo: farmatodoLogo,
 };
 
 // Brand color + initial per pharmacy. Used as a recognizable "isotipo" badge
