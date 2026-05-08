@@ -184,8 +184,9 @@ function extractFromHtml(html: string, url: string) {
 }
 
 async function crawlPharmacy(fc: Firecrawl, pharm: PharmRow, maxUrls: number, concurrency: number) {
-  const host = siteHost(pharm.website_url);
-  if (!host || !pharm.website_url) return { mapped: 0, candidates: 0, created: 0, prices: 0, errors: ["sin website_url"] };
+  const hostMaybe = siteHost(pharm.website_url);
+  if (!hostMaybe || !pharm.website_url) return { mapped: 0, candidates: 0, created: 0, prices: 0, errors: ["sin website_url"] };
+  const host: string = hostMaybe;
   const errors: string[] = [];
 
   // 1) Sitemap completo (sin filtro de búsqueda)
