@@ -28,6 +28,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { SlidersHorizontal } from "lucide-react";
+import { PharmacyLogo } from "@/components/PharmacyLogo";
 import {
   priceToVes,
   displayPrice,
@@ -294,6 +295,7 @@ function Index() {
           lowestByMed={lowestByMed}
           prices={prices}
           pharmaciesMap={pharmaciesMap}
+          pharmacySlugMap={pharmacySlugMap}
           pharmacyOptions={pharmacyOptions}
           updateSearch={updateSearch}
           bcvRate={bcvRate}
@@ -332,7 +334,16 @@ function Index() {
                             <>
                               <div className="text-xl font-bold text-primary">{d.primary}</div>
                               {d.secondary && <div className="text-[10px] text-muted-foreground">≈ {d.secondary}</div>}
-                              <div className="text-xs text-muted-foreground mt-1">en {pharmaciesMap[lo.pharmacy_id]}</div>
+                              <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1.5">
+                                en
+                                <PharmacyLogo
+                                  slug={pharmacySlugMap[lo.pharmacy_id] ?? ""}
+                                  name={pharmaciesMap[lo.pharmacy_id]}
+                                  size={16}
+                                  className="rounded-full"
+                                />
+                                {pharmaciesMap[lo.pharmacy_id]}
+                              </div>
                             </>
                           );
                         })()}
@@ -527,6 +538,7 @@ function SearchResults(props: {
   lowestByMed: Map<string, PriceRow>;
   prices: PriceRow[];
   pharmaciesMap: Record<string, string>;
+  pharmacySlugMap: Record<string, string>;
   pharmacyOptions: [string, string][];
   updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
   bcvRate: number | null;
@@ -534,7 +546,7 @@ function SearchResults(props: {
 }) {
   const {
     q, pharm, med, cat, ind, loading, meds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
+    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
   } = props;
 
   // Etiquetas únicas presentes en los resultados actuales
@@ -583,7 +595,12 @@ function SearchResults(props: {
             <div className="flex flex-wrap gap-1.5 mt-2">
               {pharm !== "all" && (
                 <Badge variant="secondary" className="gap-1">
-                  <Store className="h-3 w-3" />
+                  <PharmacyLogo
+                    slug={pharmacySlugMap[pharm] ?? ""}
+                    name={pharmaciesMap[pharm]}
+                    size={14}
+                    className="rounded-full"
+                  />
                   {pharmaciesMap[pharm] ?? "Farmacia"}
                   <button onClick={() => updateSearch({ pharm: "all" })} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
@@ -625,7 +642,17 @@ function SearchResults(props: {
                   <SelectContent>
                     <SelectItem value="all">Todas las farmacias</SelectItem>
                     {pharmacyOptions.map(([id, name]) => (
-                      <SelectItem key={id} value={id}>{name}</SelectItem>
+                      <SelectItem key={id} value={id}>
+                        <span className="inline-flex items-center gap-2">
+                          <PharmacyLogo
+                            slug={pharmacySlugMap[id] ?? ""}
+                            name={name}
+                            size={16}
+                            className="rounded-full"
+                          />
+                          {name}
+                        </span>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -769,9 +796,17 @@ function SearchResults(props: {
                         )}
                         {lo ? (
                           <div className="mt-3 pt-3 border-t border-border/60 flex items-end justify-between">
-                            <div>
+                            <div className="min-w-0">
                               <div className="text-xs text-muted-foreground">Mejor precio</div>
-                              <div className="text-xs font-medium">{pharmaciesMap[lo.pharmacy_id]}</div>
+                              <div className="text-xs font-medium inline-flex items-center gap-1.5 min-w-0">
+                                <PharmacyLogo
+                                  slug={pharmacySlugMap[lo.pharmacy_id] ?? ""}
+                                  name={pharmaciesMap[lo.pharmacy_id]}
+                                  size={18}
+                                  className="rounded-full shrink-0"
+                                />
+                                <span className="truncate">{pharmaciesMap[lo.pharmacy_id]}</span>
+                              </div>
                             </div>
                             {(() => {
                               const d = displayPrice(Number(lo.price), lo.currency, bcvRate);
