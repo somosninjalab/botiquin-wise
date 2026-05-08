@@ -200,6 +200,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          birth_date: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -209,11 +210,13 @@ export type Database = {
           ip_first_seen: string | null
           phone: string | null
           region: string | null
+          sex: string | null
           updated_at: string
           user_id: string
           weekly_digest: boolean
         }
         Insert: {
+          birth_date?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -223,11 +226,13 @@ export type Database = {
           ip_first_seen?: string | null
           phone?: string | null
           region?: string | null
+          sex?: string | null
           updated_at?: string
           user_id: string
           weekly_digest?: boolean
         }
         Update: {
+          birth_date?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -237,6 +242,7 @@ export type Database = {
           ip_first_seen?: string | null
           phone?: string | null
           region?: string | null
+          sex?: string | null
           updated_at?: string
           user_id?: string
           weekly_digest?: boolean
