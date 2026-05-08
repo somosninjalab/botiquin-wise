@@ -16,6 +16,7 @@ const PHARMACIES = [
   { name: "Locatel",   slug: "locatel",   price: "Bs. 198" },
   { name: "SAAS",      slug: "saas",      price: "Bs. 96", best: true },
   { name: "Farmago",   slug: "farmago",   price: "Bs. 215" },
+  { name: "GoPharma",  slug: "gopharma",  price: "Bs. 182" },
 ];
 
 export function HeroExplainer() {
@@ -23,7 +24,7 @@ export function HeroExplainer() {
     <div
       className="relative w-full aspect-video rounded-2xl overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-card to-accent/5 shadow-[var(--shadow-elevated)]"
       role="img"
-      aria-label="Animación: Alerta Medicina busca tu medicamento, compara Farmatodo, Locatel, SAAS y Farmago, y te avisa cuando baja el precio."
+      aria-label="Animación: Alerta Medicina busca tu medicamento, compara Farmatodo, Locatel, SAAS, Farmago y GoPharma, y te avisa cuando baja el precio."
     >
       {/* PASO 1 — Lupa buscando la medicina (0s → 4s) */}
       <div className="absolute inset-0 flex items-center justify-center hero-step-1">
@@ -52,7 +53,7 @@ export function HeroExplainer() {
       {/* PASO 2 — Comparando 4 farmacias (4s → 8s) */}
       <div className="absolute inset-0 p-4 sm:p-6 hero-step-2">
         <div className="text-center text-sm sm:text-base font-bold text-muted-foreground mb-3">
-          Comparando 4 farmacias
+          Comparando 5 farmacias
         </div>
         <div className="grid grid-cols-2 gap-2 sm:gap-3 max-w-md mx-auto">
           {PHARMACIES.map((p, i) => (
