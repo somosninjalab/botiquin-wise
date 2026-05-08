@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { SlidersHorizontal } from "lucide-react";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
+import { PriceAlertsFeed } from "@/components/PriceAlertsFeed";
 import {
   priceToVes,
   displayPrice,
@@ -303,6 +304,9 @@ function Index() {
         />
       ) : (
         <>
+          {/* Alertas de precio recientes */}
+          <PriceAlertsFeed />
+
           {/* Destacados con mejor precio */}
           <section className="container mx-auto px-4 py-12 md:py-14">
             <div className="flex items-end justify-between mb-6">
