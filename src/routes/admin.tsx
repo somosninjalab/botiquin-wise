@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { LayoutDashboard, Download, RefreshCw } from "lucide-react";
+import { LayoutDashboard, Download, RefreshCw, LineChart as LineChartIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -143,6 +143,11 @@ function AdminPage() {
         </div>
         <Button onClick={exportXlsx} className="gap-2">
           <Download className="h-4 w-4" /> Exportar registros (.xlsx)
+        </Button>
+        <Button asChild variant="outline" className="gap-2">
+          <Link to="/admin/precios">
+            <LineChartIcon className="h-4 w-4" /> Evolución de precios (20 días)
+          </Link>
         </Button>
         <Button
           variant="secondary"
