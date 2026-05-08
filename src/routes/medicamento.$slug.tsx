@@ -139,7 +139,9 @@ function MedicamentoPage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
               {med.category && <span className="rounded-full bg-secondary px-3 py-1">{med.category}</span>}
-              {med.indication && <span className="rounded-full bg-secondary px-3 py-1">{med.indication}</span>}
+              {(med.indication_es || med.indication) && (
+                <span className="rounded-full bg-secondary px-3 py-1">{med.indication_es || med.indication}</span>
+              )}
               {med.manufacturer && <span className="rounded-full bg-secondary px-3 py-1">{med.manufacturer}</span>}
             </div>
             {med.brand_names && med.brand_names.length > 0 && (
