@@ -16,6 +16,7 @@ const PHARMACIES = [
   { name: "Locatel",   slug: "locatel",   price: "Bs. 198" },
   { name: "SAAS",      slug: "saas",      price: "Bs. 96", best: true },
   { name: "Farmago",   slug: "farmago",   price: "Bs. 215" },
+  { name: "GoPharma",  slug: "gopharma",  price: "Bs. 182" },
 ];
 
 export function HeroExplainer() {
@@ -52,7 +53,7 @@ export function HeroExplainer() {
       {/* PASO 2 — Comparando 4 farmacias (4s → 8s) */}
       <div className="absolute inset-0 p-4 sm:p-6 hero-step-2">
         <div className="text-center text-sm sm:text-base font-bold text-muted-foreground mb-3">
-          Comparando 4 farmacias
+          Comparando 5 farmacias
         </div>
         <div className="grid grid-cols-2 gap-2 sm:gap-3 max-w-md mx-auto">
           {PHARMACIES.map((p, i) => (
