@@ -285,9 +285,8 @@ export const Route = createFileRoute("/api/public/hooks/sitemap-crawl")({
         const pharmSlug = url.searchParams.get("pharm");
 
         const fc = new Firecrawl({ apiKey });
-        let q = supabaseAdmin.from("pharmacies").select("id,slug,name,website_url");
-        if (pharmSlug) q = q.eq("slug", pharmSlug);
-        const { data: pharms } = await q;
+        const baseQ = supabaseAdmin.from("pharmacies").select("id,slug,name,website_url");
+        const { data: pharms } = await (pharmSlug ? baseQ.eq("slug", pharmSlug) : baseQ);
         const list = (pharms ?? []) as PharmRow[];
 
         const summary: Record<string, any> = {};
