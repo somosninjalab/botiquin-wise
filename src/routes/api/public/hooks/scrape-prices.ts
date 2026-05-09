@@ -359,6 +359,14 @@ async function scrapeOne(
     }
   }
 
+  // 0b) GoPharma fast-path: Flutter SPA that uses a public REST API.
+  if (/gopharma/i.test(host)) {
+    for (const q of variants) {
+      const hit = await searchGoPharmaApi(q, med, host);
+      if (hit) return hit;
+    }
+  }
+
   // 0) VTEX fast-path: query the public catalog JSON API directly. Returns
   // price + link + image without burning Firecrawl credits or LLM calls.
   if (pharm.search_url_template?.includes("/api/catalog_system/")) {
