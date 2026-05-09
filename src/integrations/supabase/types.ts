@@ -201,6 +201,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pharmacy_search_config: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          pharmacy_id: string
+          result_link_selector: string | null
+          search_url_template: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pharmacy_id: string
+          result_link_selector?: string | null
+          search_url_template: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pharmacy_id?: string
+          result_link_selector?: string | null
+          search_url_template?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       price_alerts: {
         Row: {
           created_at: string
