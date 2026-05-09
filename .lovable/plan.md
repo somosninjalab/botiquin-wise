@@ -1,77 +1,64 @@
-# ¡Alerta: Medicina! — Plan del MVP
+## Cambio de estrategia de scraping: usar el buscador interno de cada farmacia
 
-Portal en español que centraliza precios de medicamentos de Farmatodo, Farmacias SAAS, Maraplus y Locatel, con buscador único, historial de precios, alertas por email y panel de métricas.
+Hoy descubrimos URLs de productos con Firecrawl `search` (`site:host query`) + `map`, lo que depende de Google y del sitemap. Pasaremos a usar el **buscador interno de cada sitio** (la URL de búsqueda real que usa el cliente al escribir en su buscador), recorrer los resultados y entrar al primero que coincida con el medicamento. Esto da precios reales, actualizados y refleja exactamente lo que vería un usuario.
 
-## Experiencia de usuario
+### Cómo funcionará la nueva estrategia
 
-### Páginas públicas
-- **Home (`/`)** — Hero vibrante con buscador grande ("Busca tu medicamento o principio activo"), propuesta de valor, medicamentos destacados con mayor baja de precio reciente, CTA de registro para alertas.
-- **Resultados (`/buscar?q=...`)** — Lista de coincidencias por nombre comercial y principio activo. Cada card muestra: nombre, presentación, precio actual más bajo, farmacia, badge "↓ bajó X%", botón "Seguir este medicamento".
-- **Detalle (`/medicamento/$id`)** — Comparativa de precios actuales por farmacia (tabla), gráfico de evolución histórica (línea), botón "Recibir alertas", info de principio activo / categoría / indicación.
-- **Cómo funciona (`/como-funciona`)** — Explicación del servicio gratuito.
-- **Registro / Login (`/auth`)** — Email + contraseña y Google. Al registrarse se capturan: nombre, teléfono, email, ubicación (geolocalización por IP en el servidor).
+Para cada farmacia + medicamento:
 
-### Área de usuario
-- **Mis seguimientos (`/mis-alertas`)** — Lista de medicamentos seguidos, umbral de alerta configurable, baja con un clic.
-- **Preferencias** — Activar/desactivar resumen semanal, frecuencia de alertas inmediatas.
+1. **Construir la URL del buscador propio** de la farmacia con el término (principio activo o marca + dosis).
+2. **Cargar la página de resultados** con Firecrawl (`scrape`) o fetch + Cheerio si el HTML es estático.
+3. **Extraer los enlaces de productos** de los resultados (los primeros 3–5).
+4. **Filtrar candidatos**: el título debe mencionar el principio activo o una marca conocida y, si el medicamento trae dosis, debe coincidir.
+5. **Entrar a cada candidato** y extraer precio, stock, imagen y URL canónica con el mismo `extractionPrompt` actual.
+6. **Validar y guardar** en `medication_prices` (igual que hoy: rango por moneda, host autoritativo para currency, append-only para histórico).
 
-### Panel admin (`/admin`)
-- Solo rol `admin` (tabla `user_roles` con función `has_role`).
-- Métricas: búsquedas por medicamento, por región (derivada del IP), por categoría/indicación, top farmacias, total usuarios, suscripciones activas, alertas enviadas.
-- Gráficos con Recharts y filtros por rango de fechas.
+### Mapa de buscadores por farmacia
 
-### Emails
-- **Alerta inmediata** cuando un medicamento seguido baja de precio.
-- **Resumen semanal** los lunes con los seguidos del usuario y las mejores ofertas de su región.
+| Slug       | URL de búsqueda                                                                   |
+|------------|-----------------------------------------------------------------------------------|
+| farmatodo  | `https://www.farmatodo.com.ve/buscar?text={q}`                                    |
+| saas       | `https://www.farmaciasaas.com/buscar?text={q}` (verificar selector)               |
+| locatel    | `https://www.locatel.com.ve/buscar?text={q}`                                      |
+| maraplus   | `https://maraplus.com/?s={q}` (WooCommerce)                                       |
+| farmago    | `https://farmago.com.ve/?s={q}` (WooCommerce)                                     |
+| gopharma   | `https://ec.gopharma.com.ve/buscar?text={q}` (VTEX)                               |
+| cinecitta  | `https://store.supermarketcinecitta.com/buscar?text={q}` (VTEX)                   |
+| actual     | `https://www.tufarmaciaactual.com/?s={q}` (WooCommerce)                           |
 
-## Modelo de datos (Lovable Cloud / Supabase)
+Estas URLs se almacenarán en una tabla nueva `pharmacy_search_config` (slug, search_url_template, result_link_selector opcional) para poder ajustarlas sin redeploy.
 
-- `pharmacies` — id, nombre, logo, base_url.
-- `medications` — id, nombre comercial, principio activo, presentación, categoría, indicación, slug.
-- `medication_prices` — medication_id, pharmacy_id, price, currency, url, scraped_at. (histórico, append-only).
-- `medication_followers` — user_id, medication_id, threshold_pct, created_at.
-- `profiles` — user_id, nombre, teléfono, ciudad, región, ip_first_seen.
-- `user_roles` — user_id, role (`admin` / `user`) con función `has_role` SECURITY DEFINER.
-- `search_events` — query, medication_id, region, user_id (nullable), created_at — alimenta métricas.
-- `email_send_log` — manejado por la infra de emails de Lovable.
+### Cambios concretos
 
-RLS estricta: cada usuario solo ve sus seguimientos y perfil; precios y medicamentos son lectura pública; admin accede a métricas vía función con `has_role`.
+**Archivos**
+- `src/routes/api/public/hooks/scrape-prices.ts`: reemplazar `searchCandidates` + `mapCandidates` por una nueva función `searchOnPharmacySite(fc, pharm, query)` que:
+  - Carga la URL de búsqueda interna.
+  - Devuelve los enlaces de producto del listado (extracción con Cheerio buscando `a[href]` cuyo path encaje con `isSpecificProductUrl`).
+  - Mantiene `scrapeUrl` y el fallback gratuito sin cambios.
+- Nueva tabla `pharmacy_search_config` (1 fila por farmacia) con los templates anteriores.
+- `scrape-prices.ts` carga el config al iniciar y usa `replace("{q}", encodeURIComponent(query))`.
 
-## Scraping
+**Lógica de candidatos**
+- Por variante (`buildQueryVariants`): pedir 1 búsqueda interna, sacar máximo 5 enlaces.
+- Filtrar por `isSpecificProductUrl` y por `pageMatchesMed` (texto del listado o luego del producto).
+- Cortar tan pronto encontremos un precio válido.
 
-El alcance de scraping no se decidió aún. El plan contempla **dos fases** para no bloquear la entrega:
+**Histórico, alertas, scheduling**: sin cambios. Seguimos insertando en `medication_prices` y el cron `process-price-alerts` sigue igual.
 
-1. **Fase 1 (incluida en este plan):** carga inicial con datos demo realistas + estructura completa de BD e ingesta. Todo el frontend, registro, alertas y métricas funcionan end-to-end con datos sembrados, para validar UX.
-2. **Fase 2 (siguiente iteración):** integrar scraping real. Las opciones técnicas serán:
-   - Job programado con `pg_cron` que llama un server route `/api/public/scrape-prices` usando **Firecrawl** (conector) para extraer precios cada N horas, comparar con el último precio y disparar alertas vía la cola de emails.
-   - O scraping bajo demanda al buscar (más lento, sin cron).
+### Lo que NO cambia
 
-Te preguntaré la opción preferida después de validar la Fase 1, o podemos cerrarlo ahora si prefieres.
+- `extractionPrompt`, parsers de precio/moneda, validación por rango, `pageMatchesMed`.
+- Tablas `medications`, `medication_prices`, `price_alerts`, `pharmacies`.
+- Cron jobs ni el panel `/admin/precios`.
 
-## Estilo visual
+### Riesgos y mitigación
 
-- Español, estética **moderna y vibrante**.
-- Paleta: verde menta como primario (salud/ahorro), coral para alertas de baja de precio, fondos claros con acentos oscuros.
-- Tipografía sans-serif moderna (Inter), cards redondeadas, micro-interacciones en hover, badges de descuento llamativos.
-- Tema claro por defecto, soporte de modo oscuro.
-- Mobile-first: el buscador y los resultados deben funcionar perfecto en móvil.
+- Algunos buscadores (Farmatodo, VTEX) **renderizan resultados con JavaScript**. Para esos casos Firecrawl `scrape` (que ejecuta JS) funciona; el fallback `fetchHtml` puede no devolver enlaces. Si el listado viene vacío, caemos al método actual (`search` global / `map`) como red de seguridad.
+- WooCommerce (`?s=`) devuelve HTML estático: 100% cubierto por `fetchHtml` + Cheerio.
+- Si una farmacia cambia el path de búsqueda, basta con actualizar `pharmacy_search_config` (sin redeploy).
 
-## Aspectos técnicos
+### Entregable
 
-- TanStack Start + Tailwind v4 + shadcn/ui + Recharts.
-- Lovable Cloud habilitado para auth (email/password + Google), BD, RLS y roles.
-- Lovable Emails para alertas y resumen semanal (requiere configurar dominio remitente).
-- Geolocalización por IP en server function usando cabecera `cf-connecting-ip` / `x-forwarded-for`, resuelta con un servicio gratuito (ej. ipapi.co) y guardada en `profiles.region`.
-- Validación con Zod en todos los formularios y server functions.
-- `search_events` se inserta en cada búsqueda (anonimizado si no hay sesión) para alimentar las métricas.
-
-## Lo que entregamos en esta iteración
-
-1. Esquema completo de BD + RLS + roles.
-2. Auth (email/password + Google) y captura de perfil con ubicación por IP.
-3. Home con buscador, resultados, detalle con gráfico histórico.
-4. Sistema de seguimiento de medicamentos y configuración de alertas.
-5. Infra de emails: alerta inmediata + resumen semanal con `pg_cron`.
-6. Panel admin con métricas (búsquedas por medicamento/región/categoría).
-7. Datos demo para 4 farmacias y ~30 medicamentos representativos.
-8. Tras aprobar, decidimos juntos la estrategia de scraping real (Firecrawl programado o bajo demanda).
+1. Migración: crear `pharmacy_search_config` + insert con los templates.
+2. Refactor de `scrape-prices.ts` con la nueva función `searchOnPharmacySite` y fallback al método actual.
+3. Probar `/api/public/hooks/scrape-prices` contra 3 medicamentos representativos (paracetamol 500mg, ibuprofeno 400mg, atorvastatina 20mg) y verificar filas nuevas en `medication_prices`.
