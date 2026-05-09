@@ -103,6 +103,8 @@ function guessByHost(host?: string | null): string {
   if (!host) return "USD";
   // SAAS publishes prices in USD on its VTEX catalog.
   if (/farmaciasaas/i.test(host)) return "USD";
+  // GoPharma also publishes prices in USD.
+  if (/gopharma/i.test(host)) return "USD";
   if (/\.com\.ve$|farmatodo|farmago|gopharma|locatel\.com\.ve|cinecitta|tufarmaciaactual|maraplus/i.test(host))
     return "VES";
   return "USD";
