@@ -650,7 +650,18 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         if (medSlug) medsQuery = medsQuery.eq("slug", medSlug);
         const { data: meds } = await medsQuery.limit(limit);
 
-        const pharmList = (pharms ?? []) as PharmRow[];
+        // Load search-bar templates and merge.
+        const { data: cfgRows } = await supabaseAdmin
+          .from("pharmacy_search_config")
+          .select("pharmacy_id, search_url_template");
+        const cfgByPharm = new Map<string, string>();
+        for (const c of (cfgRows ?? []) as { pharmacy_id: string; search_url_template: string }[]) {
+          cfgByPharm.set(c.pharmacy_id, c.search_url_template);
+        }
+        const pharmList: PharmRowWithSearch[] = ((pharms ?? []) as PharmRow[]).map((p) => ({
+          ...p,
+          search_url_template: cfgByPharm.get(p.id) ?? null,
+        }));
         const medList = (meds ?? []) as MedRow[];
 
         let inserted = 0;
