@@ -101,7 +101,9 @@ function normalizeCurrency(raw: unknown, contextHost?: string | null): string {
 
 function guessByHost(host?: string | null): string {
   if (!host) return "USD";
-  if (/\.com\.ve$|farmatodo|farmago|gopharma|locatel\.com\.ve|cinecitta|farmaciasaas|tufarmaciaactual|maraplus/i.test(host))
+  // SAAS publishes prices in USD on its VTEX catalog.
+  if (/farmaciasaas/i.test(host)) return "USD";
+  if (/\.com\.ve$|farmatodo|farmago|gopharma|locatel\.com\.ve|cinecitta|tufarmaciaactual|maraplus/i.test(host))
     return "VES";
   return "USD";
 }
