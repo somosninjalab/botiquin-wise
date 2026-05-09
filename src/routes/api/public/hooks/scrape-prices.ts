@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type PharmRow = { id: string; slug: string; name: string; website_url: string | null };
+type PharmRowWithSearch = PharmRow & { search_url_template: string | null };
 type MedRow = {
   id: string;
   name: string;
@@ -340,47 +341,136 @@ async function scrapeUrl(
 async function scrapeOne(
   fc: Firecrawl,
   med: MedRow,
-  pharm: PharmRow,
+  pharm: PharmRowWithSearch,
 ): Promise<ExtractedFull | null> {
   const host = siteHost(pharm.website_url);
   if (!host || !pharm.website_url) return null;
   const variants = buildQueryVariants(med);
 
-  // 1) For each variant, gather candidate product URLs from search + sitemap-map.
+  // 1) PRIMARY: use the pharmacy's own internal search bar.
   const seen = new Set<string>();
   const candidates: string[] = [];
   for (const q of variants) {
-    const [s, m] = await Promise.all([
-      searchCandidates(fc, host, q, 4),
-      mapCandidates(fc, pharm.website_url, q, 6),
-    ]);
-    for (const u of [...s, ...m]) {
+    const internal = await searchOnPharmacySite(fc, pharm, q, host);
+    for (const u of internal) {
       if (seen.has(u)) continue;
       if (!isSpecificProductUrl(u, host)) continue;
       seen.add(u);
       candidates.push(u);
-      if (candidates.length >= 6) break;
+      if (candidates.length >= 5) break;
     }
     if (candidates.length >= 3) break;
   }
+
+  // 2) Fallback if pharmacy search yielded nothing: legacy Google + sitemap.
+  if (!candidates.length) {
+    for (const q of variants) {
+      const [s, m] = await Promise.all([
+        searchCandidates(fc, host, q, 4),
+        mapCandidates(fc, pharm.website_url, q, 6),
+      ]);
+      for (const u of [...s, ...m]) {
+        if (seen.has(u)) continue;
+        if (!isSpecificProductUrl(u, host)) continue;
+        seen.add(u);
+        candidates.push(u);
+        if (candidates.length >= 5) break;
+      }
+      if (candidates.length >= 3) break;
+    }
+  }
+
   if (!candidates.length) {
     console.warn(`[scrape:no-candidates] ${pharm.slug} / ${med.name}`);
     return null;
   }
 
-  // 2) Try candidates one by one until we get a valid extraction.
+  // 3) Try candidates one by one until we get a valid extraction.
   for (const url of candidates) {
     const norm = await scrapeUrl(fc, url, host, med);
     if (norm) return norm;
   }
   console.warn(`[scrape:no-extract] ${pharm.slug} / ${med.name} (${candidates.length} urls)`);
 
-  // 3) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
+  // 4) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
   for (const url of candidates) {
     const fb = await scrapeFreeFallback(url, host, med);
     if (fb) return fb;
   }
   return null;
+}
+
+/**
+ * Use the pharmacy's OWN internal search bar to find products. This mirrors
+ * what a real customer does: type into the site's search and pick the first
+ * matching result. Returns a list of absolute product URLs from the listing.
+ */
+async function searchOnPharmacySite(
+  fc: Firecrawl,
+  pharm: PharmRowWithSearch,
+  query: string,
+  host: string,
+): Promise<string[]> {
+  const tmpl = pharm.search_url_template;
+  if (!tmpl) return [];
+  const searchUrl = tmpl.replace("{q}", encodeURIComponent(query));
+
+  // 1) Try free fetch first (works for WooCommerce / static SSR results).
+  let html = await fetchHtml(searchUrl);
+  if (!html) html = await fetchViaJina(searchUrl);
+  let urls = html ? extractProductLinks(html, searchUrl, host) : [];
+
+  // 2) If no links (likely JS-rendered), use Firecrawl scrape which executes JS.
+  if (!urls.length) {
+    try {
+      const res: any = await fc.scrape(searchUrl, {
+        formats: ["html", "markdown"],
+        onlyMainContent: false,
+        waitFor: 2500,
+      } as any);
+      const renderedHtml: string =
+        res?.html ?? res?.data?.html ?? res?.rawHtml ?? res?.data?.rawHtml ?? "";
+      if (renderedHtml) urls = extractProductLinks(renderedHtml, searchUrl, host);
+      // Also harvest links the LLM saw in markdown.
+      const md: string = res?.markdown ?? res?.data?.markdown ?? "";
+      if (md) {
+        const fromMd = Array.from(md.matchAll(/\((https?:\/\/[^)\s]+)\)/g)).map((m) => m[1]);
+        for (const u of fromMd) {
+          if (isSpecificProductUrl(u, host) && !urls.includes(u)) urls.push(u);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return urls.slice(0, 8);
+}
+
+/** Parse a search-results HTML page and return absolute product URLs. */
+function extractProductLinks(html: string, baseUrl: string, host: string): string[] {
+  try {
+    const $ = cheerio.load(html);
+    const out: string[] = [];
+    const seen = new Set<string>();
+    $("a[href]").each((_, el) => {
+      const href = $(el).attr("href");
+      if (!href) return;
+      let abs: string;
+      try {
+        abs = new URL(href, baseUrl).toString().split("#")[0];
+      } catch {
+        return;
+      }
+      if (seen.has(abs)) return;
+      if (!isSpecificProductUrl(abs, host)) return;
+      seen.add(abs);
+      out.push(abs);
+    });
+    return out;
+  } catch {
+    return [];
+  }
 }
 
 // --- Fallback gratuito: fetch directo + Cheerio + r.jina.ai --------------
