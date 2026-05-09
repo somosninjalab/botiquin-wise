@@ -101,7 +101,9 @@ function normalizeCurrency(raw: unknown, contextHost?: string | null): string {
 
 function guessByHost(host?: string | null): string {
   if (!host) return "USD";
-  if (/\.com\.ve$|farmatodo|farmago|gopharma|locatel\.com\.ve|cinecitta|farmaciasaas|tufarmaciaactual|maraplus/i.test(host))
+  // SAAS publishes prices in USD on its VTEX catalog.
+  if (/farmaciasaas/i.test(host)) return "USD";
+  if (/\.com\.ve$|farmatodo|farmago|gopharma|locatel\.com\.ve|cinecitta|tufarmaciaactual|maraplus/i.test(host))
     return "VES";
   return "USD";
 }
@@ -347,6 +349,14 @@ async function scrapeOne(
   if (!host || !pharm.website_url) return null;
   const variants = buildQueryVariants(med);
 
+  // 0a) Farmatodo Algolia fast-path (Angular SPA, public Algolia creds).
+  if (/farmatodo\.com\.ve$/i.test(host)) {
+    for (const q of variants) {
+      const hit = await searchFarmatodoAlgolia(q, med, host);
+      if (hit) return hit;
+    }
+  }
+
   // 0) VTEX fast-path: query the public catalog JSON API directly. Returns
   // price + link + image without burning Firecrawl credits or LLM calls.
   if (pharm.search_url_template?.includes("/api/catalog_system/")) {
@@ -461,6 +471,75 @@ async function searchOnPharmacySite(
 }
 
 // --- VTEX catalog JSON API ------------------------------------------------
+
+// --- Farmatodo Algolia fast-path -----------------------------------------
+const FARMATODO_ALGOLIA = {
+  appId: "VCOJEYD2PO",
+  apiKey: "869a91e98550dd668b8b1dc04bca9011",
+  index: "products-venezuela",
+};
+
+type AlgoliaHit = {
+  item?: number | string;
+  url?: string;
+  fullPrice?: number;
+  offerPrice?: number;
+  mediaImageUrl?: string;
+  totalStock?: number;
+  outofstore?: boolean;
+  productName?: string;
+  brand?: string;
+  largeDescription?: string;
+  mediaDescription?: string;
+};
+
+async function searchFarmatodoAlgolia(
+  query: string,
+  med: MedRow,
+  host: string | null,
+): Promise<ExtractedFull | null> {
+  const url = `https://${FARMATODO_ALGOLIA.appId.toLowerCase()}-dsn.algolia.net/1/indexes/${FARMATODO_ALGOLIA.index}/query?x-algolia-application-id=${FARMATODO_ALGOLIA.appId}&x-algolia-api-key=${FARMATODO_ALGOLIA.apiKey}`;
+  let hits: AlgoliaHit[] = [];
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ params: `query=${encodeURIComponent(query)}&hitsPerPage=8` }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) {
+      console.warn(`[algolia:bad-status] ${host} ${res.status}`);
+      return null;
+    }
+    const j: any = await res.json();
+    hits = (j?.hits ?? []) as AlgoliaHit[];
+    console.info(`[algolia:hit] ${host} q="${query}" items=${hits.length}`);
+  } catch (e) {
+    console.warn(`[algolia:fetch-fail] ${(e as Error).message}`);
+    return null;
+  }
+  for (const h of hits) {
+    const haystack = [h.productName, h.brand, h.url, h.mediaDescription, h.largeDescription]
+      .filter(Boolean)
+      .join(" ");
+    if (!pageMatchesMed(haystack, med)) continue;
+    const price = h.offerPrice && h.offerPrice > 0 ? h.offerPrice : h.fullPrice ?? 0;
+    if (!price || price <= 0) continue;
+    const currency = "VES";
+    if (!priceWithinRange(price, currency)) continue;
+    if (!h.url) continue;
+    const link = `https://${host ?? "www.farmatodo.com.ve"}/producto/${h.url}`;
+    if (!isSpecificProductUrl(link, host)) continue;
+    const image_url = h.mediaImageUrl ? pickImageUrl({ image_url: h.mediaImageUrl }, link) : null;
+    const inStock = (h.totalStock ?? 0) > 0 && h.outofstore !== true;
+    return { price, currency, in_stock: inStock, product_url: link, image_url };
+  }
+  console.warn(`[algolia:no-match] ${host} q="${query}"`);
+  return null;
+}
 
 type VtexItemSeller = {
   commertialOffer?: { Price?: number; ListPrice?: number; AvailableQuantity?: number; IsAvailable?: boolean };
