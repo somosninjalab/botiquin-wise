@@ -625,6 +625,85 @@ async function searchVtexApi(
   return null;
 }
 
+// --- GoPharma (Flutter SPA backed by app.gopharma.dev REST API) ----------
+
+type GoPharmaProduct = {
+  id?: number;
+  name?: string;
+  slug?: string;
+  price?: number | string;
+  stock?: number;
+  image_full_url?: string;
+  image?: string;
+  active_ingredient?: string;
+  description?: string;
+};
+
+async function searchGoPharmaApi(
+  query: string,
+  med: MedRow,
+  host: string | null,
+): Promise<ExtractedFull | null> {
+  const url = `https://app.gopharma.dev/api/v1/items/search?name=${encodeURIComponent(
+    query,
+  )}&type=all&offset=1&limit=20`;
+  let products: GoPharmaProduct[] = [];
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(url, {
+      headers: {
+        ...BROWSER_HEADERS,
+        Accept: "application/json",
+        "X-localization": "es",
+        // Required headers; GoPharma's API rejects requests without these.
+        moduleId: "1",
+        zoneId: "[1]",
+        latitude: "10.4806",
+        longitude: "-66.9036",
+        Referer: "https://ec.gopharma.com.ve/",
+        Origin: "https://ec.gopharma.com.ve",
+      },
+      signal: ctrl.signal,
+      redirect: "follow",
+    });
+    clearTimeout(t);
+    if (res.status >= 400) {
+      console.warn(`[gopharma-api:bad-status] ${url} → ${res.status}`);
+      return null;
+    }
+    const j: any = await res.json();
+    products = (j?.products ?? []) as GoPharmaProduct[];
+    console.info(`[gopharma-api:hit] ${host} q="${query}" items=${products.length}`);
+  } catch (e) {
+    console.warn(`[gopharma-api:fetch-fail] ${url} ${(e as Error).message}`);
+    return null;
+  }
+  if (!products.length) return null;
+
+  for (const p of products) {
+    const haystack = [p.name, p.active_ingredient, p.description].filter(Boolean).join(" ");
+    if (!pageMatchesMed(haystack, med)) continue;
+    const price = typeof p.price === "string" ? parseFloat(p.price) : p.price ?? 0;
+    if (!price || !Number.isFinite(price) || price <= 0) continue;
+    const currency = "USD";
+    if (!priceWithinRange(price, currency)) continue;
+    const slug = p.slug ?? "";
+    const id = p.id;
+    if (!slug && !id) continue;
+    // ec.gopharma.com.ve is a Flutter SPA; deep-link to the product detail.
+    const link = `https://${host ?? "ec.gopharma.com.ve"}/product/${slug || id}`;
+    if (!isSpecificProductUrl(link, host)) continue;
+    const image_url = p.image_full_url
+      ? pickImageUrl({ image_url: p.image_full_url }, link)
+      : null;
+    const inStock = (p.stock ?? 0) > 0;
+    return { price, currency, in_stock: inStock, product_url: link, image_url };
+  }
+  console.warn(`[gopharma-api:no-match] ${host} q="${query}"`);
+  return null;
+}
+
 /** Parse a search-results HTML page and return absolute product URLs. */
 function extractProductLinks(html: string, baseUrl: string, host: string): string[] {
   try {
