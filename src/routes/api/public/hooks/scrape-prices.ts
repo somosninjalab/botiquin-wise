@@ -347,6 +347,16 @@ async function scrapeOne(
   if (!host || !pharm.website_url) return null;
   const variants = buildQueryVariants(med);
 
+  // 0) VTEX fast-path: query the public catalog JSON API directly. Returns
+  // price + link + image without burning Firecrawl credits or LLM calls.
+  if (pharm.search_url_template?.includes("/api/catalog_system/")) {
+    for (const q of variants) {
+      const hit = await searchVtexApi(pharm.search_url_template, q, med, host);
+      if (hit) return hit;
+    }
+    // Fall through to legacy if VTEX API returned nothing.
+  }
+
   // 1) PRIMARY: use the pharmacy's own internal search bar.
   const seen = new Set<string>();
   const candidates: string[] = [];
@@ -413,6 +423,9 @@ async function searchOnPharmacySite(
 ): Promise<string[]> {
   const tmpl = pharm.search_url_template;
   if (!tmpl) return [];
+  // VTEX API templates are handled in the fast-path; if we still get here
+  // (med didn't match), there is no HTML listing to parse.
+  if (tmpl.includes("/api/catalog_system/")) return [];
   const searchUrl = tmpl.replace("{q}", encodeURIComponent(query));
 
   // 1) Try free fetch first (works for WooCommerce / static SSR results).
@@ -445,6 +458,74 @@ async function searchOnPharmacySite(
   }
 
   return urls.slice(0, 8);
+}
+
+// --- VTEX catalog JSON API ------------------------------------------------
+
+type VtexItemSeller = {
+  commertialOffer?: { Price?: number; ListPrice?: number; AvailableQuantity?: number; IsAvailable?: boolean };
+};
+type VtexItem = { itemId?: string; images?: { imageUrl?: string }[]; sellers?: VtexItemSeller[] };
+type VtexProduct = {
+  productName?: string;
+  productTitle?: string;
+  link?: string;
+  linkText?: string;
+  items?: VtexItem[];
+};
+
+async function searchVtexApi(
+  template: string,
+  query: string,
+  med: MedRow,
+  host: string | null,
+): Promise<ExtractedFull | null> {
+  const url = template.replace("{q}", encodeURIComponent(query));
+  let products: VtexProduct[] = [];
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    const res = await fetch(url, {
+      headers: {
+        ...BROWSER_HEADERS,
+        Accept: "application/json",
+      },
+      signal: ctrl.signal,
+      redirect: "follow",
+    });
+    clearTimeout(t);
+    // VTEX commonly answers 200 or 206 (partial); both carry valid JSON.
+    if (res.status >= 400) return null;
+    products = (await res.json()) as VtexProduct[];
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(products) || !products.length) return null;
+
+  for (const p of products) {
+    const name = p.productName ?? p.productTitle ?? "";
+    if (!name) continue;
+    if (!pageMatchesMed(name, med)) continue;
+    const item = (p.items ?? [])[0];
+    const offer = item?.sellers?.[0]?.commertialOffer;
+    const price = offer?.Price ?? offer?.ListPrice ?? 0;
+    if (!price || price <= 0) continue;
+    const currency = guessByHost(host); // VTEX VE returns Bs.
+    if (!priceWithinRange(price, currency)) continue;
+    const link = p.link ?? (p.linkText ? `https://${host}/${p.linkText}/p` : "");
+    if (!link || !isSpecificProductUrl(link, host)) continue;
+    const image_url = pickImageUrl({ image_url: item?.images?.[0]?.imageUrl }, link);
+    const inStock =
+      offer?.IsAvailable !== false && (offer?.AvailableQuantity ?? 1) > 0;
+    return {
+      price,
+      currency: currency.slice(0, 8),
+      in_stock: inStock,
+      product_url: link,
+      image_url,
+    };
+  }
+  return null;
 }
 
 /** Parse a search-results HTML page and return absolute product URLs. */
