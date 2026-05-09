@@ -494,26 +494,33 @@ async function searchVtexApi(
       redirect: "follow",
     });
     clearTimeout(t);
-    // VTEX commonly answers 200 or 206 (partial); both carry valid JSON.
-    if (res.status >= 400) return null;
+    if (res.status >= 400) {
+      console.warn(`[vtex-api:bad-status] ${url} → ${res.status}`);
+      return null;
+    }
     products = (await res.json()) as VtexProduct[];
-  } catch {
+    console.info(`[vtex-api:hit] ${host} q="${query}" items=${products.length}`);
+  } catch (e) {
+    console.warn(`[vtex-api:fetch-fail] ${url} ${(e as Error).message}`);
     return null;
   }
   if (!Array.isArray(products) || !products.length) return null;
 
+  let inspected = 0, matched = 0;
   for (const p of products) {
     const name = p.productName ?? p.productTitle ?? "";
     if (!name) continue;
+    inspected++;
     if (!pageMatchesMed(name, med)) continue;
+    matched++;
     const item = (p.items ?? [])[0];
     const offer = item?.sellers?.[0]?.commertialOffer;
     const price = offer?.Price ?? offer?.ListPrice ?? 0;
-    if (!price || price <= 0) continue;
+    if (!price || price <= 0) { console.warn(`[vtex-api:no-price] ${host} "${name}"`); continue; }
     const currency = guessByHost(host); // VTEX VE returns Bs.
-    if (!priceWithinRange(price, currency)) continue;
+    if (!priceWithinRange(price, currency)) { console.warn(`[vtex-api:out-of-range] ${host} ${price} ${currency}`); continue; }
     const link = p.link ?? (p.linkText ? `https://${host}/${p.linkText}/p` : "");
-    if (!link || !isSpecificProductUrl(link, host)) continue;
+    if (!link || !isSpecificProductUrl(link, host)) { console.warn(`[vtex-api:bad-link] ${link}`); continue; }
     const image_url = pickImageUrl({ image_url: item?.images?.[0]?.imageUrl }, link);
     const inStock =
       offer?.IsAvailable !== false && (offer?.AvailableQuantity ?? 1) > 0;
@@ -525,6 +532,7 @@ async function searchVtexApi(
       image_url,
     };
   }
+  console.warn(`[vtex-api:no-match] ${host} q="${query}" inspected=${inspected} matched=${matched}`);
   return null;
 }
 
