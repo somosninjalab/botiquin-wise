@@ -347,6 +347,14 @@ async function scrapeOne(
   if (!host || !pharm.website_url) return null;
   const variants = buildQueryVariants(med);
 
+  // 0a) Farmatodo Algolia fast-path (Angular SPA, public Algolia creds).
+  if (/farmatodo\.com\.ve$/i.test(host)) {
+    for (const q of variants) {
+      const hit = await searchFarmatodoAlgolia(q, med, host);
+      if (hit) return hit;
+    }
+  }
+
   // 0) VTEX fast-path: query the public catalog JSON API directly. Returns
   // price + link + image without burning Firecrawl credits or LLM calls.
   if (pharm.search_url_template?.includes("/api/catalog_system/")) {
