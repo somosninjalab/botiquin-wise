@@ -18,6 +18,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
 import { Route as ApiPublicHooksSitemapCrawlRouteImport } from './routes/api/public/hooks/sitemap-crawl'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
@@ -73,6 +74,12 @@ const AdminPreciosRoute = AdminPreciosRouteImport.update({
   path: '/precios',
   getParentRoute: () => AdminRoute,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTranslateMedsRoute =
   ApiPublicHooksTranslateMedsRouteImport.update({
     id: '/api/public/hooks/translate-meds',
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,6 +196,7 @@ export interface FileRoutesById {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -269,6 +282,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
   ApiPublicHooksSitemapCrawlRoute: typeof ApiPublicHooksSitemapCrawlRoute
   ApiPublicHooksTranslateMedsRoute: typeof ApiPublicHooksTranslateMedsRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -335,6 +349,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/precios'
       preLoaderRoute: typeof AdminPreciosRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/translate-meds': {
       id: '/api/public/hooks/translate-meds'
@@ -430,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
   ApiPublicHooksSitemapCrawlRoute: ApiPublicHooksSitemapCrawlRoute,
   ApiPublicHooksTranslateMedsRoute: ApiPublicHooksTranslateMedsRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
