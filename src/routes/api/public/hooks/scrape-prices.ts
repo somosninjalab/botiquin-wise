@@ -464,6 +464,7 @@ async function searchOnPharmacySite(
 
   // 1) Try free fetch first (works for WooCommerce / static SSR results).
   let html = await fetchHtml(searchUrl);
+  if (!html) html = await fetchViaProxy(searchUrl);
   if (!html) html = await fetchViaJina(searchUrl);
   let urls = html ? extractProductLinks(html, searchUrl, host) : [];
 
@@ -1019,6 +1020,11 @@ async function scrapeFreeFallback(
     }
   }
   if (!html) html = await fetchHtml(url);
+  if (!html) {
+    // Reverse proxy: cambia la IP de salida y suele esquivar bloqueos
+    // geográficos / Cloudflare (Maraplus, Cinecittà).
+    html = await fetchViaProxy(url);
+  }
   if (!html) {
     console.warn(`[scrape-free:fetchHtml-fail] ${url}`);
     html = await fetchViaJina(url);
