@@ -56,6 +56,8 @@ const searchSchema = z.object({
   med: fallback(z.string(), "all").default("all"),
   cat: fallback(z.string(), "all").default("all"),
   ind: fallback(z.string(), "all").default("all"),
+  brand: fallback(z.string(), "all").default("all"),
+  ai: fallback(z.string(), "all").default("all"),
 });
 
 export const Route = createFileRoute("/")({
@@ -64,10 +66,16 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { q, pharm, med, cat, ind } = Route.useSearch();
+  const { q, pharm, med, cat, ind, brand, ai } = Route.useSearch();
   const navigate = useNavigate({ from: "/" });
   const isSearching =
-    q.trim().length > 0 || pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all";
+    q.trim().length > 0 ||
+    pharm !== "all" ||
+    med !== "all" ||
+    cat !== "all" ||
+    ind !== "all" ||
+    brand !== "all" ||
+    ai !== "all";
   const bcvRate = useBcvRate();
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
@@ -150,7 +158,7 @@ function Index() {
   }, [q, cat, ind, isSearching]);
 
   const updateSearch = (
-    patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>,
+    patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
   ) => {
     navigate({ search: (prev: any) => ({ ...prev, ...patch }) });
   };
@@ -182,9 +190,12 @@ function Index() {
     if (med !== "all") list = list.filter((m) => m.id === med);
     if (cat !== "all") list = list.filter((m) => m.category === cat);
     if (ind !== "all") list = list.filter((m) => m.indication === ind);
+    if (ai !== "all") list = list.filter((m) => m.active_ingredient === ai);
+    if (brand !== "all")
+      list = list.filter((m) => (m.brand_names ?? []).some((b) => b === brand));
     if (pharm !== "all") list = list.filter((m) => lowestByMed.has(m.id));
     return list;
-  }, [meds, med, cat, ind, pharm, lowestByMed]);
+  }, [meds, med, cat, ind, ai, brand, pharm, lowestByMed]);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, MedicationRow[]>();
@@ -292,6 +303,8 @@ function Index() {
           med={med}
           cat={cat}
           ind={ind}
+          brand={brand}
+          ai={ai}
           loading={loading}
           meds={meds}
           grouped={grouped}
