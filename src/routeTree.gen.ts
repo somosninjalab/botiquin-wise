@@ -17,7 +17,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
 import { Route as ApiPublicHooksSitemapCrawlRouteImport } from './routes/api/public/hooks/sitemap-crawl'
@@ -69,11 +73,33 @@ const MedicamentoSlugRoute = MedicamentoSlugRouteImport.update({
   path: '/medicamento/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminPreciosRoute = AdminPreciosRouteImport.update({
   id: '/precios',
   path: '/precios',
   getParentRoute: () => AdminRoute,
 } as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -143,7 +169,9 @@ export interface FileRoutesByFullPath {
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/admin/precios': typeof AdminPreciosRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -154,6 +182,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,7 +194,9 @@ export interface FileRoutesByTo {
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/admin/precios': typeof AdminPreciosRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -175,6 +207,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,7 +220,9 @@ export interface FileRoutesById {
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/admin/precios': typeof AdminPreciosRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -197,6 +233,8 @@ export interface FileRoutesById {
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -209,7 +247,9 @@ export interface FileRouteTypes {
     | '/mi-orden'
     | '/mis-alertas'
     | '/admin/precios'
+    | '/email/unsubscribe'
     | '/medicamento/$slug'
+    | '/lovable/email/suppression'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -220,6 +260,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -230,7 +272,9 @@ export interface FileRouteTypes {
     | '/mi-orden'
     | '/mis-alertas'
     | '/admin/precios'
+    | '/email/unsubscribe'
     | '/medicamento/$slug'
+    | '/lovable/email/suppression'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -241,6 +285,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -251,7 +297,9 @@ export interface FileRouteTypes {
     | '/mi-orden'
     | '/mis-alertas'
     | '/admin/precios'
+    | '/email/unsubscribe'
     | '/medicamento/$slug'
+    | '/lovable/email/suppression'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -262,6 +310,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -272,7 +322,9 @@ export interface RootRouteChildren {
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   MiOrdenRoute: typeof MiOrdenRoute
   MisAlertasRoute: typeof MisAlertasRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksDiscoverMedsRoute: typeof ApiPublicHooksDiscoverMedsRoute
   ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
   ApiPublicHooksEnrichMedsRoute: typeof ApiPublicHooksEnrichMedsRoute
@@ -283,6 +335,8 @@ export interface RootRouteChildren {
   ApiPublicHooksSitemapCrawlRoute: typeof ApiPublicHooksSitemapCrawlRoute
   ApiPublicHooksTranslateMedsRoute: typeof ApiPublicHooksTranslateMedsRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -343,12 +397,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedicamentoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/precios': {
       id: '/admin/precios'
       path: '/precios'
       fullPath: '/admin/precios'
       preLoaderRoute: typeof AdminPreciosRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -441,7 +523,9 @@ const rootRouteChildren: RootRouteChildren = {
   ComoFuncionaRoute: ComoFuncionaRoute,
   MiOrdenRoute: MiOrdenRoute,
   MisAlertasRoute: MisAlertasRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksDiscoverMedsRoute: ApiPublicHooksDiscoverMedsRoute,
   ApiPublicHooksDiscoverOnDemandRoute: ApiPublicHooksDiscoverOnDemandRoute,
   ApiPublicHooksEnrichMedsRoute: ApiPublicHooksEnrichMedsRoute,
@@ -452,6 +536,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSitemapCrawlRoute: ApiPublicHooksSitemapCrawlRoute,
   ApiPublicHooksTranslateMedsRoute: ApiPublicHooksTranslateMedsRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
