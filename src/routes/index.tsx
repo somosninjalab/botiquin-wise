@@ -569,6 +569,8 @@ function SearchResults(props: {
   med: string;
   cat: string;
   ind: string;
+  brand: string;
+  ai: string;
   loading: boolean;
   meds: MedicationRow[];
   grouped: [string, MedicationRow[]][];
@@ -577,12 +579,12 @@ function SearchResults(props: {
   pharmaciesMap: Record<string, string>;
   pharmacySlugMap: Record<string, string>;
   pharmacyOptions: [string, string][];
-  updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
+  updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>) => void;
   bcvRate: number | null;
   scrapingIds: Set<string>;
 }) {
   const {
-    q, pharm, med, cat, ind, loading, meds, grouped, lowestByMed, prices,
+    q, pharm, med, cat, ind, brand, ai, loading, meds, grouped, lowestByMed, prices,
     pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
   } = props;
 
@@ -604,11 +606,27 @@ function SearchResults(props: {
     () => Array.from(indicationLabels.keys()).sort((a, b) => (indicationLabels.get(a)!).localeCompare(indicationLabels.get(b)!)),
     [indicationLabels],
   );
+  // Listas únicas de nombre comercial y compuesto activo presentes en resultados
+  const brandOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of meds) for (const b of m.brand_names ?? []) if (b) set.add(b);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [meds]);
+  const aiOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of meds) if (m.active_ingredient) set.add(m.active_ingredient);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [meds]);
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const activeFilterCount =
-    (pharm !== "all" ? 1 : 0) + (med !== "all" ? 1 : 0) + (cat !== "all" ? 1 : 0) + (ind !== "all" ? 1 : 0);
+    (pharm !== "all" ? 1 : 0) +
+    (med !== "all" ? 1 : 0) +
+    (cat !== "all" ? 1 : 0) +
+    (ind !== "all" ? 1 : 0) +
+    (brand !== "all" ? 1 : 0) +
+    (ai !== "all" ? 1 : 0);
 
   return (
     <section id="resultados" className="container mx-auto px-4 pt-3 md:pt-4 pb-16 scroll-mt-20">
