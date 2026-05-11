@@ -847,6 +847,67 @@ function extractFromHtml(html: string, url: string): {
     if (og) image_url = pickImageUrl({ image_url: og }, url);
   }
 
+  // 3) Selectores CSS comunes para precio (WooCommerce, Odoo, VTEX, genéricos).
+  //    Buscamos el primer nodo cuyo texto parsee a un precio válido. Recorremos
+  //    en orden: precio "actual/de oferta" antes que "regular/tachado".
+  if (price === null) {
+    const SELECTORS = [
+      // Específicos de carrito/oferta primero
+      ".price ins .woocommerce-Price-amount bdi",
+      ".price ins .woocommerce-Price-amount",
+      "p.price ins .amount",
+      ".price .woocommerce-Price-amount bdi",
+      ".price .woocommerce-Price-amount",
+      ".woocommerce-Price-amount bdi",
+      ".woocommerce-Price-amount",
+      // Odoo
+      ".product_price .oe_currency_value",
+      ".oe_price .oe_currency_value",
+      ".oe_price_h4 .oe_currency_value",
+      "span.oe_currency_value",
+      // VTEX / shopify / generic
+      ".vtex-product-price-1-x-sellingPrice",
+      ".vtex-product-price-1-x-sellingPriceValue",
+      ".price-best-price",
+      ".product-price .price",
+      ".product__price",
+      ".price-now",
+      ".current-price",
+      ".sale-price",
+      ".final-price",
+      ".precio-actual",
+      ".precio",
+      "[itemprop='price']",
+      "[data-price]",
+      "[class*='sellingPrice']",
+      "[class*='product-price']",
+      "[class*='price-value']",
+    ];
+    let symbol = "";
+    for (const sel of SELECTORS) {
+      const nodes = $(sel);
+      for (let i = 0; i < nodes.length; i++) {
+        const el = nodes.eq(i);
+        const txt =
+          (el.attr("content") ||
+            el.attr("data-price") ||
+            el.text() ||
+            "").trim();
+        if (!txt) continue;
+        const p = parsePrice(txt);
+        if (p) {
+          price = p;
+          if (/USD|US\$|\$/.test(txt)) symbol = "USD";
+          else if (/Bs|VES|VEF|BOL/i.test(txt)) symbol = "VES";
+          else if (/€|EUR/.test(txt)) symbol = "EUR";
+          break;
+        }
+      }
+      if (price !== null) break;
+    }
+    if (price !== null && !currency) currency = symbol;
+  }
+
   const title = $("title").first().text() || $('meta[property="og:title"]').attr("content") || "";
   const text = `${title}\n${$("body").text().slice(0, 4000)}`;
 
