@@ -360,7 +360,9 @@ function Index() {
                         </span>
                       )}
                     </div>
-                    <h3 className="mt-3 font-semibold leading-tight line-clamp-2">{m.name}</h3>
+                    <h3 className="mt-3 font-semibold leading-tight line-clamp-2">
+                      {(m.brand_names ?? [])[0] || m.name}
+                    </h3>
                     <p className="text-xs text-muted-foreground mt-1">{m.active_ingredient}</p>
                     {lo ? (
                       <div className="mt-3 pt-3 border-t border-border/60">
@@ -552,7 +554,9 @@ function PopularList() {
                 params={{ slug: m.slug }}
                 className="group flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm hover:border-primary/50 hover:bg-primary/5 transition-colors"
               >
-                <span className="truncate font-medium group-hover:text-primary">{m.name}</span>
+                <span className="truncate font-medium group-hover:text-primary">
+                  {(m.brand_names ?? [])[0] || m.name}
+                </span>
                 <span className="text-xs text-muted-foreground truncate ml-2">{m.active_ingredient}</span>
               </Link>
             ))}
@@ -901,7 +905,9 @@ function SearchResults(props: {
                             </span>
                           )}
                         </div>
-                        <h3 className="mt-3 font-semibold">{m.name}</h3>
+                        <h3 className="mt-3 font-semibold">
+                          {(m.brand_names ?? [])[0] || m.name}
+                        </h3>
                         <p className="text-xs text-muted-foreground">
                           {m.active_ingredient}{m.presentation ? ` · ${m.presentation}` : ""}
                         </p>
