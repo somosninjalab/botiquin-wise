@@ -424,7 +424,7 @@ async function scrapeOne(
 
   // 4) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
   for (const url of candidates) {
-    const fb = await scrapeFreeFallback(url, host, med);
+    const fb = await scrapeFreeFallback(url, host, med, fc);
     if (fb) return fb;
   }
   return null;
