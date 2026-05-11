@@ -424,7 +424,7 @@ async function scrapeOne(
 
   // 4) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
   for (const url of candidates) {
-    const fb = await scrapeFreeFallback(url, host, med);
+    const fb = await scrapeFreeFallback(url, host, med, fc);
     if (fb) return fb;
   }
   return null;
@@ -918,15 +918,50 @@ async function scrapeFreeFallback(
   url: string,
   host: string | null,
   med: MedRow,
+  fc?: Firecrawl,
 ): Promise<ExtractedFull | null> {
   let html = await fetchHtml(url);
-  if (!html) html = await fetchViaJina(url);
-  if (!html) return null;
+  if (!html) {
+    console.warn(`[scrape-free:fetchHtml-fail] ${url}`);
+    html = await fetchViaJina(url);
+  }
+  if (!html && fc) {
+    try {
+      const res: any = await fc.scrape(url, {
+        formats: ["html"],
+        onlyMainContent: false,
+        waitFor: 2000,
+      } as any);
+      html =
+        res?.html ?? res?.data?.html ?? res?.rawHtml ?? res?.data?.rawHtml ?? "";
+      if (html) console.info(`[scrape-free:fc-html-ok] ${url} (${html.length}b)`);
+    } catch (e) {
+      console.warn(`[scrape-free:fc-html-fail] ${url} ${(e as Error).message}`);
+    }
+  }
+  if (!html) {
+    console.warn(`[scrape-free:no-html] ${url}`);
+    return null;
+  }
   const ext = extractFromHtml(html, url);
-  if (ext.price === null) return null;
+  if (ext.price === null) {
+    console.warn(`[scrape-free:no-price] ${url} (html ${html.length}b)`);
+    return null;
+  }
   const currency = normalizeCurrency(ext.currency, host);
-  if (!priceWithinRange(ext.price, currency)) return null;
-  if (!pageMatchesMed(ext.text, med)) {
+  if (!priceWithinRange(ext.price, currency)) {
+    console.warn(`[scrape-free:out-of-range] ${url} ${ext.price} ${currency}`);
+    return null;
+  }
+  // Incluir el slug de la URL en el haystack: muchos sitios (Odoo)
+  // dejan el contenido del producto bajo JS y el <body> queda casi vacío,
+  // pero el slug de la URL sí menciona principio activo + marca + dosis.
+  const urlSlug = (() => {
+    try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
+    catch { return ""; }
+  })();
+  const haystack = `${ext.text}\n${urlSlug}`;
+  if (!pageMatchesMed(haystack, med)) {
     console.warn(`[scrape-free:mismatch] ${url}`);
     return null;
   }
