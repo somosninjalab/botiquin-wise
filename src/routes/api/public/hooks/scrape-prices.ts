@@ -896,6 +896,22 @@ function extractFromHtml(html: string, url: string): {
       "[class*='sellingPrice']",
       "[class*='product-price']",
       "[class*='price-value']",
+      // Odoo extra (Tu Farmacia Actual / Maraplus / Farmago)
+      ".product_price h4 .oe_currency_value",
+      ".product_price b",
+      ".o_we_currency_value",
+      "h4.oe_price .oe_currency_value",
+      // Selectores muy genéricos por id/atributos
+      "[id*='product_price'] .oe_currency_value",
+      "[id*='price'] .amount",
+      "span.amount",
+      "[class*='Price__']",
+      "[class*='price__']",
+      "[class*='ProductPrice']",
+      "[data-product-price]",
+      "[data-test*='price']",
+      "[data-testid*='price']",
+      "[data-qa*='price']",
     ];
     let symbol = "";
     for (const sel of SELECTORS) {
