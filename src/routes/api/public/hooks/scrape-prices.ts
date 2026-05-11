@@ -392,6 +392,7 @@ async function scrapeOne(
   // 1) PRIMARY: use the pharmacy's own internal search bar.
   const seen = new Set<string>();
   const candidates: string[] = [];
+  const trustedSet = new Set<string>();
   for (const q of variants) {
     const internal = await searchOnPharmacySite(fc, pharm, q, host);
     for (const u of internal) {
@@ -399,6 +400,7 @@ async function scrapeOne(
       if (!isSpecificProductUrl(u, host)) continue;
       seen.add(u);
       candidates.push(u);
+      trustedSet.add(u);
       if (candidates.length >= 5) break;
     }
     if (candidates.length >= 3) break;
@@ -429,14 +431,14 @@ async function scrapeOne(
 
   // 3) Try candidates one by one until we get a valid extraction.
   for (const url of candidates) {
-    const norm = await scrapeUrl(fc, url, host, med);
+    const norm = await scrapeUrl(fc, url, host, med, { trusted: trustedSet.has(url) });
     if (norm) return norm;
   }
   console.warn(`[scrape:no-extract] ${pharm.slug} / ${med.name} (${candidates.length} urls)`);
 
   // 4) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
   for (const url of candidates) {
-    const fb = await scrapeFreeFallback(url, host, med, fc);
+    const fb = await scrapeFreeFallback(url, host, med, fc, { trusted: trustedSet.has(url) });
     if (fb) return fb;
   }
   return null;
