@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { renderAsync } from '@react-email/components'
+import { render } from '@react-email/components'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 const SITE_NAME = '¡Alerta: Medicina!'
@@ -81,8 +81,8 @@ export async function enqueueTransactionalEmail(p: EnqueueParams): Promise<Enque
 
   // Render
   const element = React.createElement(template.component, templateData)
-  const html = await renderAsync(element)
-  const text = await renderAsync(element, { plainText: true })
+  const html = await render(element)
+  const text = await render(element, { plainText: true })
   const subject = typeof template.subject === 'function' ? template.subject(templateData) : template.subject
 
   await supabase.from('email_send_log').insert({
