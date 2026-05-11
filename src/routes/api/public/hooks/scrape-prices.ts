@@ -312,21 +312,33 @@ async function scrapeUrl(
   url: string,
   host: string | null,
   med: MedRow,
+  opts: { trusted?: boolean } = {},
 ): Promise<ExtractedFull | null> {
   try {
     const res: any = await fc.scrape(url, {
       formats: ["markdown", { type: "json", prompt: extractionPrompt } as any] as any,
       onlyMainContent: true,
+      waitFor: 2500,
     } as any);
     const j = res?.json ?? res?.data?.json ?? res?.extract;
     const md: string =
       res?.markdown ?? res?.data?.markdown ?? res?.metadata?.title ?? "";
     const norm = normalizeExtraction(j, url, host);
     if (!norm) return null;
-    // Validación de contenido: la página debe hablar del medicamento.
-    if (!pageMatchesMed(`${md}\n${res?.metadata?.title ?? ""}`, med)) {
-      console.warn(`[scrape:mismatch] ${url} no menciona ${med.active_ingredient}`);
-      return null;
+    // Validación de contenido: si la URL viene del buscador interno de la
+    // farmacia, confiamos en ella y no exigimos pageMatchesMed (los sitios
+    // SPA dejan el <body> vacío al servir y el match falla aunque el
+    // producto sea correcto). Solo validamos cuando NO es trusted.
+    if (!opts.trusted) {
+      const urlSlug = (() => {
+        try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
+        catch { return ""; }
+      })();
+      const haystack = `${md}\n${res?.metadata?.title ?? ""}\n${urlSlug}`;
+      if (!pageMatchesMed(haystack, med)) {
+        console.warn(`[scrape:mismatch] ${url} no menciona ${med.active_ingredient}`);
+        return null;
+      }
     }
     // Validación de rango de precio.
     if (!priceWithinRange(norm.price, norm.currency)) {
@@ -380,6 +392,7 @@ async function scrapeOne(
   // 1) PRIMARY: use the pharmacy's own internal search bar.
   const seen = new Set<string>();
   const candidates: string[] = [];
+  const trustedSet = new Set<string>();
   for (const q of variants) {
     const internal = await searchOnPharmacySite(fc, pharm, q, host);
     for (const u of internal) {
@@ -387,6 +400,7 @@ async function scrapeOne(
       if (!isSpecificProductUrl(u, host)) continue;
       seen.add(u);
       candidates.push(u);
+      trustedSet.add(u);
       if (candidates.length >= 5) break;
     }
     if (candidates.length >= 3) break;
@@ -417,14 +431,14 @@ async function scrapeOne(
 
   // 3) Try candidates one by one until we get a valid extraction.
   for (const url of candidates) {
-    const norm = await scrapeUrl(fc, url, host, med);
+    const norm = await scrapeUrl(fc, url, host, med, { trusted: trustedSet.has(url) });
     if (norm) return norm;
   }
   console.warn(`[scrape:no-extract] ${pharm.slug} / ${med.name} (${candidates.length} urls)`);
 
   // 4) Fallback gratuito: fetch directo + Cheerio (JSON-LD / OpenGraph) y r.jina.ai.
   for (const url of candidates) {
-    const fb = await scrapeFreeFallback(url, host, med, fc);
+    const fb = await scrapeFreeFallback(url, host, med, fc, { trusted: trustedSet.has(url) });
     if (fb) return fb;
   }
   return null;
@@ -882,6 +896,22 @@ function extractFromHtml(html: string, url: string): {
       "[class*='sellingPrice']",
       "[class*='product-price']",
       "[class*='price-value']",
+      // Odoo extra (Tu Farmacia Actual / Maraplus / Farmago)
+      ".product_price h4 .oe_currency_value",
+      ".product_price b",
+      ".o_we_currency_value",
+      "h4.oe_price .oe_currency_value",
+      // Selectores muy genéricos por id/atributos
+      "[id*='product_price'] .oe_currency_value",
+      "[id*='price'] .amount",
+      "span.amount",
+      "[class*='Price__']",
+      "[class*='price__']",
+      "[class*='ProductPrice']",
+      "[data-product-price]",
+      "[data-test*='price']",
+      "[data-testid*='price']",
+      "[data-qa*='price']",
     ];
     let symbol = "";
     for (const sel of SELECTORS) {
@@ -919,25 +949,34 @@ async function scrapeFreeFallback(
   host: string | null,
   med: MedRow,
   fc?: Firecrawl,
+  opts: { trusted?: boolean } = {},
 ): Promise<ExtractedFull | null> {
-  let html = await fetchHtml(url);
-  if (!html) {
-    console.warn(`[scrape-free:fetchHtml-fail] ${url}`);
-    html = await fetchViaJina(url);
-  }
-  if (!html && fc) {
+  // Prioridad: HTML RENDERIZADO (Firecrawl ejecuta JS) → fetch directo → jina.
+  // Muchas farmacias (Odoo, VTEX, SPA) tienen el precio dentro de nodos que
+  // sólo aparecen tras correr JS; si pedimos el HTML pelado queda vacío.
+  let html: string | null = null;
+  let rendered = false;
+  if (fc) {
     try {
       const res: any = await fc.scrape(url, {
         formats: ["html"],
         onlyMainContent: false,
-        waitFor: 2000,
+        waitFor: 3000,
       } as any);
       html =
         res?.html ?? res?.data?.html ?? res?.rawHtml ?? res?.data?.rawHtml ?? "";
-      if (html) console.info(`[scrape-free:fc-html-ok] ${url} (${html.length}b)`);
+      if (html) {
+        rendered = true;
+        console.info(`[scrape-free:fc-rendered-ok] ${url} (${html.length}b)`);
+      }
     } catch (e) {
-      console.warn(`[scrape-free:fc-html-fail] ${url} ${(e as Error).message}`);
+      console.warn(`[scrape-free:fc-rendered-fail] ${url} ${(e as Error).message}`);
     }
+  }
+  if (!html) html = await fetchHtml(url);
+  if (!html) {
+    console.warn(`[scrape-free:fetchHtml-fail] ${url}`);
+    html = await fetchViaJina(url);
   }
   if (!html) {
     console.warn(`[scrape-free:no-html] ${url}`);
@@ -953,19 +992,24 @@ async function scrapeFreeFallback(
     console.warn(`[scrape-free:out-of-range] ${url} ${ext.price} ${currency}`);
     return null;
   }
-  // Incluir el slug de la URL en el haystack: muchos sitios (Odoo)
-  // dejan el contenido del producto bajo JS y el <body> queda casi vacío,
-  // pero el slug de la URL sí menciona principio activo + marca + dosis.
-  const urlSlug = (() => {
-    try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
-    catch { return ""; }
-  })();
-  const haystack = `${ext.text}\n${urlSlug}`;
-  if (!pageMatchesMed(haystack, med)) {
-    console.warn(`[scrape-free:mismatch] ${url}`);
-    return null;
+  // Si la URL viene del buscador interno de la farmacia (trusted) o si el
+  // HTML que extrajimos vino RENDERIZADO con JS, saltamos pageMatchesMed:
+  // el listado interno ya filtró por el término y el cuerpo renderizado a
+  // veces está empaquetado en componentes que no exponen el texto plano.
+  if (!opts.trusted && !rendered) {
+    const urlSlug = (() => {
+      try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
+      catch { return ""; }
+    })();
+    const haystack = `${ext.text}\n${urlSlug}`;
+    if (!pageMatchesMed(haystack, med)) {
+      console.warn(`[scrape-free:mismatch] ${url}`);
+      return null;
+    }
   }
-  console.info(`[scrape-free:ok] ${url} ${ext.price} ${currency}`);
+  console.info(
+    `[scrape-free:ok] ${url} ${ext.price} ${currency}${rendered ? " (rendered)" : ""}${opts.trusted ? " (trusted)" : ""}`,
+  );
   return {
     price: ext.price,
     currency: currency.slice(0, 8),
