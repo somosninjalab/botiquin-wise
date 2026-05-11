@@ -312,21 +312,33 @@ async function scrapeUrl(
   url: string,
   host: string | null,
   med: MedRow,
+  opts: { trusted?: boolean } = {},
 ): Promise<ExtractedFull | null> {
   try {
     const res: any = await fc.scrape(url, {
       formats: ["markdown", { type: "json", prompt: extractionPrompt } as any] as any,
       onlyMainContent: true,
+      waitFor: 2500,
     } as any);
     const j = res?.json ?? res?.data?.json ?? res?.extract;
     const md: string =
       res?.markdown ?? res?.data?.markdown ?? res?.metadata?.title ?? "";
     const norm = normalizeExtraction(j, url, host);
     if (!norm) return null;
-    // Validación de contenido: la página debe hablar del medicamento.
-    if (!pageMatchesMed(`${md}\n${res?.metadata?.title ?? ""}`, med)) {
-      console.warn(`[scrape:mismatch] ${url} no menciona ${med.active_ingredient}`);
-      return null;
+    // Validación de contenido: si la URL viene del buscador interno de la
+    // farmacia, confiamos en ella y no exigimos pageMatchesMed (los sitios
+    // SPA dejan el <body> vacío al servir y el match falla aunque el
+    // producto sea correcto). Solo validamos cuando NO es trusted.
+    if (!opts.trusted) {
+      const urlSlug = (() => {
+        try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
+        catch { return ""; }
+      })();
+      const haystack = `${md}\n${res?.metadata?.title ?? ""}\n${urlSlug}`;
+      if (!pageMatchesMed(haystack, med)) {
+        console.warn(`[scrape:mismatch] ${url} no menciona ${med.active_ingredient}`);
+        return null;
+      }
     }
     // Validación de rango de precio.
     if (!priceWithinRange(norm.price, norm.currency)) {
