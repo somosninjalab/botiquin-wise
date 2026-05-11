@@ -464,6 +464,7 @@ async function searchOnPharmacySite(
 
   // 1) Try free fetch first (works for WooCommerce / static SSR results).
   let html = await fetchHtml(searchUrl);
+  if (!html) html = await fetchViaProxy(searchUrl);
   if (!html) html = await fetchViaJina(searchUrl);
   let urls = html ? extractProductLinks(html, searchUrl, host) : [];
 
@@ -784,6 +785,51 @@ async function fetchViaJina(url: string): Promise<string | null> {
   }
 }
 
+/**
+ * Reverse-proxy fetch: enmascara la IP del Worker pasando la petición a
+ * través de proxies CORS públicos. Útil cuando la farmacia bloquea por IP
+ * o región (Maraplus, Cinecittà). Probamos varios proxies en cadena: si uno
+ * está caído o nos rate-limita, pasamos al siguiente.
+ *
+ * Salta también la validación CORS si en algún momento se llama desde el
+ * navegador, pero el efecto principal aquí es ocultar el origen real.
+ */
+const PROXY_BUILDERS: Array<(u: string) => { url: string; headers?: Record<string, string> }> = [
+  (u) => ({ url: `https://corsproxy.io/?url=${encodeURIComponent(u)}` }),
+  (u) => ({ url: `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` }),
+  (u) => ({ url: `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}` }),
+  (u) => ({ url: `https://proxy.cors.sh/${u}`, headers: { "x-cors-api-key": "temp_anon" } }),
+  (u) => ({ url: `https://thingproxy.freeboard.io/fetch/${u}` }),
+];
+
+async function fetchViaProxy(url: string, timeoutMs = 15000): Promise<string | null> {
+  for (const build of PROXY_BUILDERS) {
+    const { url: proxied, headers: extra } = build(url);
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeoutMs);
+      const res = await fetch(proxied, {
+        headers: { ...BROWSER_HEADERS, ...(extra ?? {}) },
+        signal: ctrl.signal,
+        redirect: "follow",
+      });
+      clearTimeout(t);
+      if (!res.ok) {
+        console.warn(`[proxy:bad-status] ${new URL(proxied).host} → ${res.status} for ${url}`);
+        continue;
+      }
+      const txt = await res.text();
+      if (txt && txt.length > 200) {
+        console.info(`[proxy:ok] ${new URL(proxied).host} (${txt.length}b) for ${url}`);
+        return txt;
+      }
+    } catch (e) {
+      console.warn(`[proxy:fetch-fail] ${(e as Error).message} for ${url}`);
+    }
+  }
+  return null;
+}
+
 function flattenJsonLd(node: any, out: any[] = []): any[] {
   if (!node) return out;
   if (Array.isArray(node)) {
@@ -974,6 +1020,11 @@ async function scrapeFreeFallback(
     }
   }
   if (!html) html = await fetchHtml(url);
+  if (!html) {
+    // Reverse proxy: cambia la IP de salida y suele esquivar bloqueos
+    // geográficos / Cloudflare (Maraplus, Cinecittà).
+    html = await fetchViaProxy(url);
+  }
   if (!html) {
     console.warn(`[scrape-free:fetchHtml-fail] ${url}`);
     html = await fetchViaJina(url);
