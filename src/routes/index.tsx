@@ -313,6 +313,7 @@ function Index() {
           meds={meds}
           grouped={grouped}
           lowestByMed={lowestByMed}
+          latestByMedPharm={latestByMedPharm}
           prices={prices}
           pharmaciesMap={pharmaciesMap}
           pharmacySlugMap={pharmacySlugMap}
