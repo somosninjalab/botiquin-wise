@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
 import { Route as MiOrdenRouteImport } from './routes/mi-orden'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
@@ -33,6 +34,11 @@ import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/publi
 import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
 import { Route as ApiPublicHooksDiscoverMedsRouteImport } from './routes/api/public/hooks/discover-meds'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MisAlertasRoute = MisAlertasRouteImport.update({
   id: '/mis-alertas',
   path: '/mis-alertas',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
     | '/medicamento/$slug'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
     | '/medicamento/$slug'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
     | '/medicamento/$slug'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   MiOrdenRoute: typeof MiOrdenRoute
   MisAlertasRoute: typeof MisAlertasRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -341,6 +354,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mis-alertas': {
       id: '/mis-alertas'
       path: '/mis-alertas'
@@ -523,6 +543,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComoFuncionaRoute: ComoFuncionaRoute,
   MiOrdenRoute: MiOrdenRoute,
   MisAlertasRoute: MisAlertasRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
