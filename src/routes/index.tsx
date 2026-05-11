@@ -56,6 +56,8 @@ const searchSchema = z.object({
   med: fallback(z.string(), "all").default("all"),
   cat: fallback(z.string(), "all").default("all"),
   ind: fallback(z.string(), "all").default("all"),
+  brand: fallback(z.string(), "all").default("all"),
+  ai: fallback(z.string(), "all").default("all"),
 });
 
 export const Route = createFileRoute("/")({
@@ -64,10 +66,16 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { q, pharm, med, cat, ind } = Route.useSearch();
+  const { q, pharm, med, cat, ind, brand, ai } = Route.useSearch();
   const navigate = useNavigate({ from: "/" });
   const isSearching =
-    q.trim().length > 0 || pharm !== "all" || med !== "all" || cat !== "all" || ind !== "all";
+    q.trim().length > 0 ||
+    pharm !== "all" ||
+    med !== "all" ||
+    cat !== "all" ||
+    ind !== "all" ||
+    brand !== "all" ||
+    ai !== "all";
   const bcvRate = useBcvRate();
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
@@ -150,7 +158,7 @@ function Index() {
   }, [q, cat, ind, isSearching]);
 
   const updateSearch = (
-    patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>,
+    patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
   ) => {
     navigate({ search: (prev: any) => ({ ...prev, ...patch }) });
   };
@@ -182,9 +190,12 @@ function Index() {
     if (med !== "all") list = list.filter((m) => m.id === med);
     if (cat !== "all") list = list.filter((m) => m.category === cat);
     if (ind !== "all") list = list.filter((m) => m.indication === ind);
+    if (ai !== "all") list = list.filter((m) => m.active_ingredient === ai);
+    if (brand !== "all")
+      list = list.filter((m) => (m.brand_names ?? []).some((b) => b === brand));
     if (pharm !== "all") list = list.filter((m) => lowestByMed.has(m.id));
     return list;
-  }, [meds, med, cat, ind, pharm, lowestByMed]);
+  }, [meds, med, cat, ind, ai, brand, pharm, lowestByMed]);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, MedicationRow[]>();
@@ -292,6 +303,8 @@ function Index() {
           med={med}
           cat={cat}
           ind={ind}
+          brand={brand}
+          ai={ai}
           loading={loading}
           meds={meds}
           grouped={grouped}
@@ -347,7 +360,9 @@ function Index() {
                         </span>
                       )}
                     </div>
-                    <h3 className="mt-3 font-semibold leading-tight line-clamp-2">{m.name}</h3>
+                    <h3 className="mt-3 font-semibold leading-tight line-clamp-2">
+                      {(m.brand_names ?? [])[0] || m.name}
+                    </h3>
                     <p className="text-xs text-muted-foreground mt-1">{m.active_ingredient}</p>
                     {lo ? (
                       <div className="mt-3 pt-3 border-t border-border/60">
@@ -539,7 +554,9 @@ function PopularList() {
                 params={{ slug: m.slug }}
                 className="group flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm hover:border-primary/50 hover:bg-primary/5 transition-colors"
               >
-                <span className="truncate font-medium group-hover:text-primary">{m.name}</span>
+                <span className="truncate font-medium group-hover:text-primary">
+                  {(m.brand_names ?? [])[0] || m.name}
+                </span>
                 <span className="text-xs text-muted-foreground truncate ml-2">{m.active_ingredient}</span>
               </Link>
             ))}
@@ -556,6 +573,8 @@ function SearchResults(props: {
   med: string;
   cat: string;
   ind: string;
+  brand: string;
+  ai: string;
   loading: boolean;
   meds: MedicationRow[];
   grouped: [string, MedicationRow[]][];
@@ -564,12 +583,12 @@ function SearchResults(props: {
   pharmaciesMap: Record<string, string>;
   pharmacySlugMap: Record<string, string>;
   pharmacyOptions: [string, string][];
-  updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
+  updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>) => void;
   bcvRate: number | null;
   scrapingIds: Set<string>;
 }) {
   const {
-    q, pharm, med, cat, ind, loading, meds, grouped, lowestByMed, prices,
+    q, pharm, med, cat, ind, brand, ai, loading, meds, grouped, lowestByMed, prices,
     pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
   } = props;
 
@@ -591,11 +610,27 @@ function SearchResults(props: {
     () => Array.from(indicationLabels.keys()).sort((a, b) => (indicationLabels.get(a)!).localeCompare(indicationLabels.get(b)!)),
     [indicationLabels],
   );
+  // Listas únicas de nombre comercial y compuesto activo presentes en resultados
+  const brandOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of meds) for (const b of m.brand_names ?? []) if (b) set.add(b);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [meds]);
+  const aiOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of meds) if (m.active_ingredient) set.add(m.active_ingredient);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [meds]);
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const activeFilterCount =
-    (pharm !== "all" ? 1 : 0) + (med !== "all" ? 1 : 0) + (cat !== "all" ? 1 : 0) + (ind !== "all" ? 1 : 0);
+    (pharm !== "all" ? 1 : 0) +
+    (med !== "all" ? 1 : 0) +
+    (cat !== "all" ? 1 : 0) +
+    (ind !== "all" ? 1 : 0) +
+    (brand !== "all" ? 1 : 0) +
+    (ai !== "all" ? 1 : 0);
 
   return (
     <section id="resultados" className="container mx-auto px-4 pt-3 md:pt-4 pb-16 scroll-mt-20">
@@ -663,6 +698,24 @@ function SearchResults(props: {
                   </button>
                 </Badge>
               )}
+              {brand !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  <Tag className="h-3 w-3" />
+                  {brand}
+                  <button onClick={() => updateSearch({ brand: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {ai !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  <Pill className="h-3 w-3" />
+                  {ai}
+                  <button onClick={() => updateSearch({ ai: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
             </div>
           )}
           {filtersOpen && (
@@ -702,12 +755,44 @@ function SearchResults(props: {
                   </SelectContent>
                 </Select>
               </div>
+              {brandOptions.length > 0 && (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <Select value={brand} onValueChange={(v) => updateSearch({ brand: v })}>
+                    <SelectTrigger className="h-10 w-full lg:w-[200px]">
+                      <SelectValue placeholder="Nombre comercial" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los nombres comerciales</SelectItem>
+                      {brandOptions.map((b) => (
+                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {aiOptions.length > 0 && (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Pill className="h-4 w-4 text-muted-foreground" />
+                  <Select value={ai} onValueChange={(v) => updateSearch({ ai: v })}>
+                    <SelectTrigger className="h-10 w-full lg:w-[200px]">
+                      <SelectValue placeholder="Compuesto activo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los compuestos</SelectItem>
+                      {aiOptions.map((a) => (
+                        <SelectItem key={a} value={a}>{a}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             {(q || activeFilterCount > 0) && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all" })}
+                onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all", brand: "all", ai: "all" })}
                 className="justify-self-start self-start"
               >
                 <X className="h-4 w-4 mr-1" /> Limpiar todo
@@ -820,7 +905,9 @@ function SearchResults(props: {
                             </span>
                           )}
                         </div>
-                        <h3 className="mt-3 font-semibold">{m.name}</h3>
+                        <h3 className="mt-3 font-semibold">
+                          {(m.brand_names ?? [])[0] || m.name}
+                        </h3>
                         <p className="text-xs text-muted-foreground">
                           {m.active_ingredient}{m.presentation ? ` · ${m.presentation}` : ""}
                         </p>
