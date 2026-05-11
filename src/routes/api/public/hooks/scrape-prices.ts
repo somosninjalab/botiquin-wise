@@ -953,7 +953,15 @@ async function scrapeFreeFallback(
     console.warn(`[scrape-free:out-of-range] ${url} ${ext.price} ${currency}`);
     return null;
   }
-  if (!pageMatchesMed(ext.text, med)) {
+  // Incluir el slug de la URL en el haystack: muchos sitios (Odoo)
+  // dejan el contenido del producto bajo JS y el <body> queda casi vacío,
+  // pero el slug de la URL sí menciona principio activo + marca + dosis.
+  const urlSlug = (() => {
+    try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
+    catch { return ""; }
+  })();
+  const haystack = `${ext.text}\n${urlSlug}`;
+  if (!pageMatchesMed(haystack, med)) {
     console.warn(`[scrape-free:mismatch] ${url}`);
     return null;
   }
