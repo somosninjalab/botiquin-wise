@@ -49,6 +49,10 @@ import { useBcvRate } from "@/hooks/useBcvRate";
 import { HeroExplainer } from "@/components/HeroExplainer";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown } from "lucide-react";
+import { Mail } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { sendSearchResultsEmail } from "@/lib/email/send-search-results.functions";
+import { toast } from "sonner";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -309,6 +313,7 @@ function Index() {
           meds={meds}
           grouped={grouped}
           lowestByMed={lowestByMed}
+          latestByMedPharm={latestByMedPharm}
           prices={prices}
           pharmaciesMap={pharmaciesMap}
           pharmacySlugMap={pharmacySlugMap}
@@ -579,6 +584,7 @@ function SearchResults(props: {
   meds: MedicationRow[];
   grouped: [string, MedicationRow[]][];
   lowestByMed: Map<string, PriceRow>;
+  latestByMedPharm: Map<string, PriceRow>;
   prices: PriceRow[];
   pharmaciesMap: Record<string, string>;
   pharmacySlugMap: Record<string, string>;
@@ -589,7 +595,7 @@ function SearchResults(props: {
 }) {
   const {
     q, pharm, med, cat, ind, brand, ai, loading, meds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
+    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm,
   } = props;
 
   // Etiquetas únicas presentes en los resultados actuales
@@ -624,6 +630,60 @@ function SearchResults(props: {
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const { user } = useAuth();
+  const sendEmail = useServerFn(sendSearchResultsEmail);
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  const handleSendEmail = async () => {
+    if (!user) {
+      toast.error("Inicia sesión para recibir los resultados por correo.");
+      return;
+    }
+    // Build payload from grouped (top 10 meds, top 20 rows each)
+    const flatMeds = grouped.flatMap(([, arr]) => arr).slice(0, 10);
+    if (!flatMeds.length) {
+      toast.error("No hay resultados para enviar.");
+      return;
+    }
+    const medsPayload = flatMeds
+      .map((m) => {
+        const rows = [] as Array<{ pharmacy: string; price: number; currency: string; productUrl?: string; inStock?: boolean }>;
+        for (const [pharmId, name] of Object.entries(pharmaciesMap)) {
+          const p = latestByMedPharm.get(`${m.id}|${pharmId}`);
+          if (!p) continue;
+          rows.push({
+            pharmacy: name,
+            price: Number(p.price),
+            currency: p.currency,
+            productUrl: p.product_url ?? undefined,
+            inStock: p.in_stock,
+          });
+        }
+        return {
+          medication: m.name,
+          ingredient: m.active_ingredient ?? undefined,
+          rows: rows.slice(0, 20),
+        };
+      })
+      .filter((m) => m.rows.length > 0);
+
+    if (!medsPayload.length) {
+      toast.error("Aún no tenemos precios disponibles para enviar.");
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const r: any = await sendEmail({ data: { query: q || undefined, meds: medsPayload } });
+      if (r?.success) toast.success("¡Te enviamos los resultados a tu correo!");
+      else toast.error(r?.reason === "no_email" ? "Tu cuenta no tiene email." : "No se pudo enviar el correo.");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Error al enviar el correo");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const activeFilterCount =
     (pharm !== "all" ? 1 : 0) +
     (med !== "all" ? 1 : 0) +
@@ -645,6 +705,17 @@ function SearchResults(props: {
               {q && <span className="text-muted-foreground font-normal"> para "{q}"</span>}
             </h2>
             <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendEmail}
+              disabled={sendingEmail || loading || totalResults === 0}
+              className="h-8 gap-1.5"
+              title={user ? "Enviar resultados a mi correo" : "Inicia sesión para recibir por correo"}
+            >
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">{sendingEmail ? "Enviando…" : "Enviar a mi correo"}</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
