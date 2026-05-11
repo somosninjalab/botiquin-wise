@@ -931,25 +931,34 @@ async function scrapeFreeFallback(
   host: string | null,
   med: MedRow,
   fc?: Firecrawl,
+  opts: { trusted?: boolean } = {},
 ): Promise<ExtractedFull | null> {
-  let html = await fetchHtml(url);
-  if (!html) {
-    console.warn(`[scrape-free:fetchHtml-fail] ${url}`);
-    html = await fetchViaJina(url);
-  }
-  if (!html && fc) {
+  // Prioridad: HTML RENDERIZADO (Firecrawl ejecuta JS) → fetch directo → jina.
+  // Muchas farmacias (Odoo, VTEX, SPA) tienen el precio dentro de nodos que
+  // sólo aparecen tras correr JS; si pedimos el HTML pelado queda vacío.
+  let html: string | null = null;
+  let rendered = false;
+  if (fc) {
     try {
       const res: any = await fc.scrape(url, {
         formats: ["html"],
         onlyMainContent: false,
-        waitFor: 2000,
+        waitFor: 3000,
       } as any);
       html =
         res?.html ?? res?.data?.html ?? res?.rawHtml ?? res?.data?.rawHtml ?? "";
-      if (html) console.info(`[scrape-free:fc-html-ok] ${url} (${html.length}b)`);
+      if (html) {
+        rendered = true;
+        console.info(`[scrape-free:fc-rendered-ok] ${url} (${html.length}b)`);
+      }
     } catch (e) {
-      console.warn(`[scrape-free:fc-html-fail] ${url} ${(e as Error).message}`);
+      console.warn(`[scrape-free:fc-rendered-fail] ${url} ${(e as Error).message}`);
     }
+  }
+  if (!html) html = await fetchHtml(url);
+  if (!html) {
+    console.warn(`[scrape-free:fetchHtml-fail] ${url}`);
+    html = await fetchViaJina(url);
   }
   if (!html) {
     console.warn(`[scrape-free:no-html] ${url}`);
@@ -965,19 +974,24 @@ async function scrapeFreeFallback(
     console.warn(`[scrape-free:out-of-range] ${url} ${ext.price} ${currency}`);
     return null;
   }
-  // Incluir el slug de la URL en el haystack: muchos sitios (Odoo)
-  // dejan el contenido del producto bajo JS y el <body> queda casi vacío,
-  // pero el slug de la URL sí menciona principio activo + marca + dosis.
-  const urlSlug = (() => {
-    try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
-    catch { return ""; }
-  })();
-  const haystack = `${ext.text}\n${urlSlug}`;
-  if (!pageMatchesMed(haystack, med)) {
-    console.warn(`[scrape-free:mismatch] ${url}`);
-    return null;
+  // Si la URL viene del buscador interno de la farmacia (trusted) o si el
+  // HTML que extrajimos vino RENDERIZADO con JS, saltamos pageMatchesMed:
+  // el listado interno ya filtró por el término y el cuerpo renderizado a
+  // veces está empaquetado en componentes que no exponen el texto plano.
+  if (!opts.trusted && !rendered) {
+    const urlSlug = (() => {
+      try { return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, " "); }
+      catch { return ""; }
+    })();
+    const haystack = `${ext.text}\n${urlSlug}`;
+    if (!pageMatchesMed(haystack, med)) {
+      console.warn(`[scrape-free:mismatch] ${url}`);
+      return null;
+    }
   }
-  console.info(`[scrape-free:ok] ${url} ${ext.price} ${currency}`);
+  console.info(
+    `[scrape-free:ok] ${url} ${ext.price} ${currency}${rendered ? " (rendered)" : ""}${opts.trusted ? " (trusted)" : ""}`,
+  );
   return {
     price: ext.price,
     currency: currency.slice(0, 8),
