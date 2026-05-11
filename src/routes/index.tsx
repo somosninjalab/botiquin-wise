@@ -49,6 +49,10 @@ import { useBcvRate } from "@/hooks/useBcvRate";
 import { HeroExplainer } from "@/components/HeroExplainer";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown } from "lucide-react";
+import { Mail } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { sendSearchResultsEmail } from "@/lib/email/send-search-results.functions";
+import { toast } from "sonner";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
