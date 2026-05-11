@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { enqueueTransactionalEmail } from "@/lib/email/enqueue.server";
 
 // Procesa cambios significativos de precio en las últimas N horas y crea filas
 // en `price_alerts` (visible en el home + base para notificaciones por email).
@@ -69,6 +70,70 @@ export const Route = createFileRoute("/api/public/hooks/process-price-alerts")({
           }
         }
 
+        // ── Notify followers by email ───────────────────────────────────
+        // Group inserted alerts by user (intersect with followers + threshold).
+        let emailsQueued = 0;
+        if (toInsert.length) {
+          const medIds = Array.from(new Set(toInsert.map((a) => a.medication_id)));
+          const pharmIds = Array.from(new Set(toInsert.map((a) => a.pharmacy_id)));
+
+          const [{ data: followers }, { data: meds }, { data: pharms }] = await Promise.all([
+            supabaseAdmin.from("medication_followers").select("user_id, medication_id, threshold_pct").in("medication_id", medIds),
+            supabaseAdmin.from("medications").select("id, name, active_ingredient").in("id", medIds),
+            supabaseAdmin.from("pharmacies").select("id, name").in("id", pharmIds),
+          ]);
+
+          const medById = new Map((meds ?? []).map((m: any) => [m.id, m]));
+          const pharmById = new Map((pharms ?? []).map((p: any) => [p.id, p]));
+
+          // Group alerts by user, applying their personal threshold
+          const byUser = new Map<string, any[]>();
+          for (const f of (followers ?? []) as any[]) {
+            const userAlerts = toInsert.filter(
+              (a) => a.medication_id === f.medication_id && Math.abs(a.pct_change) >= Number(f.threshold_pct ?? 0),
+            );
+            if (!userAlerts.length) continue;
+            const arr = byUser.get(f.user_id) ?? [];
+            for (const a of userAlerts) {
+              const med = medById.get(a.medication_id);
+              const ph = pharmById.get(a.pharmacy_id);
+              arr.push({
+                medication: med?.name ?? "Medicamento",
+                ingredient: med?.active_ingredient,
+                pharmacy: ph?.name ?? "Farmacia",
+                previousPrice: Number(a.previous_price),
+                newPrice: Number(a.new_price),
+                pctChange: Number(a.pct_change),
+                currency: a.currency,
+              });
+            }
+            byUser.set(f.user_id, arr);
+          }
+
+          if (byUser.size) {
+            const userIds = Array.from(byUser.keys());
+            const { data: profiles } = await supabaseAdmin
+              .from("profiles")
+              .select("user_id, email, full_name, instant_alerts")
+              .in("user_id", userIds);
+
+            for (const p of (profiles ?? []) as any[]) {
+              if (!p.email || p.instant_alerts === false) continue;
+              const items = byUser.get(p.user_id) ?? [];
+              if (!items.length) continue;
+              const idemKey = `price-alert-${p.user_id}-${new Date().toISOString().slice(0, 13)}`;
+              const r = await enqueueTransactionalEmail({
+                supabase: supabaseAdmin,
+                templateName: "price-alert",
+                recipientEmail: p.email,
+                idempotencyKey: idemKey,
+                templateData: { name: p.full_name?.split(" ")[0], items },
+              });
+              if (r.success) emailsQueued++;
+            }
+          }
+        }
+
         return Response.json({
           ok: true,
           threshold,
@@ -76,6 +141,7 @@ export const Route = createFileRoute("/api/public/hooks/process-price-alerts")({
           pairs_checked: byPair.size,
           alerts_candidate: toInsert.length,
           alerts_inserted: inserted,
+          emails_queued: emailsQueued,
         });
       },
     },
