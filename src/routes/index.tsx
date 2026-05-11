@@ -694,6 +694,24 @@ function SearchResults(props: {
                   </button>
                 </Badge>
               )}
+              {brand !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  <Tag className="h-3 w-3" />
+                  {brand}
+                  <button onClick={() => updateSearch({ brand: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {ai !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  <Pill className="h-3 w-3" />
+                  {ai}
+                  <button onClick={() => updateSearch({ ai: "all" })} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
             </div>
           )}
           {filtersOpen && (
@@ -733,12 +751,44 @@ function SearchResults(props: {
                   </SelectContent>
                 </Select>
               </div>
+              {brandOptions.length > 0 && (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <Select value={brand} onValueChange={(v) => updateSearch({ brand: v })}>
+                    <SelectTrigger className="h-10 w-full lg:w-[200px]">
+                      <SelectValue placeholder="Nombre comercial" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los nombres comerciales</SelectItem>
+                      {brandOptions.map((b) => (
+                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {aiOptions.length > 0 && (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Pill className="h-4 w-4 text-muted-foreground" />
+                  <Select value={ai} onValueChange={(v) => updateSearch({ ai: v })}>
+                    <SelectTrigger className="h-10 w-full lg:w-[200px]">
+                      <SelectValue placeholder="Compuesto activo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los compuestos</SelectItem>
+                      {aiOptions.map((a) => (
+                        <SelectItem key={a} value={a}>{a}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             {(q || activeFilterCount > 0) && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all" })}
+                onClick={() => updateSearch({ q: "", pharm: "all", med: "all", cat: "all", ind: "all", brand: "all", ai: "all" })}
                 className="justify-self-start self-start"
               >
                 <X className="h-4 w-4 mr-1" /> Limpiar todo
