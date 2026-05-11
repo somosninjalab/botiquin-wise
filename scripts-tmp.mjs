@@ -1,0 +1,10 @@
+import * as cheerio from "cheerio";
+import fs from "fs";
+const html = fs.readFileSync("/tmp/anapir.html", "utf8");
+const $ = cheerio.load(html);
+const title = $("title").first().text();
+const bodyText = $("body").text().slice(0, 4000);
+console.log("TITLE:", title);
+console.log("BODY first 4000:", bodyText.replace(/\s+/g, " "));
+console.log("---");
+console.log("ibuprofeno in body?", /ibuprof/i.test(bodyText));
