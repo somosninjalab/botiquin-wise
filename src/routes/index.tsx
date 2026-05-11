@@ -584,6 +584,7 @@ function SearchResults(props: {
   meds: MedicationRow[];
   grouped: [string, MedicationRow[]][];
   lowestByMed: Map<string, PriceRow>;
+  latestByMedPharm: Map<string, PriceRow>;
   prices: PriceRow[];
   pharmaciesMap: Record<string, string>;
   pharmacySlugMap: Record<string, string>;
@@ -594,7 +595,7 @@ function SearchResults(props: {
 }) {
   const {
     q, pharm, med, cat, ind, brand, ai, loading, meds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds,
+    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm,
   } = props;
 
   // Etiquetas únicas presentes en los resultados actuales
