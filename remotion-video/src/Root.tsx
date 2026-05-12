@@ -1,6 +1,7 @@
 import { Composition } from "remotion";
 import { MainVideo } from "./MainVideo";
 import { AbsoluteFill } from "remotion";
+import { VerticalVideo } from "./VerticalVideo";
 
 const VerticalWrap = () => {
   // Letterbox the 1920x1080 MainVideo inside 1080x1920.
@@ -29,6 +30,14 @@ export const RemotionRoot = () => (
     id="vertical"
     component={VerticalWrap}
     durationInFrames={300}
+    fps={30}
+    width={1080}
+    height={1920}
+  />
+  <Composition
+    id="vertical-story"
+    component={VerticalVideo}
+    durationInFrames={638}
     fps={30}
     width={1080}
     height={1920}
