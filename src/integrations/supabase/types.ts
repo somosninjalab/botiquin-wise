@@ -210,6 +210,48 @@ export type Database = {
           },
         ]
       }
+      medication_tags: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          medication_id: string
+          source: string
+          tag_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          medication_id: string
+          source?: string
+          tag_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          medication_id?: string
+          source?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_tags_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medications: {
         Row: {
           active_ingredient: string
@@ -217,6 +259,8 @@ export type Database = {
           brand_names_text: string
           category: string | null
           created_at: string
+          embedding: string | null
+          embedding_updated_at: string | null
           id: string
           image_url: string | null
           indication: string | null
@@ -233,6 +277,8 @@ export type Database = {
           brand_names_text?: string
           category?: string | null
           created_at?: string
+          embedding?: string | null
+          embedding_updated_at?: string | null
           id?: string
           image_url?: string | null
           indication?: string | null
@@ -249,6 +295,8 @@ export type Database = {
           brand_names_text?: string
           category?: string | null
           created_at?: string
+          embedding?: string | null
+          embedding_updated_at?: string | null
           id?: string
           image_url?: string | null
           indication?: string | null
@@ -473,6 +521,73 @@ export type Database = {
         }
         Relationships: []
       }
+      tag_aliases: {
+        Row: {
+          alias: string
+          created_at: string
+          id: string
+          source: string
+          tag_id: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          id?: string
+          source?: string
+          tag_id: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          id?: string
+          source?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_aliases_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["tag_kind"]
+          label_es: string
+          parent_id: string | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["tag_kind"]
+          label_es: string
+          parent_id?: string | null
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["tag_kind"]
+          label_es?: string
+          parent_id?: string | null
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tags_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_orders: {
         Row: {
           created_at: string
@@ -566,6 +681,8 @@ export type Database = {
           brand_names_text: string
           category: string | null
           created_at: string
+          embedding: string | null
+          embedding_updated_at: string | null
           id: string
           image_url: string | null
           indication: string | null
@@ -583,6 +700,33 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      search_medications_semantic: {
+        Args: {
+          lim?: number
+          p_active_ingredient?: string
+          p_brand?: string
+          p_pharmacy?: string
+          p_tag_slugs?: string[]
+          q_embedding?: string
+          q_text?: string
+        }
+        Returns: {
+          active_ingredient: string
+          brand_names: string[]
+          brand_names_text: string
+          category: string
+          id: string
+          image_url: string
+          indication: string
+          indication_es: string
+          manufacturer: string
+          name: string
+          presentation: string
+          similarity: number
+          slug: string
+          symptoms_text: string
+        }[]
+      }
       suggest_medications: {
         Args: { lim?: number; q: string }
         Returns: {
@@ -593,9 +737,20 @@ export type Database = {
           slug: string
         }[]
       }
+      tags_for_medication: {
+        Args: { p_medication_id: string }
+        Returns: {
+          confidence: number
+          kind: Database["public"]["Enums"]["tag_kind"]
+          label_es: string
+          slug: string
+          source: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      tag_kind: "category" | "indication" | "symptom" | "population" | "form"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -724,6 +879,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      tag_kind: ["category", "indication", "symptom", "population", "form"],
     },
   },
 } as const
