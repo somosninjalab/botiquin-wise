@@ -54,7 +54,10 @@ export const Scene4Compare = () => {
           transform: `translateY(${interpolate(spring({ frame: frame - 4, fps, config: { damping: 16 } }), [0, 1], [30, 0])}px)`,
         }}
       >
-        <div style={{ fontSize: 50 }}>🔍</div>
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke={COLORS.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
         <div style={{ fontSize: 48, fontWeight: 700, color: COLORS.ink, fontFamily: "monospace" }}>
           {typed}
           <span style={{ color: COLORS.primary }}>{caret}</span>
