@@ -327,6 +327,7 @@ function Index() {
           ai={ai}
           loading={loading}
           meds={meds}
+          allMeds={allMeds}
           grouped={grouped}
           lowestByMed={lowestByMed}
           latestByMedPharm={latestByMedPharm}
