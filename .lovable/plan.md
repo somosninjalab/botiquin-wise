@@ -1,64 +1,105 @@
-## Cambio de estrategia de scraping: usar el buscador interno de cada farmacia
+# Estandarización de búsqueda y taxonomía
 
-Hoy descubrimos URLs de productos con Firecrawl `search` (`site:host query`) + `map`, lo que depende de Google y del sitemap. Pasaremos a usar el **buscador interno de cada sitio** (la URL de búsqueda real que usa el cliente al escribir en su buscador), recorrer los resultados y entrar al primero que coincida con el medicamento. Esto da precios reales, actualizados y refleja exactamente lo que vería un usuario.
+## Objetivo
 
-### Cómo funcionará la nueva estrategia
+Que cualquier medicamento, sin importar de qué farmacia se haya scrapeado, quede con la misma forma normalizada (campos + etiquetas) y sea encontrable por búsqueda semántica que respete los filtros actuales (farmacia, categoría, indicación, marca, principio activo).
 
-Para cada farmacia + medicamento:
+## Arquitectura
 
-1. **Construir la URL del buscador propio** de la farmacia con el término (principio activo o marca + dosis).
-2. **Cargar la página de resultados** con Firecrawl (`scrape`) o fetch + Cheerio si el HTML es estático.
-3. **Extraer los enlaces de productos** de los resultados (los primeros 3–5).
-4. **Filtrar candidatos**: el título debe mencionar el principio activo o una marca conocida y, si el medicamento trae dosis, debe coincidir.
-5. **Entrar a cada candidato** y extraer precio, stock, imagen y URL canónica con el mismo `extractionPrompt` actual.
-6. **Validar y guardar** en `medication_prices` (igual que hoy: rango por moneda, host autoritativo para currency, append-only para histórico).
+```text
+┌─ scrape-prices ─┐  ┌─ discover-meds ─┐  ┌─ enrich-meds ─┐
+└────────┬────────┘  └────────┬────────┘  └───────┬───────┘
+         └────────────┬───────┴───────────────────┘
+                      ▼
+         lib/medications/normalize.ts   ← normaliza nombre, ai, presentación
+         lib/medications/tagger.ts      ← mapea texto libre → taxonomía
+                      ▼
+              upsert medications
+                      ▼
+         lib/medications/embed.ts       ← Lovable AI embedding (gemini)
+                      ▼
+              UPDATE medications.embedding
+                      ▼
+   RPC search_medications_semantic(q, filtros)  ← usado por buscar.tsx + index.tsx
+```
 
-### Mapa de buscadores por farmacia
+## Cambios DB (migración)
 
-| Slug       | URL de búsqueda                                                                   |
-|------------|-----------------------------------------------------------------------------------|
-| farmatodo  | `https://www.farmatodo.com.ve/buscar?text={q}`                                    |
-| saas       | `https://www.farmaciasaas.com/buscar?text={q}` (verificar selector)               |
-| locatel    | `https://www.locatel.com.ve/buscar?text={q}`                                      |
-| maraplus   | `https://maraplus.com/?s={q}` (WooCommerce)                                       |
-| farmago    | `https://farmago.com.ve/?s={q}` (WooCommerce)                                     |
-| gopharma   | `https://ec.gopharma.com.ve/buscar?text={q}` (VTEX)                               |
-| cinecitta  | `https://store.supermarketcinecitta.com/buscar?text={q}` (VTEX)                   |
-| actual     | `https://www.tufarmaciaactual.com/?s={q}` (WooCommerce)                           |
+1. `CREATE EXTENSION vector;`
+2. `tags` — taxonomía controlada
+   - `id`, `slug` (unique), `label_es`, `kind` (`category` | `indication` | `symptom` | `population`), `parent_id` (jerarquía opcional)
+3. `tag_aliases` — sinónimos que mapean texto libre → tag
+   - `tag_id`, `alias` (lowercased, unique global)
+4. `medication_tags` — pivote N:N
+   - `medication_id`, `tag_id`, `source` (`scraper` | `llm` | `manual`), `confidence`
+5. `medications.embedding vector(768)` + índice IVF/HNSW
+6. RPC `public.search_medications_semantic(q_embedding vector, q_text text, p_pharmacy uuid, p_tag_slugs text[], p_brand text, p_active_ingredient text, lim int)` — combina similitud coseno + filtros + fallback trigram para queries cortas
+7. RLS: lectura pública en `tags`, `tag_aliases`, `medication_tags`; escritura solo admin/service role
 
-Estas URLs se almacenarán en una tabla nueva `pharmacy_search_config` (slug, search_url_template, result_link_selector opcional) para poder ajustarlas sin redeploy.
+## Pipeline de tagging (server)
 
-### Cambios concretos
+`src/lib/medications/normalize.ts`
+- `normalizeName`, `normalizeActiveIngredient`, `normalizePresentation`, `extractDosage` — reglas determinísticas (lower, trim, sin acentos, regex de mg/ml)
 
-**Archivos**
-- `src/routes/api/public/hooks/scrape-prices.ts`: reemplazar `searchCandidates` + `mapCandidates` por una nueva función `searchOnPharmacySite(fc, pharm, query)` que:
-  - Carga la URL de búsqueda interna.
-  - Devuelve los enlaces de producto del listado (extracción con Cheerio buscando `a[href]` cuyo path encaje con `isSpecificProductUrl`).
-  - Mantiene `scrapeUrl` y el fallback gratuito sin cambios.
-- Nueva tabla `pharmacy_search_config` (1 fila por farmacia) con los templates anteriores.
-- `scrape-prices.ts` carga el config al iniciar y usa `replace("{q}", encodeURIComponent(query))`.
+`src/lib/medications/tagger.ts`
+- `mapToTags(rawText[]): { tagSlug, confidence, source }[]`
+- 1) Lookup directo en `tag_aliases` (rápido, determinístico)
+- 2) Si quedan tokens sin mapear, llama a Lovable AI Gateway (`google/gemini-2.5-flash-lite`) con la lista de tags existentes y pide clasificación; los nuevos aliases se insertan en `tag_aliases` (`source='llm'`) para no llamar al LLM otra vez
+- Logs de cobertura (cuántos tokens mapearon vs. quedaron libres)
 
-**Lógica de candidatos**
-- Por variante (`buildQueryVariants`): pedir 1 búsqueda interna, sacar máximo 5 enlaces.
-- Filtrar por `isSpecificProductUrl` y por `pageMatchesMed` (texto del listado o luego del producto).
-- Cortar tan pronto encontremos un precio válido.
+`src/lib/medications/embed.ts`
+- `embedText(text): Promise<number[]>` usando Lovable AI (`google/text-embedding-004`)
+- Texto a embeber = `name + active_ingredient + brand_names + indication_es + tags(label_es).join(' ')`
 
-**Histórico, alertas, scheduling**: sin cambios. Seguimos insertando en `medication_prices` y el cron `process-price-alerts` sigue igual.
+## Integración en scrapers
 
-### Lo que NO cambia
+Cada hook que hoy hace `upsert` en `medications` (`scrape-prices`, `discover-meds`, `discover-on-demand`, `enrich-meds`, `seed-cima`) pasa por:
+```
+const norm = normalize(rawMed);
+const { id } = await upsertMedication(norm);
+await syncTags(id, [norm.category, norm.indication, ...norm.symptoms]);
+await refreshEmbedding(id);
+```
+Se extrae a `src/lib/medications/upsert.server.ts` para no duplicar lógica entre scrapers.
 
-- `extractionPrompt`, parsers de precio/moneda, validación por rango, `pageMatchesMed`.
-- Tablas `medications`, `medication_prices`, `price_alerts`, `pharmacies`.
-- Cron jobs ni el panel `/admin/precios`.
+## Backfill
 
-### Riesgos y mitigación
+Hook nuevo: `src/routes/api/public/hooks/backfill-tags-embeddings.ts`
+- Procesa por lotes (50 meds) con cursor por `created_at`
+- Para cada med: re-tagging + re-embedding
+- Idempotente; safe re-runs
+- Programado en `pg_cron` cada noche para meds nuevos
 
-- Algunos buscadores (Farmatodo, VTEX) **renderizan resultados con JavaScript**. Para esos casos Firecrawl `scrape` (que ejecuta JS) funciona; el fallback `fetchHtml` puede no devolver enlaces. Si el listado viene vacío, caemos al método actual (`search` global / `map`) como red de seguridad.
-- WooCommerce (`?s=`) devuelve HTML estático: 100% cubierto por `fetchHtml` + Cheerio.
-- Si una farmacia cambia el path de búsqueda, basta con actualizar `pharmacy_search_config` (sin redeploy).
+## Búsqueda
 
-### Entregable
+`src/lib/medications.ts`
+- `searchMedications(query, filters)` ahora:
+  1. Genera embedding del query (vía server fn `embed-query.functions.ts`, cacheado en memoria por sesión)
+  2. Llama `search_medications_semantic` con embedding + filtros existentes (farmacia, marca, ai, categoría → tag_slug)
+  3. Si la query es vacía o < 3 chars, salta el embedding y usa solo filtros
+  4. Mantiene `suggest_medications` para autocomplete (no cambia)
 
-1. Migración: crear `pharmacy_search_config` + insert con los templates.
-2. Refactor de `scrape-prices.ts` con la nueva función `searchOnPharmacySite` y fallback al método actual.
-3. Probar `/api/public/hooks/scrape-prices` contra 3 medicamentos representativos (paracetamol 500mg, ibuprofeno 400mg, atorvastatina 20mg) y verificar filas nuevas en `medication_prices`.
+`src/routes/index.tsx` y `src/routes/buscar.tsx`
+- Mantienen su UI; solo cambia el shape del filtro `cat`/`ind` a `tag_slug` (con mapping retro-compatible)
+
+## Detalles técnicos
+
+- Embeddings: Lovable AI `google/text-embedding-004` (768 dims). Si falta el modelo, fallback a `gemini-2.5-flash-lite` con prompt de embedding pseudo-determinístico — pero validamos primero que esté disponible.
+- Coste: cada med ~1 embedding al guardarse + 1 por query. Cache en `medications.embedding` evita recomputar.
+- Filtros existentes preservados: `pharm`, `med`, `cat`, `ind`, `brand`, `ai` siguen funcionando; internamente `cat`/`ind` resuelven a `tag_slugs[]`.
+- El RPC usa `<#>` (cosine distance) y aplica `WHERE` con tags antes del orden por similitud para mantener velocidad.
+- Migración crea índice `ivfflat (embedding vector_cosine_ops) WITH (lists=100)`.
+
+## Orden de ejecución
+
+1. Migración DB (tags, tag_aliases, medication_tags, vector, RPC, RLS)
+2. `lib/medications/{normalize,tagger,embed,upsert}.ts`
+3. Refactor de los 5 hooks de scraping para usar `upsertMedication`
+4. Hook `backfill-tags-embeddings` + cron nocturno
+5. Cambiar `searchMedications` a `search_medications_semantic`
+6. Smoke test: invocar backfill con `limit=20`, comprobar que `medications.embedding` se llena y que `/buscar?q=dolor de cabeza` devuelve paracetamol/ibuprofeno aunque no contengan literalmente esas palabras
+
+## Fuera de alcance
+
+- UI nueva para administrar tags (puede ir después; por ahora se gestionan vía SQL/aliases auto-aprendidos)
+- Re-scrape masivo de farmacias (solo re-tagging/embedding sobre lo ya almacenado)
