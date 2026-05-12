@@ -84,6 +84,10 @@ function Index() {
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
+  // Catálogo global ligero para alimentar las opciones de los filtros
+  // (categoría, indicación, nombre comercial, compuesto activo). Sin esto
+  // los selects solo mostrarían criterios de los pocos meds visibles.
+  const [allMeds, setAllMeds] = useState<MedicationRow[]>([]);
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -95,6 +99,18 @@ function Index() {
       const { data: ph } = await supabase.from("pharmacies").select("id,name,slug");
       setPharmaciesMap(Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.name])));
       setPharmacySlugMap(Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.slug])));
+    })();
+  }, []);
+
+  // Carga única del catálogo completo solo para los filtros
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("medications")
+        .select("id,name,slug,active_ingredient,category,indication,indication_es,brand_names")
+        .order("name")
+        .limit(1000);
+      setAllMeds((data ?? []) as unknown as MedicationRow[]);
     })();
   }, []);
 
