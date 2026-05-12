@@ -840,7 +840,7 @@ function SearchResults(props: {
                   <SelectTrigger className="h-10 w-full lg:w-[200px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los medicamentos</SelectItem>
-                    {meds.map((m) => (
+                    {(allMeds.length ? allMeds : meds).map((m) => (
                       <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                     ))}
                   </SelectContent>
