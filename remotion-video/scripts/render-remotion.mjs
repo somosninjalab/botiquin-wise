@@ -32,5 +32,21 @@ await renderMedia({
   concurrency: 1,
 });
 
+const verticalComposition = await selectComposition({
+  serveUrl: bundled,
+  id: "vertical",
+  puppeteerInstance: browser,
+});
+
+await renderMedia({
+  composition: verticalComposition,
+  serveUrl: bundled,
+  codec: "h264",
+  outputLocation: "/mnt/documents/alerta-medicina-9x16.mp4",
+  puppeteerInstance: browser,
+  muted: true,
+  concurrency: 1,
+});
+
 await browser.close({ silent: false });
 console.log("DONE");
