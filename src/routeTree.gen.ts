@@ -33,6 +33,7 @@ import { Route as ApiPublicHooksNightlyGrowRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
 import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
 import { Route as ApiPublicHooksDiscoverMedsRouteImport } from './routes/api/public/hooks/discover-meds'
+import { Route as ApiPublicHooksBackfillEmbeddingsRouteImport } from './routes/api/public/hooks/backfill-embeddings'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -165,6 +166,12 @@ const ApiPublicHooksDiscoverMedsRoute =
     path: '/api/public/hooks/discover-meds',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksBackfillEmbeddingsRoute =
+  ApiPublicHooksBackfillEmbeddingsRouteImport.update({
+    id: '/api/public/hooks/backfill-embeddings',
+    path: '/api/public/hooks/backfill-embeddings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -205,6 +213,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -232,6 +241,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -312,6 +324,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -338,6 +351,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksBackfillEmbeddingsRoute: typeof ApiPublicHooksBackfillEmbeddingsRoute
   ApiPublicHooksDiscoverMedsRoute: typeof ApiPublicHooksDiscoverMedsRoute
   ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
   ApiPublicHooksEnrichMedsRoute: typeof ApiPublicHooksEnrichMedsRoute
@@ -522,6 +536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDiscoverMedsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/backfill-embeddings': {
+      id: '/api/public/hooks/backfill-embeddings'
+      path: '/api/public/hooks/backfill-embeddings'
+      fullPath: '/api/public/hooks/backfill-embeddings'
+      preLoaderRoute: typeof ApiPublicHooksBackfillEmbeddingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -547,6 +568,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksBackfillEmbeddingsRoute: ApiPublicHooksBackfillEmbeddingsRoute,
   ApiPublicHooksDiscoverMedsRoute: ApiPublicHooksDiscoverMedsRoute,
   ApiPublicHooksDiscoverOnDemandRoute: ApiPublicHooksDiscoverOnDemandRoute,
   ApiPublicHooksEnrichMedsRoute: ApiPublicHooksEnrichMedsRoute,

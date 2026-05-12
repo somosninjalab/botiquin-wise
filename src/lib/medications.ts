@@ -1,4 +1,25 @@
 import { supabase } from "@/integrations/supabase/client";
+import { embedQuery } from "@/lib/medications/embed.functions";
+
+// Cache de embeddings de query por sesión, para no llamar al server en cada keystroke.
+const queryEmbeddingCache = new Map<string, number[]>();
+
+async function getQueryEmbedding(q: string): Promise<number[] | null> {
+  const key = q.trim().toLowerCase();
+  if (!key) return null;
+  const cached = queryEmbeddingCache.get(key);
+  if (cached) return cached;
+  try {
+    const { embedding } = await embedQuery({ data: { q: key } });
+    if (embedding && embedding.length) {
+      queryEmbeddingCache.set(key, embedding);
+      return embedding;
+    }
+  } catch (err) {
+    console.warn("embedQuery failed, falling back to text search:", err);
+  }
+  return null;
+}
 
 export type MedicationRow = {
   id: string;
@@ -33,6 +54,30 @@ export async function searchMedications(q: string, limit = 30) {
     return (data ?? []) as MedicationRow[];
   }
   const safe = q.replace(/[,()]/g, " ");
+
+  // 0) Búsqueda semántica unificada (embeddings + filtros + fallback trigram).
+  //    Respeta el RPC search_medications_semantic. Si la query es muy corta
+  //    (< 3 chars) saltamos el embedding y dejamos que el RPC use trigram.
+  const useSemantic = safe.trim().length >= 3;
+  const qEmbedding = useSemantic ? await getQueryEmbedding(safe) : null;
+  if (useSemantic) {
+    try {
+      const { data: semantic, error: semErr } = await supabase.rpc(
+        "search_medications_semantic",
+        {
+          q_embedding: (qEmbedding as unknown as string) ?? null,
+          q_text: safe,
+          lim: limit,
+        },
+      );
+      if (!semErr && semantic && (semantic as unknown[]).length) {
+        return (semantic as MedicationRow[]).slice(0, limit);
+      }
+    } catch (err) {
+      console.warn("search_medications_semantic failed, falling back:", err);
+    }
+  }
+
   // 1a) coincidencias directas en nombre, principio activo, indicación, categoría, marcas y síntomas
   const { data: direct, error } = await supabase
     .from("medications")
