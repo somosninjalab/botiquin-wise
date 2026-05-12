@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as PopularesRouteImport } from './routes/populares'
 import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
 import { Route as MiOrdenRouteImport } from './routes/mi-orden'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
@@ -38,6 +39,11 @@ import { Route as ApiPublicHooksBackfillEmbeddingsRouteImport } from './routes/a
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PopularesRoute = PopularesRouteImport.update({
+  id: '/populares',
+  path: '/populares',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MisAlertasRoute = MisAlertasRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/populares': typeof PopularesRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/populares': typeof PopularesRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/como-funciona': typeof ComoFuncionaRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/populares': typeof PopularesRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/populares'
     | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/populares'
     | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/como-funciona'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/populares'
     | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
@@ -347,6 +359,7 @@ export interface RootRouteChildren {
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   MiOrdenRoute: typeof MiOrdenRoute
   MisAlertasRoute: typeof MisAlertasRoute
+  PopularesRoute: typeof PopularesRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
@@ -373,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/populares': {
+      id: '/populares'
+      path: '/populares'
+      fullPath: '/populares'
+      preLoaderRoute: typeof PopularesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mis-alertas': {
@@ -564,6 +584,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComoFuncionaRoute: ComoFuncionaRoute,
   MiOrdenRoute: MiOrdenRoute,
   MisAlertasRoute: MisAlertasRoute,
+  PopularesRoute: PopularesRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
@@ -585,12 +606,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
