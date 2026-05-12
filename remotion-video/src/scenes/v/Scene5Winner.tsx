@@ -69,7 +69,7 @@ export const Scene5Winner = () => {
             textTransform: "uppercase",
           }}
         >
-          🏆 Mejor precio
+          ★ Mejor precio
         </div>
 
         <div
@@ -120,7 +120,7 @@ export const Scene5Winner = () => {
             transform: `scale(${saveS})`,
           }}
         >
-          Ahorras 60% 💸
+          Ahorras 60%
         </div>
       </div>
     </AbsoluteFill>
