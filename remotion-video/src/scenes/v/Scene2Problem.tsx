@@ -98,7 +98,7 @@ export const Scene2Problem = () => {
           transform: `scale(${spring({ frame: frame - 60, fps, config: { damping: 10, stiffness: 200 } })})`,
         }}
       >
-        2,5× más caro 🤯
+        2,5× más caro.
       </div>
     </AbsoluteFill>
   );
