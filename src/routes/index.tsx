@@ -599,6 +599,7 @@ function SearchResults(props: {
   ai: string;
   loading: boolean;
   meds: MedicationRow[];
+  allMeds: MedicationRow[];
   grouped: [string, MedicationRow[]][];
   lowestByMed: Map<string, PriceRow>;
   latestByMedPharm: Map<string, PriceRow>;
@@ -611,24 +612,26 @@ function SearchResults(props: {
   scrapingIds: Set<string>;
 }) {
   const {
-    q, pharm, med, cat, ind, brand, ai, loading, meds, grouped, lowestByMed, prices,
+    q, pharm, med, cat, ind, brand, ai, loading, meds, allMeds, grouped, lowestByMed, prices,
     pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm,
   } = props;
 
-  // Etiquetas únicas presentes en los resultados actuales
+  // Fuente para opciones de filtros: catálogo global cuando esté cargado;
+  // si no, los resultados actuales. Así los selects muestran muchos criterios.
+  const optionsSource = allMeds.length ? allMeds : meds;
   const categories = useMemo(
-    () => Array.from(new Set(meds.map((m) => m.category).filter(Boolean) as string[])).sort(),
-    [meds],
+    () => Array.from(new Set(optionsSource.map((m) => m.category).filter(Boolean) as string[])).sort(),
+    [optionsSource],
   );
   // Mapa indication (EN) → label (ES si existe)
   const indicationLabels = useMemo(() => {
     const m = new Map<string, string>();
-    for (const x of meds) {
+    for (const x of optionsSource) {
       if (!x.indication) continue;
       if (!m.has(x.indication)) m.set(x.indication, x.indication_es || x.indication);
     }
     return m;
-  }, [meds]);
+  }, [optionsSource]);
   const indications = useMemo(
     () => Array.from(indicationLabels.keys()).sort((a, b) => (indicationLabels.get(a)!).localeCompare(indicationLabels.get(b)!)),
     [indicationLabels],
@@ -636,14 +639,14 @@ function SearchResults(props: {
   // Listas únicas de nombre comercial y compuesto activo presentes en resultados
   const brandOptions = useMemo(() => {
     const set = new Set<string>();
-    for (const m of meds) for (const b of m.brand_names ?? []) if (b) set.add(b);
+    for (const m of optionsSource) for (const b of m.brand_names ?? []) if (b) set.add(b);
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [meds]);
+  }, [optionsSource]);
   const aiOptions = useMemo(() => {
     const set = new Set<string>();
-    for (const m of meds) if (m.active_ingredient) set.add(m.active_ingredient);
+    for (const m of optionsSource) if (m.active_ingredient) set.add(m.active_ingredient);
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [meds]);
+  }, [optionsSource]);
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
   const [filtersOpen, setFiltersOpen] = useState(false);
