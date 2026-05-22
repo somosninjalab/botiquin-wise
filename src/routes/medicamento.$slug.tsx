@@ -38,7 +38,7 @@ function MedicamentoPage() {
       ]);
       setPrices((p ?? []) as PriceRow[]);
       setPharms((ph ?? []) as any);
-      await supabase.from("search_events").insert({ medication_id: m.id, category: m.category });
+      await trackSearch({ medication_id: m.id, category: m.category });
       if (user) {
         const { data: f } = await supabase
           .from("medication_followers").select("id").eq("user_id", user.id).eq("medication_id", m.id).maybeSingle();
