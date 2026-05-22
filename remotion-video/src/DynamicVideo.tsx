@@ -75,14 +75,28 @@ function HookScene() {
   return (
     <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 35%, #FFFFFF 0%, ${COLORS.bg} 60%, #DCF3E8 100%)`, justifyContent: "center", alignItems: "center", padding: 60 }}>
       <FlashBg color={COLORS.primaryGlow} hit={0} />
-      {/* floating coin emojis */}
-      {[0,1,2,3,4,5].map((i) => {
-        const x = [80, 920, 140, 880, 200, 820][i];
-        const y = [200, 260, 1500, 1450, 900, 950][i];
+      {/* floating Bs. price tags */}
+      {[
+        { x: 80,  y: 200,  v: "Bs. 240", c: COLORS.accent },
+        { x: 820, y: 260,  v: "Bs. 215", c: COLORS.primary },
+        { x: 120, y: 1500, v: "Bs. 198", c: COLORS.primary },
+        { x: 780, y: 1450, v: "Bs. 182", c: COLORS.accent },
+        { x: 60,  y: 880,  v: "Bs. 96",  c: COLORS.primary },
+        { x: 820, y: 940,  v: "Bs. 240", c: COLORS.accent },
+      ].map((t, i) => {
         const float = Math.sin((frame + i * 12) * 0.08) * 18;
-        const rot = Math.sin((frame + i * 8) * 0.05) * 12;
+        const rot = Math.sin((frame + i * 8) * 0.05) * 8;
         return (
-          <div key={i} style={{ position: "absolute", left: x, top: y + float, fontSize: 90, transform: `rotate(${rot}deg)`, opacity: 0.85 }}>💸</div>
+          <div key={i} style={{
+            position: "absolute", left: t.x, top: t.y + float,
+            transform: `rotate(${rot}deg)`,
+            background: "#fff", color: t.c,
+            border: `3px solid ${t.c}`,
+            padding: "10px 22px", borderRadius: 999,
+            fontSize: 38, fontWeight: 900,
+            boxShadow: "0 8px 20px rgba(15,42,46,0.10)",
+            opacity: 0.95,
+          }}>{t.v}</div>
         );
       })}
       <div style={{ transform: `scale(${s1}) translateX(${shake}px)`, fontSize: 220, fontWeight: 900, color: COLORS.ink, lineHeight: 1, letterSpacing: -6 }}>
@@ -228,8 +242,10 @@ function DemoScene() {
       <div style={{
         position: "absolute", bottom: 80, fontSize: 64, fontWeight: 900, color: COLORS.ink,
         opacity: interpolate(frame, [85, 100], [0, 1]),
+        background: "#fff", padding: "16px 40px", borderRadius: 60,
+        boxShadow: "0 12px 40px rgba(15,42,46,0.18)",
       }}>
-        En 2 segundos ⚡
+        En 2 segundos
       </div>
     </AbsoluteFill>
   );
