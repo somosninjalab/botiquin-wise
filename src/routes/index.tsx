@@ -259,27 +259,28 @@ function Index() {
       ) : (
       <section className="relative overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.22 }} />
-        <div className="container mx-auto px-4 py-6 md:py-16">
+        <div className="container mx-auto px-4 py-4 md:py-16">
           <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center max-w-6xl mx-auto">
             {/* Columna izquierda: mensaje grande y simple */}
             <div className="text-center md:text-left">
-              <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base font-semibold text-primary border-2 border-primary/30 shadow-sm">
+              <span className="hidden md:inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base font-semibold text-primary border-2 border-primary/30 shadow-sm">
                 <Bell className="h-4 w-4 md:h-5 md:w-5" /> ¡Alerta: Medicina!
               </span>
-              <h1 className="mt-3 md:mt-5 text-3xl sm:text-4xl md:text-6xl font-extrabold leading-[1.1] text-foreground tracking-tight">
+              <h1 className="mt-1 md:mt-5 text-[1.65rem] sm:text-4xl md:text-6xl font-extrabold leading-[1.1] text-foreground tracking-tight">
                 Encuentra tu medicina al{" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   precio más bajo
                 </span>
               </h1>
-              <p className="mt-3 md:mt-5 text-base md:text-2xl text-muted-foreground leading-relaxed">
-                Compara precios en{" "}
-                <strong className="text-foreground">Farmatodo, Locatel, SAAS, Farmago y GoPharma</strong>{" "}
-                en segundos.
+              <p className="mt-2 md:mt-5 text-sm md:text-2xl text-muted-foreground leading-snug md:leading-relaxed">
+                <span className="hidden md:inline">Compara precios en </span>
+                <strong className="text-foreground">Farmatodo, Locatel, SAAS, Farmago y GoPharma</strong>
+                <span className="md:hidden"> · en segundos</span>
+                <span className="hidden md:inline"> en segundos.</span>
               </p>
-              <div className="mt-5 md:mt-7">
+              <div className="mt-3 md:mt-7">
                 <SearchBar size="lg" initial={q} onSearch={(value) => updateSearch({ q: value })} />
-                <p className="mt-2 text-xs md:text-sm text-muted-foreground">
+                <p className="mt-2 text-xs md:text-sm text-muted-foreground hidden sm:block">
                   Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
                 </p>
               </div>
