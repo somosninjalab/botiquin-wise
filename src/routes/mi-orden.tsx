@@ -204,6 +204,29 @@ function MiOrdenPage() {
           </Card>
         </>
       )}
+
+      {/* Sticky total móvil */}
+      {items.length > 0 && (
+        <div
+          className="md:hidden fixed inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-3 py-2 flex items-center gap-3"
+          style={{ bottom: `calc(56px + env(safe-area-inset-bottom))` }}
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              {mode === "mix" ? "Mix más barato" : bestPharm?.ph.name ?? "Mejor farmacia"}
+            </div>
+            <div className="text-lg font-extrabold tabular-nums leading-tight">
+              {formatBs(mode === "mix" ? mixPlan.total : bestPharm?.total ?? 0)}
+            </div>
+          </div>
+          <Button
+            onClick={saveOrder}
+            className="h-11 bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"
+          >
+            <Save className="h-4 w-4 mr-1.5" /> Guardar
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
