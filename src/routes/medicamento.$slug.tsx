@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { trackSearch } from "@/lib/track-search";
 import { useAuth } from "@/hooks/useAuth";
 import { displayPrice, priceToVes, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { useBcvRate } from "@/hooks/useBcvRate";
@@ -38,7 +39,7 @@ function MedicamentoPage() {
       ]);
       setPrices((p ?? []) as PriceRow[]);
       setPharms((ph ?? []) as any);
-      await supabase.from("search_events").insert({ medication_id: m.id, category: m.category });
+      await trackSearch({ medication_id: m.id, category: m.category });
       if (user) {
         const { data: f } = await supabase
           .from("medication_followers").select("id").eq("user_id", user.id).eq("medication_id", m.id).maybeSingle();

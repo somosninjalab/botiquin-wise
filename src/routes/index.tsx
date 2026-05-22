@@ -45,6 +45,7 @@ import {
   type PriceRow,
 } from "@/lib/medications";
 import { supabase } from "@/integrations/supabase/client";
+import { trackSearch } from "@/lib/track-search";
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { HeroExplainer } from "@/components/HeroExplainer";
 import { useAuth } from "@/hooks/useAuth";
@@ -134,10 +135,7 @@ function Index() {
       const p = await getLatestPricesForMedications(m.map((x) => x.id));
       setPrices(p);
       if (q.trim()) {
-        await supabase.from("search_events").insert({
-          query: q.slice(0, 200),
-          result_count: m.length,
-        });
+        await trackSearch({ query: q, result_count: m.length });
       }
       setLoading(false);
 
