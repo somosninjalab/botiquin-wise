@@ -41,6 +41,10 @@ function AdminPage() {
   const byQuery = aggregate(events, (e) => e.query || "(detalle)").slice(0, 10);
   const byRegion = aggregate(events, (e) => e.region || e.country || "Desconocida").slice(0, 10);
   const byCategory = aggregate(events, (e) => e.category || "Sin categoría").slice(0, 10);
+  const byCity = aggregate(
+    events.filter((e) => e.city),
+    (e) => `${e.city}${e.region ? `, ${e.region}` : ""}`,
+  ).slice(0, 10);
   const failedSearches = aggregate(
     events.filter((e) => e.query && (e.result_count === 0 || e.result_count === null)),
     (e) => e.query as string,
@@ -118,6 +122,33 @@ function AdminPage() {
       "Medicamento ID": s.medication_id ?? "",
     }));
 
+    // Aggregate by city across all searches
+    const cityMap = new Map<string, { city: string; region: string; country: string; total: number; users: Set<string>; queries: Map<string, number> }>();
+    (searches ?? []).forEach((s: any) => {
+      if (!s.city) return;
+      const key = `${s.city}|${s.region ?? ""}|${s.country ?? ""}`;
+      const entry = cityMap.get(key) ?? { city: s.city, region: s.region ?? "", country: s.country ?? "", total: 0, users: new Set<string>(), queries: new Map<string, number>() };
+      entry.total += 1;
+      if (s.user_id) entry.users.add(s.user_id);
+      const q = s.query || "(detalle)";
+      entry.queries.set(q, (entry.queries.get(q) ?? 0) + 1);
+      cityMap.set(key, entry);
+    });
+    const citiesSheet = Array.from(cityMap.values())
+      .sort((a, b) => b.total - a.total)
+      .map((c) => ({
+        "Ciudad": c.city,
+        "Región": c.region,
+        "País": c.country,
+        "Total búsquedas": c.total,
+        "Usuarios únicos": c.users.size,
+        "Top búsquedas": Array.from(c.queries.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([q, n]) => `${q} (${n})`)
+          .join(" | "),
+      }));
+
     const medsSheet = (meds ?? []).map((m: any) => ({
       "Medicamento": m.name,
       "Principio activo": m.active_ingredient,
@@ -128,6 +159,7 @@ function AdminPage() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(usersSheet), "Usuarios");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(followsSheet), "Seguimientos");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(searchesSheet), "Búsquedas");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(citiesSheet), "Por ciudad");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(medsSheet), "Catálogo");
 
     const stamp = new Date().toISOString().slice(0, 10);
@@ -200,6 +232,7 @@ function AdminPage() {
       <div className="grid lg:grid-cols-2 gap-6 mt-8">
         <ChartCard title="Top búsquedas" data={byQuery} />
         <ChartCard title="Top regiones" data={byRegion} />
+        <ChartCard title="Top ciudades" data={byCity} />
         <ChartCard title="Top categorías / especialidades" data={byCategory} />
       </div>
 
