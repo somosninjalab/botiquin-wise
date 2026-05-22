@@ -121,7 +121,8 @@ export const Route = createFileRoute("/api/public/hooks/process-price-alerts")({
               if (!p.email || p.instant_alerts === false) continue;
               const items = byUser.get(p.user_id) ?? [];
               if (!items.length) continue;
-              const idemKey = `price-alert-${p.user_id}-${new Date().toISOString().slice(0, 13)}`;
+              // Máximo 1 email por usuario por día (UTC).
+              const idemKey = `price-alert-${p.user_id}-${new Date().toISOString().slice(0, 10)}`;
               const r = await enqueueTransactionalEmail({
                 supabase: supabaseAdmin,
                 templateName: "price-alert",
