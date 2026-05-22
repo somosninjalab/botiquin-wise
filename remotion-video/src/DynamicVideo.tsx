@@ -96,11 +96,11 @@ function SlamScene() {
   const { fps } = useVideoConfig();
   const STAGGER = 18;
   return (
-    <AbsoluteFill style={{ background: "#fff", padding: 60, justifyContent: "center" }}>
+    <AbsoluteFill style={{ background: "#fff", padding: "80px 60px", justifyContent: "flex-start" }}>
       <div style={{ fontSize: 64, fontWeight: 800, color: COLORS.muted, textAlign: "center", marginBottom: 30 }}>
         Mismo medicamento:
       </div>
-      <div style={{ fontSize: 100, fontWeight: 900, color: COLORS.ink, textAlign: "center", letterSpacing: -3, marginBottom: 50 }}>
+      <div style={{ fontSize: 86, fontWeight: 900, color: COLORS.ink, textAlign: "center", letterSpacing: -3, marginBottom: 40, lineHeight: 1 }}>
         Paracetamol 500mg
       </div>
       {PRICES.map((p, i) => {
@@ -139,7 +139,7 @@ function SlamScene() {
         opacity: interpolate(frame, [110, 125], [0, 1]),
         transform: `scale(${interpolate(frame, [110, 130], [0.5, 1])})`,
       }}>
-        ¡60% menos!
+        60% menos
       </div>
     </AbsoluteFill>
   );
@@ -197,7 +197,7 @@ function DemoScene() {
           borderRadius: 20, padding: "24px 30px", fontSize: 48, color: COLORS.ink,
           display: "flex", alignItems: "center", gap: 16,
         }}>
-          <span style={{ fontSize: 44 }}>🔍</span>
+          <span style={{fontSize:44,fontWeight:900,color:"#16A37A"}}>Q</span>
           <span style={{ fontWeight: 600 }}>{text}{frame % 30 < 15 ? "|" : ""}</span>
         </div>
         <div style={{ marginTop: 30, display: "flex", flexDirection: "column", gap: 18 }}>
