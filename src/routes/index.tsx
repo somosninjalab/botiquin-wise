@@ -45,6 +45,7 @@ import {
   type PriceRow,
 } from "@/lib/medications";
 import { supabase } from "@/integrations/supabase/client";
+import { trackSearch } from "@/lib/track-search";
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { HeroExplainer } from "@/components/HeroExplainer";
 import { useAuth } from "@/hooks/useAuth";
