@@ -110,104 +110,95 @@ function MedicamentoPage() {
       ? Math.round(((highestVes - lowestVes) / highestVes) * 100)
       : 0;
 
+  const addThisToOrder = () => {
+    if (!med) return;
+    addToOrder({
+      medication_id: med.id,
+      slug: med.slug,
+      name: med.name,
+      active_ingredient: med.active_ingredient,
+      presentation: med.presentation,
+      image_url: med.image_url,
+    });
+    toast.success(`${med.name} agregado a tu orden`);
+  };
+  const lowestRow = latestByPharm[0];
+
   return (
-    <div className="container mx-auto px-4 py-8 md:py-10 max-w-6xl">
+    <div className="container mx-auto px-4 py-4 md:py-10 max-w-6xl pb-28 md:pb-10">
       <Link to="/" search={{ q: "", pharm: "all", med: "all", cat: "all", ind: "all" }} className="text-sm text-muted-foreground hover:underline">
-        ← Volver al inicio
+        ← Volver
       </Link>
 
-      {/* Hero del medicamento */}
-      <div className="mt-4 rounded-2xl border border-border bg-card p-6 md:p-8">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              {med.image_url ? (
-                <img
-                  src={med.image_url}
-                  alt={med.name}
-                  className="h-20 w-20 rounded-xl object-contain bg-white border border-border"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                />
-              ) : (
-                <div className="rounded-xl bg-primary/10 p-3 text-primary"><Pill className="h-6 w-6" /></div>
-              )}
-              <div className="min-w-0">
-                <h1 className="text-2xl md:text-3xl font-bold">{med.name}</h1>
-                <p className="text-muted-foreground text-sm md:text-base">
-                  {med.active_ingredient}{med.presentation ? ` · ${med.presentation}` : ""}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              {med.category && <span className="rounded-full bg-secondary px-3 py-1">{med.category}</span>}
-              {(med.indication_es || med.indication) && (
-                <span className="rounded-full bg-secondary px-3 py-1">{med.indication_es || med.indication}</span>
-              )}
-              {med.manufacturer && <span className="rounded-full bg-secondary px-3 py-1">{med.manufacturer}</span>}
-            </div>
-            {med.brand_names && med.brand_names.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-3">
-                <span className="font-medium text-foreground">Marcas:</span> {med.brand_names.join(", ")}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col items-stretch md:items-end gap-3 shrink-0">
-            {latestByPharm[0] && (
-              <div className="text-right">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Mejor precio hoy</div>
-                {(() => {
-                  const p = latestByPharm[0];
-                  const d = displayPrice(Number(p.price), p.currency, bcvRate);
-                  return (
-                    <>
-                      <div className="text-3xl font-bold text-primary">{d.primary}</div>
-                      {d.secondary && <div className="text-xs text-muted-foreground">≈ {d.secondary}</div>}
-                      <div className="text-xs text-muted-foreground mt-1">en {pharmMap[p.pharmacy_id]}</div>
-                    </>
-                  );
-                })()}
-                {savings > 0 && (
-                  <div className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-accent">
-                    Ahorras hasta {savings}%
-                  </div>
-                )}
-              </div>
-            )}
-            <Button
-              onClick={toggleFollow}
-              className={following ? "" : "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"}
-              variant={following ? "outline" : "default"}
-            >
-              {following ? <><BellOff className="h-4 w-4 mr-2" /> Dejar de seguir</> : <><Bell className="h-4 w-4 mr-2" /> Avísame si baja</>}
-            </Button>
-            <Button
-              onClick={() => {
-                if (!med) return;
-                addToOrder({
-                  medication_id: med.id,
-                  slug: med.slug,
-                  name: med.name,
-                  active_ingredient: med.active_ingredient,
-                  presentation: med.presentation,
-                  image_url: med.image_url,
-                });
-                toast.success(`${med.name} agregado a tu orden`);
-              }}
-              variant={inOrder ? "outline" : "secondary"}
-            >
-              {inOrder ? <><Check className="h-4 w-4 mr-2" /> En tu orden — agregar otro</> : <><ShoppingCart className="h-4 w-4 mr-2" /> Agregar a mi orden</>}
-            </Button>
-          </div>
+      {/* Encabezado tipo GoodRx: nombre + genérico + chips */}
+      <header className="mt-3 md:mt-4 flex items-start gap-3 md:gap-4">
+        {med.image_url ? (
+          <img
+            src={med.image_url}
+            alt={med.name}
+            className="h-14 w-14 md:h-20 md:w-20 rounded-xl object-contain bg-white border border-border shrink-0"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <div className="rounded-xl bg-primary/10 p-3 text-primary shrink-0"><Pill className="h-6 w-6" /></div>
+        )}
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold leading-tight">{med.name}</h1>
+          <p className="text-muted-foreground text-sm md:text-base mt-0.5">
+            {med.active_ingredient}{med.presentation ? ` · ${med.presentation}` : ""}
+          </p>
         </div>
-      </div>
+      </header>
 
-      {/* Tabla de comparación tipo GoodRx */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold">Compara precios en farmacias</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Precios actualizados. Pulsa "Ver" para ir directo a la farmacia.
+      {/* Chips horizontales con scroll en móvil (GoodRx pattern) */}
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
+        {med.category && <span className="shrink-0 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium">{med.category}</span>}
+        {(med.indication_es || med.indication) && (
+          <span className="shrink-0 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium">{med.indication_es || med.indication}</span>
+        )}
+        {med.manufacturer && <span className="shrink-0 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium">{med.manufacturer}</span>}
+      </div>
+      {med.brand_names && med.brand_names.length > 0 && (
+        <p className="text-xs text-muted-foreground mt-2">
+          <span className="font-medium text-foreground">Marcas:</span> {med.brand_names.join(", ")}
         </p>
-        <Card className="mt-4 overflow-hidden p-0">
+      )}
+
+      {/* Banner amarillo: mejor precio (GoodRx-style) */}
+      {lowestRow && (() => {
+        const d = displayPrice(Number(lowestRow.price), lowestRow.currency, bcvRate);
+        return (
+          <a
+            href={lowestRow.product_url ?? "#"}
+            target={lowestRow.product_url ? "_blank" : undefined}
+            rel="noreferrer"
+            className="mt-5 flex items-center gap-3 rounded-2xl bg-amber-100 dark:bg-amber-950/40 border border-amber-300/70 dark:border-amber-700/40 p-4 active:scale-[0.99] transition-transform"
+          >
+            <PharmacyLogo
+              slug={pharmSlugMap[lowestRow.pharmacy_id] ?? ""}
+              name={pharmMap[lowestRow.pharmacy_id]}
+              size={44}
+              className="shrink-0 rounded-full bg-white"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] uppercase tracking-wide font-bold text-amber-900 dark:text-amber-300">Más barato</div>
+              <div className="text-2xl md:text-3xl font-extrabold text-amber-950 dark:text-amber-50 leading-tight">{d.primary}</div>
+              <div className="text-xs text-amber-900/80 dark:text-amber-200/80 truncate">
+                en {pharmMap[lowestRow.pharmacy_id]}
+                {d.secondary && <> · ≈ {d.secondary}</>}
+                {savings > 0 && <> · ahorras {savings}%</>}
+              </div>
+            </div>
+            {lowestRow.product_url && <ExternalLink className="h-5 w-5 text-amber-900 dark:text-amber-300 shrink-0" />}
+          </a>
+        );
+      })()}
+
+      {/* Lista de farmacias estilo GoodRx — filas grandes, toda la fila tappable */}
+      <div className="mt-6">
+        <h2 className="text-lg md:text-xl font-bold">Compara precios en farmacias</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">Pulsa una fila para ir directo a la farmacia.</p>
+        <Card className="mt-3 overflow-hidden p-0">
           {latestByPharm.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
               Aún no hay precios para este medicamento. Vuelve pronto.
@@ -217,51 +208,58 @@ function MedicamentoPage() {
               {latestByPharm.map((p, i) => {
                 const d = displayPrice(Number(p.price), p.currency, bcvRate);
                 const isLowest = i === 0;
-                return (
-                  <li
-                    key={p.id}
-                    className={`grid grid-cols-12 items-center gap-3 p-4 ${isLowest ? "bg-primary/5" : ""}`}
-                  >
-                    <div className="col-span-12 sm:col-span-5 flex items-center gap-3 min-w-0">
-                      <PharmacyLogo
-                        slug={pharmSlugMap[p.pharmacy_id] ?? ""}
-                        name={pharmMap[p.pharmacy_id]}
-                        size={36}
-                        className="shrink-0 rounded-full"
-                      />
-                      <div className="min-w-0">
-                        <div className="font-semibold truncate">{pharmMap[p.pharmacy_id]}</div>
-                        <div className={`text-xs ${p.in_stock ? "text-success" : "text-muted-foreground"}`}>
-                          {p.in_stock ? "En stock" : "Sin stock"}
-                        </div>
+                const RowContent = (
+                  <div className={`flex items-center gap-3 p-4 min-h-[68px] ${isLowest ? "bg-primary/5" : ""}`}>
+                    <PharmacyLogo
+                      slug={pharmSlugMap[p.pharmacy_id] ?? ""}
+                      name={pharmMap[p.pharmacy_id]}
+                      size={40}
+                      className="shrink-0 rounded-full bg-white"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold truncate text-base">{pharmMap[p.pharmacy_id]}</div>
+                      <div className={`text-xs ${p.in_stock ? "text-success" : "text-muted-foreground"}`}>
+                        {p.in_stock ? "En stock" : "Sin stock"}
                       </div>
                     </div>
-                    <div className="col-span-6 sm:col-span-4">
-                      {isLowest && (
-                        <span className="inline-block text-[10px] font-bold uppercase tracking-wide rounded-full bg-primary text-primary-foreground px-2 py-0.5 mb-1">
-                          Precio más bajo
-                        </span>
-                      )}
-                      <div className={`font-bold ${isLowest ? "text-primary text-xl" : "text-lg"}`}>{d.primary}</div>
+                    <div className="text-right shrink-0">
+                      <div className={`font-extrabold tabular-nums ${isLowest ? "text-primary text-xl" : "text-lg"}`}>{d.primary}</div>
                       {d.secondary && <div className="text-[11px] text-muted-foreground">≈ {d.secondary}</div>}
                     </div>
-                    <div className="col-span-6 sm:col-span-3 text-right">
-                      {p.product_url ? (
-                        <a href={p.product_url} target="_blank" rel="noreferrer">
-                          <Button size="sm" variant={isLowest ? "default" : "outline"} className={isLowest ? "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground" : ""}>
-                            Ver <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                          </Button>
-                        </a>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Sin enlace</span>
-                      )}
-                    </div>
+                    {p.product_url ? (
+                      <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
+                    ) : null}
+                  </div>
+                );
+                return (
+                  <li key={p.id}>
+                    {p.product_url ? (
+                      <a href={p.product_url} target="_blank" rel="noreferrer" className="block active:bg-muted/60">
+                        {RowContent}
+                      </a>
+                    ) : (
+                      <div>{RowContent}</div>
+                    )}
                   </li>
                 );
               })}
             </ul>
           )}
         </Card>
+      </div>
+
+      {/* CTAs secundarios (desktop) */}
+      <div className="hidden md:flex mt-6 gap-3">
+        <Button
+          onClick={toggleFollow}
+          className={following ? "" : "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"}
+          variant={following ? "outline" : "default"}
+        >
+          {following ? <><BellOff className="h-4 w-4 mr-2" /> Dejar de seguir</> : <><Bell className="h-4 w-4 mr-2" /> Avísame si baja</>}
+        </Button>
+        <Button onClick={addThisToOrder} variant={inOrder ? "outline" : "secondary"}>
+          {inOrder ? <><Check className="h-4 w-4 mr-2" /> En tu orden — agregar otro</> : <><ShoppingCart className="h-4 w-4 mr-2" /> Agregar a mi orden</>}
+        </Button>
       </div>
 
       {/* Histórico */}
@@ -285,6 +283,23 @@ function MedicamentoPage() {
           </div>
         </Card>
       )}
+
+      {/* Sticky CTAs móvil (sobre la bottom-nav) */}
+      <div
+        className="md:hidden fixed inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-3 py-2 flex gap-2"
+        style={{ bottom: `calc(56px + env(safe-area-inset-bottom))` }}
+      >
+        <Button
+          onClick={toggleFollow}
+          variant={following ? "outline" : "default"}
+          className={`flex-1 h-11 ${following ? "" : "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"}`}
+        >
+          {following ? <><BellOff className="h-4 w-4 mr-1.5" /> Siguiendo</> : <><Bell className="h-4 w-4 mr-1.5" /> Avísame</>}
+        </Button>
+        <Button onClick={addThisToOrder} variant={inOrder ? "outline" : "secondary"} className="flex-1 h-11">
+          {inOrder ? <><Check className="h-4 w-4 mr-1.5" /> En orden</> : <><ShoppingCart className="h-4 w-4 mr-1.5" /> A mi orden</>}
+        </Button>
+      </div>
     </div>
   );
 }

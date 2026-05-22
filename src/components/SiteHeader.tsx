@@ -38,12 +38,13 @@ export function SiteHeader() {
           )}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           <a
             href="https://instagram.com/alerta.medicina"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram @alerta.medicina"
+            className="hidden md:inline-flex"
           >
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <Instagram className="h-5 w-5" />
@@ -54,6 +55,7 @@ export function SiteHeader() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="TikTok @alerta.medicina"
+            className="hidden md:inline-flex"
           >
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
