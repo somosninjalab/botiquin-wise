@@ -3,6 +3,7 @@ import { MainVideo } from "./MainVideo";
 import { AbsoluteFill } from "remotion";
 import { VerticalVideo } from "./VerticalVideo";
 import { ComebackVideo } from "./ComebackVideo";
+import { DynamicVideo, DYNAMIC_DURATION } from "./DynamicVideo";
 
 const VerticalWrap = () => {
   // Letterbox the 1920x1080 MainVideo inside 1080x1920.
@@ -47,6 +48,14 @@ export const RemotionRoot = () => (
     id="comeback"
     component={ComebackVideo}
     durationInFrames={913}
+    fps={30}
+    width={1080}
+    height={1920}
+  />
+  <Composition
+    id="dynamic"
+    component={DynamicVideo}
+    durationInFrames={DYNAMIC_DURATION}
     fps={30}
     width={1080}
     height={1920}
