@@ -29,6 +29,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
 import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
 import { Route as ApiPublicHooksSitemapCrawlRouteImport } from './routes/api/public/hooks/sitemap-crawl'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
@@ -143,6 +144,12 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksWeeklyReminderRoute =
+  ApiPublicHooksWeeklyReminderRouteImport.update({
+    id: '/api/public/hooks/weekly-reminder',
+    path: '/api/public/hooks/weekly-reminder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksTranslateMedsRoute =
   ApiPublicHooksTranslateMedsRouteImport.update({
     id: '/api/public/hooks/translate-meds',
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -261,6 +269,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -360,6 +371,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -392,6 +404,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -424,6 +437,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
   ApiPublicHooksSitemapCrawlRoute: typeof ApiPublicHooksSitemapCrawlRoute
   ApiPublicHooksTranslateMedsRoute: typeof ApiPublicHooksTranslateMedsRoute
+  ApiPublicHooksWeeklyReminderRoute: typeof ApiPublicHooksWeeklyReminderRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -573,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/weekly-reminder': {
+      id: '/api/public/hooks/weekly-reminder'
+      path: '/api/public/hooks/weekly-reminder'
+      fullPath: '/api/public/hooks/weekly-reminder'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/translate-meds': {
       id: '/api/public/hooks/translate-meds'
       path: '/api/public/hooks/translate-meds'
@@ -681,6 +702,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
   ApiPublicHooksSitemapCrawlRoute: ApiPublicHooksSitemapCrawlRoute,
   ApiPublicHooksTranslateMedsRoute: ApiPublicHooksTranslateMedsRoute,
+  ApiPublicHooksWeeklyReminderRoute: ApiPublicHooksWeeklyReminderRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

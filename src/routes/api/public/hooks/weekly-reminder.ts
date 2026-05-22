@@ -17,28 +17,11 @@ export const Route = createFileRoute("/api/public/hooks/weekly-reminder")({
           .not("email", "is", null);
         if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
 
-        // Solo a usuarios con email confirmado
-        const userIds = (profiles ?? []).map((p: any) => p.user_id);
-        const confirmed = new Set<string>();
-        if (userIds.length) {
-          // chunk to avoid huge IN clauses
-          for (let i = 0; i < userIds.length; i += 500) {
-            const slice = userIds.slice(i, i + 500);
-            const { data } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-            // Fallback: filter from the full list (admin API has no in() filter)
-            for (const u of (data?.users ?? []) as any[]) {
-              if (u.email_confirmed_at && slice.includes(u.id)) confirmed.add(u.id);
-            }
-            break; // listUsers returns all in one page below perPage; avoid loop
-          }
-        }
-
-        const week = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (Monday)
+        const week = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
         let queued = 0;
         let skipped = 0;
         for (const p of (profiles ?? []) as any[]) {
           if (!p.email) { skipped++; continue; }
-          if (!confirmed.has(p.user_id)) { skipped++; continue; }
           const r = await enqueueTransactionalEmail({
             supabase: supabaseAdmin,
             templateName: "weekly-reminder",
