@@ -48,6 +48,7 @@ export const template = {
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'system-ui, -apple-system, Arial, sans-serif' }
 const container = { padding: '24px 28px', maxWidth: '560px', margin: '0 auto' }
+const logo = { width: '160px', maxWidth: '100%', height: 'auto', margin: '0 1px 20px 1px', display: 'block' as const }
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 12px' }
 const text = { fontSize: '15px', color: '#475569', lineHeight: '1.6', margin: '0 0 16px' }
 const btn = { backgroundColor: '#0f766e', color: '#ffffff', padding: '12px 20px', borderRadius: '8px', fontSize: '15px', textDecoration: 'none', display: 'inline-block', marginTop: '8px', fontWeight: 'bold' as const }
