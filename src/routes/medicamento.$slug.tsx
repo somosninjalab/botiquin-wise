@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { trackSearch } from "@/lib/track-search";
 import { useAuth } from "@/hooks/useAuth";
 import { displayPrice, priceToVes, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { useBcvRate } from "@/hooks/useBcvRate";
