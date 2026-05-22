@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      email_idempotency_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
