@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Card } from "@/components/ui/card";
@@ -123,6 +123,11 @@ export default function AuthPage() {
             <form onSubmit={handleSignIn} className="space-y-3">
               <div><Label>Email</Label><Input type="email" value={si.email} onChange={(e) => setSi({ ...si, email: e.target.value })} maxLength={255} required /></div>
               <div><Label>Contraseña</Label><Input type="password" value={si.password} onChange={(e) => setSi({ ...si, password: e.target.value })} maxLength={100} required /></div>
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">Entrar</Button>
             </form>
           </TabsContent>

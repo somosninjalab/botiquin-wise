@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PopularesRouteImport } from './routes/populares'
 import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
 import { Route as MiOrdenRouteImport } from './routes/mi-orden'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -43,6 +45,11 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
   path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PopularesRoute = PopularesRouteImport.update({
   id: '/populares',
   path: '/populares',
@@ -56,6 +63,11 @@ const MisAlertasRoute = MisAlertasRouteImport.update({
 const MiOrdenRoute = MiOrdenRouteImport.update({
   id: '/mi-orden',
   path: '/mi-orden',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
@@ -197,9 +209,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -227,9 +241,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -258,9 +274,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -290,9 +308,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/forgot-password'
     | '/mi-orden'
     | '/mis-alertas'
     | '/populares'
+    | '/reset-password'
     | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
@@ -320,9 +340,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/forgot-password'
     | '/mi-orden'
     | '/mis-alertas'
     | '/populares'
+    | '/reset-password'
     | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
@@ -350,9 +372,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/forgot-password'
     | '/mi-orden'
     | '/mis-alertas'
     | '/populares'
+    | '/reset-password'
     | '/unsubscribe'
     | '/admin/precios'
     | '/email/unsubscribe'
@@ -381,9 +405,11 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   MiOrdenRoute: typeof MiOrdenRoute
   MisAlertasRoute: typeof MisAlertasRoute
   PopularesRoute: typeof PopularesRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
@@ -414,6 +440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/populares': {
       id: '/populares'
       path: '/populares'
@@ -433,6 +466,13 @@ declare module '@tanstack/react-router' {
       path: '/mi-orden'
       fullPath: '/mi-orden'
       preLoaderRoute: typeof MiOrdenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/como-funciona': {
@@ -622,9 +662,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   MiOrdenRoute: MiOrdenRoute,
   MisAlertasRoute: MisAlertasRoute,
   PopularesRoute: PopularesRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
@@ -648,3 +690,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
