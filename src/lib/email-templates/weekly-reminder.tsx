@@ -1,8 +1,10 @@
 import * as React from 'react'
 import {
-  Body, Button, Container, Head, Heading, Hr, Html, Preview, Text,
+  Body, Button, Container, Head, Heading, Hr, Html, Img, Preview, Text,
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+
+const LOGO_URL = 'https://tgbgjztpacrdaqlxduvb.supabase.co/storage/v1/object/public/email-assets/alertamedicina-logo.png'
 
 const SITE_NAME = '¡Alerta: Medicina!'
 const SITE_URL = 'https://alertamedicina.com'
