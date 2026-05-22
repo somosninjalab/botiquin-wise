@@ -12,7 +12,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirma para tener los mejores precios de tu medicina',
+  signup: 'Confirma tu email',
   invite: 'Te invitaron a Alerta Medicina',
   magiclink: 'Tu enlace de acceso',
   recovery: 'Restablece tu contraseña',
