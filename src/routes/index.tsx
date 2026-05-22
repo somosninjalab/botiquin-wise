@@ -134,10 +134,7 @@ function Index() {
       const p = await getLatestPricesForMedications(m.map((x) => x.id));
       setPrices(p);
       if (q.trim()) {
-        await supabase.from("search_events").insert({
-          query: q.slice(0, 200),
-          result_count: m.length,
-        });
+        await trackSearch({ query: q, result_count: m.length });
       }
       setLoading(false);
 
