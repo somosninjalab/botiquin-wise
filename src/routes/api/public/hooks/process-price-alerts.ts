@@ -18,7 +18,9 @@ export const Route = createFileRoute("/api/public/hooks/process-price-alerts")({
       POST: async ({ request }) => {
         const url = new URL(request.url);
         const threshold = Math.max(1, Math.min(Number(url.searchParams.get("threshold") ?? 5) || 5, 90));
-        const hours = Math.max(1, Math.min(Number(url.searchParams.get("hours") ?? 72) || 72, 720));
+        // Ventana por defecto = 24h: el resumen diario solo agrupa cambios
+        // detectados en el día actual (no arrastra días anteriores).
+        const hours = Math.max(1, Math.min(Number(url.searchParams.get("hours") ?? 24) || 24, 720));
         const since = new Date(Date.now() - hours * 3_600_000).toISOString();
 
         const { data, error } = await supabaseAdmin
