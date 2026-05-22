@@ -85,7 +85,7 @@ function HookScene() {
         DE MÁS?
       </div>
       <div style={{ marginTop: 60, fontSize: 64, fontWeight: 700, color: "#fff", opacity: interpolate(frame, [40, 55], [0, 1]) }}>
-        por tus medicinas 💊
+        por tus medicinas
       </div>
     </AbsoluteFill>
   );
@@ -139,7 +139,7 @@ function SlamScene() {
         opacity: interpolate(frame, [110, 125], [0, 1]),
         transform: `scale(${interpolate(frame, [110, 130], [0.5, 1])})`,
       }}>
-        ¡60% menos! 🎉
+        ¡60% menos!
       </div>
     </AbsoluteFill>
   );
@@ -179,7 +179,7 @@ function DemoScene() {
   const typed = Math.min(11, Math.floor(interpolate(frame, [15, 45], [0, 11], { extrapolateRight: "clamp" })));
   const text = "paracetamol".slice(0, typed);
   const showResults = frame > 50;
-  const results = ["💊 Paracetamol 500mg", "💊 Paracetamol 1g", "💊 Paracetamol Jarabe"];
+  const results = ["Paracetamol 500mg", "Paracetamol 1g", "Paracetamol Jarabe"];
   return (
     <AbsoluteFill style={{ background: COLORS.ink, justifyContent: "center", alignItems: "center", padding: 80 }}>
       <div style={{
@@ -219,7 +219,7 @@ function DemoScene() {
         position: "absolute", bottom: 80, fontSize: 56, fontWeight: 800, color: "#fff",
         opacity: interpolate(frame, [85, 100], [0, 1]),
       }}>
-        En 2 segundos. ⚡
+        En 2 segundos.
       </div>
     </AbsoluteFill>
   );
@@ -249,7 +249,7 @@ function FollowScene() {
         </div>
         <div style={{ fontSize: 56, fontWeight: 900, color: COLORS.ink }}>@alertamedicina</div>
         <div style={{ fontSize: 38, fontWeight: 500, color: COLORS.muted, textAlign: "center" }}>
-          Te avisamos cuando bajan<br/>los precios. 📉
+          Te avisamos cuando bajan<br/>los precios.
         </div>
         <div style={{
           background: COLORS.primary, color: "#fff",
@@ -280,7 +280,7 @@ function CTAScene() {
         alerta<br/>medicina<span style={{ color: COLORS.primaryGlow }}>.com</span>
       </div>
       <div style={{ width: `${underline}%`, maxWidth: 700, height: 8, background: COLORS.primaryGlow, marginTop: 30, borderRadius: 8 }} />
-      <div style={{ marginTop: 50, fontSize: 80, transform: `translateY(${arrow}px)` }}>👉💊✨</div>
+      <div style={{ marginTop: 50, fontSize: 80, transform: `translateY(${arrow}px)` }}>→</div>
     </AbsoluteFill>
   );
 }
