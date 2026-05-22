@@ -116,7 +116,9 @@ export default function AuthPage() {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
+      setLoading(false);
       toast.error(result.error.message || "Error al iniciar sesión con Google");
+      return;
     }
     if (result.redirected) {
       return;
