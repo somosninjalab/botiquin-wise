@@ -19,6 +19,7 @@ const WeeklyReminderEmail = ({ name }: Props) => (
     <Preview>Antes de comprar tu medicina, compara en {SITE_NAME}</Preview>
     <Body style={main}>
       <Container style={container}>
+        <Img src={LOGO_URL} alt="Alerta Medicina" style={logo} />
         <Heading style={h1}>{name ? `Hola ${name},` : 'Hola,'}</Heading>
         <Text style={text}>
           Esta semana, antes de pagar de más por tus medicinas, recuerda revisar los
