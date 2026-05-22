@@ -46,6 +46,17 @@ export async function enqueueTransactionalEmail(p: EnqueueParams): Promise<Enque
 
   const normalizedEmail = effectiveRecipient.toLowerCase()
 
+  // Idempotency: si ya se encoló un email con esta clave, no lo volvemos a encolar.
+  if (p.idempotencyKey) {
+    const { error: idemErr } = await supabase
+      .from('email_idempotency_keys')
+      .insert({ key: p.idempotencyKey })
+    if (idemErr) {
+      // Conflicto de unique → ya enviado. Cualquier otro error también lo tratamos como "no reenviar".
+      return { success: false, reason: 'duplicate_idempotency_key' }
+    }
+  }
+
   // Suppression check
   const { data: suppressed, error: supErr } = await supabase
     .from('suppressed_emails').select('id').eq('email', normalizedEmail).maybeSingle()
