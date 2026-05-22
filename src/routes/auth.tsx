@@ -110,6 +110,21 @@ export default function AuthPage() {
     toast.success("Sesión iniciada");
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      toast.error(result.error.message || "Error al iniciar sesión con Google");
+    }
+    if (result.redirected) {
+      return;
+    }
+    setLoading(false);
+    toast.success("Sesión iniciada");
+  };
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-md">
       <Card className="p-6">
