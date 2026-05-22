@@ -73,18 +73,42 @@ function HookScene() {
   const s3 = spring({ frame: frame - 28, fps, config: { damping: 10, stiffness: 180 } });
   const shake = Math.sin(frame * 0.9) * 4 * Math.max(0, 1 - frame / 40);
   return (
-    <AbsoluteFill style={{ background: COLORS.ink, justifyContent: "center", alignItems: "center", padding: 60 }}>
-      <FlashBg color="#fff" hit={0} />
-      <div style={{ transform: `scale(${s1}) translateX(${shake}px)`, fontSize: 220, fontWeight: 900, color: "#fff", lineHeight: 1, letterSpacing: -6 }}>
+    <AbsoluteFill style={{ background: `radial-gradient(circle at 50% 35%, #FFFFFF 0%, ${COLORS.bg} 60%, #DCF3E8 100%)`, justifyContent: "center", alignItems: "center", padding: 60 }}>
+      <FlashBg color={COLORS.primaryGlow} hit={0} />
+      {/* floating Bs. price tags */}
+      {[
+        { x: 80,  y: 200,  v: "Bs. 240", c: COLORS.accent },
+        { x: 820, y: 260,  v: "Bs. 215", c: COLORS.primary },
+        { x: 120, y: 1500, v: "Bs. 198", c: COLORS.primary },
+        { x: 780, y: 1450, v: "Bs. 182", c: COLORS.accent },
+        { x: 60,  y: 880,  v: "Bs. 96",  c: COLORS.primary },
+        { x: 820, y: 940,  v: "Bs. 240", c: COLORS.accent },
+      ].map((t, i) => {
+        const float = Math.sin((frame + i * 12) * 0.08) * 18;
+        const rot = Math.sin((frame + i * 8) * 0.05) * 8;
+        return (
+          <div key={i} style={{
+            position: "absolute", left: t.x, top: t.y + float,
+            transform: `rotate(${rot}deg)`,
+            background: "#fff", color: t.c,
+            border: `3px solid ${t.c}`,
+            padding: "10px 22px", borderRadius: 999,
+            fontSize: 38, fontWeight: 900,
+            boxShadow: "0 8px 20px rgba(15,42,46,0.10)",
+            opacity: 0.95,
+          }}>{t.v}</div>
+        );
+      })}
+      <div style={{ transform: `scale(${s1}) translateX(${shake}px)`, fontSize: 220, fontWeight: 900, color: COLORS.ink, lineHeight: 1, letterSpacing: -6 }}>
         ¿Estás
       </div>
-      <div style={{ transform: `scale(${s2})`, fontSize: 220, fontWeight: 900, color: COLORS.accent, lineHeight: 1, letterSpacing: -6, marginTop: -20 }}>
+      <div style={{ transform: `scale(${s2})`, fontSize: 220, fontWeight: 900, color: COLORS.ink, lineHeight: 1, letterSpacing: -6, marginTop: -20 }}>
         pagando
       </div>
-      <div style={{ transform: `scale(${s3})`, fontSize: 280, fontWeight: 900, color: COLORS.primaryGlow, lineHeight: 1, letterSpacing: -8, marginTop: -10, textShadow: `0 0 60px ${COLORS.primary}` }}>
+      <div style={{ transform: `scale(${s3})`, fontSize: 280, fontWeight: 900, color: COLORS.primary, lineHeight: 1, letterSpacing: -8, marginTop: -10, textShadow: `0 6px 24px ${COLORS.primaryGlow}60` }}>
         DE MÁS?
       </div>
-      <div style={{ marginTop: 60, fontSize: 64, fontWeight: 700, color: "#fff", opacity: interpolate(frame, [40, 55], [0, 1]) }}>
+      <div style={{ marginTop: 60, fontSize: 64, fontWeight: 700, color: COLORS.muted, opacity: interpolate(frame, [40, 55], [0, 1]) }}>
         por tus medicinas
       </div>
     </AbsoluteFill>
@@ -181,12 +205,12 @@ function DemoScene() {
   const showResults = frame > 50;
   const results = ["Paracetamol 500mg", "Paracetamol 1g", "Paracetamol Jarabe"];
   return (
-    <AbsoluteFill style={{ background: COLORS.ink, justifyContent: "center", alignItems: "center", padding: 80 }}>
+    <AbsoluteFill style={{ background: `linear-gradient(160deg, ${COLORS.primaryGlow} 0%, ${COLORS.bg} 55%, #FFF 100%)`, justifyContent: "center", alignItems: "center", padding: 80 }}>
       <div style={{
         width: 720, height: 1280, background: "#fff", borderRadius: 60,
         border: `12px solid ${COLORS.primary}`,
         transform: `translateY(${interpolate(phone, [0, 1], [200, 0])}px) scale(${phone})`,
-        boxShadow: `0 40px 120px ${COLORS.primary}60`,
+        boxShadow: `0 40px 120px ${COLORS.primary}50, 0 0 0 14px #FFFFFF80`,
         padding: 50, display: "flex", flexDirection: "column",
       }}>
         <div style={{ fontSize: 44, fontWeight: 900, color: COLORS.primary, textAlign: "center", marginBottom: 40 }}>
@@ -216,10 +240,12 @@ function DemoScene() {
         </div>
       </div>
       <div style={{
-        position: "absolute", bottom: 80, fontSize: 56, fontWeight: 800, color: "#fff",
+        position: "absolute", bottom: 80, fontSize: 64, fontWeight: 900, color: COLORS.ink,
         opacity: interpolate(frame, [85, 100], [0, 1]),
+        background: "#fff", padding: "16px 40px", borderRadius: 60,
+        boxShadow: "0 12px 40px rgba(15,42,46,0.18)",
       }}>
-        En 2 segundos.
+        En 2 segundos
       </div>
     </AbsoluteFill>
   );
@@ -272,15 +298,22 @@ function CTAScene() {
   const underline = interpolate(frame, [20, 50], [0, 100], { extrapolateRight: "clamp" });
   const arrow = interpolate(frame, [30, 50], [-30, 0], { extrapolateRight: "clamp" });
   return (
-    <AbsoluteFill style={{ background: COLORS.ink, justifyContent: "center", alignItems: "center", padding: 60 }}>
-      <div style={{ fontSize: 72, fontWeight: 700, color: COLORS.primaryGlow, marginBottom: 30, transform: `scale(${s})`, textAlign: "center" }}>
+    <AbsoluteFill style={{ background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryGlow} 100%)`, justifyContent: "center", alignItems: "center", padding: 60 }}>
+      {/* subtle floating dots */}
+      {[0,1,2,3,4,5,6,7].map((i) => {
+        const x = (i * 137) % 1080;
+        const y = ((i * 211) % 1700) + 80;
+        const f = Math.sin((frame + i * 9) * 0.07) * 14;
+        return <div key={i} style={{ position: "absolute", left: x, top: y + f, width: 14, height: 14, borderRadius: "50%", background: "#FFFFFF40" }} />;
+      })}
+      <div style={{ fontSize: 72, fontWeight: 700, color: "#FFFFFF", marginBottom: 30, transform: `scale(${s})`, textAlign: "center", opacity: 0.95 }}>
         Antes de comprar →
       </div>
       <div style={{ fontSize: 130, fontWeight: 900, color: "#fff", letterSpacing: -5, lineHeight: 1, textAlign: "center", transform: `scale(${s})` }}>
-        alerta<br/>medicina<span style={{ color: COLORS.primaryGlow }}>.com</span>
+        alerta<br/>medicina<span style={{ color: COLORS.ink }}>.com</span>
       </div>
-      <div style={{ width: `${underline}%`, maxWidth: 700, height: 8, background: COLORS.primaryGlow, marginTop: 30, borderRadius: 8 }} />
-      <div style={{ marginTop: 50, fontSize: 80, transform: `translateY(${arrow}px)` }}>→</div>
+      <div style={{ width: `${underline}%`, maxWidth: 700, height: 10, background: "#FFFFFF", marginTop: 30, borderRadius: 8 }} />
+      <div style={{ marginTop: 50, fontSize: 80, color: "#fff", transform: `translateY(${arrow}px)` }}>→</div>
     </AbsoluteFill>
   );
 }
