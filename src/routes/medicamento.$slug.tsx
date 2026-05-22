@@ -283,6 +283,23 @@ function MedicamentoPage() {
           </div>
         </Card>
       )}
+
+      {/* Sticky CTAs móvil (sobre la bottom-nav) */}
+      <div
+        className="md:hidden fixed inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-3 py-2 flex gap-2"
+        style={{ bottom: `calc(56px + env(safe-area-inset-bottom))` }}
+      >
+        <Button
+          onClick={toggleFollow}
+          variant={following ? "outline" : "default"}
+          className={`flex-1 h-11 ${following ? "" : "bg-gradient-to-r from-primary to-primary-glow text-primary-foreground"}`}
+        >
+          {following ? <><BellOff className="h-4 w-4 mr-1.5" /> Siguiendo</> : <><Bell className="h-4 w-4 mr-1.5" /> Avísame</>}
+        </Button>
+        <Button onClick={addThisToOrder} variant={inOrder ? "outline" : "secondary"} className="flex-1 h-11">
+          {inOrder ? <><Check className="h-4 w-4 mr-1.5" /> En orden</> : <><ShoppingCart className="h-4 w-4 mr-1.5" /> A mi orden</>}
+        </Button>
+      </div>
     </div>
   );
 }
