@@ -114,10 +114,23 @@ export const Route = createFileRoute("/api/public/hooks/process-price-alerts")({
 
           if (byUser.size) {
             const userIds = Array.from(byUser.keys());
+            const since24h = new Date(Date.now() - 24 * 3_600_000).toISOString();
+
+            // Solo notificar a usuarios que hicieron al menos una búsqueda
+            // en las últimas 24h.
+            const { data: activeSearches } = await supabaseAdmin
+              .from("search_events")
+              .select("user_id")
+              .in("user_id", userIds)
+              .gte("created_at", since24h);
+            const activeUserIds = new Set(
+              (activeSearches ?? []).map((s: any) => s.user_id).filter(Boolean),
+            );
+
             const { data: profiles } = await supabaseAdmin
               .from("profiles")
               .select("user_id, email, full_name, instant_alerts")
-              .in("user_id", userIds);
+              .in("user_id", Array.from(activeUserIds));
 
             for (const p of (profiles ?? []) as any[]) {
               if (!p.email || p.instant_alerts === false) continue;
