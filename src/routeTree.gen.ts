@@ -25,6 +25,8 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
 import { Route as ApiPublicHooksSitemapCrawlRouteImport } from './routes/api/public/hooks/sitemap-crawl'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
@@ -119,6 +121,16 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksTranslateMedsRoute =
   ApiPublicHooksTranslateMedsRouteImport.update({
     id: '/api/public/hooks/translate-meds',
@@ -203,6 +215,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -231,6 +245,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -260,6 +276,8 @@ export interface FileRoutesById {
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
   '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -290,6 +308,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -318,6 +338,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -346,6 +368,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/seed-cima'
     | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -374,6 +398,8 @@ export interface RootRouteChildren {
   ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
   ApiPublicHooksSitemapCrawlRoute: typeof ApiPublicHooksSitemapCrawlRoute
   ApiPublicHooksTranslateMedsRoute: typeof ApiPublicHooksTranslateMedsRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -493,6 +519,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/translate-meds': {
       id: '/api/public/hooks/translate-meds'
       path: '/api/public/hooks/translate-meds'
@@ -599,6 +639,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
   ApiPublicHooksSitemapCrawlRoute: ApiPublicHooksSitemapCrawlRoute,
   ApiPublicHooksTranslateMedsRoute: ApiPublicHooksTranslateMedsRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
