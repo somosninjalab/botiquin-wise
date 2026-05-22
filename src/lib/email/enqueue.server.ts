@@ -94,7 +94,7 @@ export async function enqueueTransactionalEmail(p: EnqueueParams): Promise<Enque
     payload: {
       message_id: messageId,
       to: effectiveRecipient,
-      from: `${SITE_NAME} <${FROM_LOCAL}@${FROM_DOMAIN}>`,
+      from: `"${SITE_NAME}" <${FROM_LOCAL}@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject,
       html,
