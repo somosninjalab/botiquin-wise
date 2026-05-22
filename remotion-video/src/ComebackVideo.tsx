@@ -130,11 +130,11 @@ function Scene1Hook() {
         <div
           style={{
             marginTop: 36,
-            fontSize: 180,
+            fontSize: 150,
             fontWeight: 900,
             color: "#fff",
             lineHeight: 0.95,
-            letterSpacing: -6,
+            letterSpacing: -5,
             opacity: headS,
             transform: `scale(${interpolate(headS, [0, 1], [0.9, 1])})`,
             textShadow:
