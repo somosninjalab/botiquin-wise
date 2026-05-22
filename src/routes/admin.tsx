@@ -15,6 +15,7 @@ function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, follows: 0, meds: 0 });
   const [scraping, setScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState<string | null>(null);
@@ -27,13 +28,15 @@ function AdminPage() {
   useEffect(() => {
     if (!isAdmin) return;
     (async () => {
-      const [{ data: ev }, { count: u }, { count: f }, { count: m }] = await Promise.all([
+      const [{ data: ev }, { data: pr }, { count: u }, { count: f }, { count: m }] = await Promise.all([
         supabase.from("search_events").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("profiles").select("city, region, country, sex").limit(5000),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("medication_followers").select("*", { count: "exact", head: true }),
         supabase.from("medications").select("*", { count: "exact", head: true }),
       ]);
       setEvents(ev ?? []);
+      setProfiles(pr ?? []);
       setStats({ users: u ?? 0, follows: f ?? 0, meds: m ?? 0 });
     })();
   }, [isAdmin]);
@@ -49,6 +52,22 @@ function AdminPage() {
     events.filter((e) => e.query && (e.result_count === 0 || e.result_count === null)),
     (e) => e.query as string,
   ).slice(0, 15);
+
+  const usersByCity = aggregate(
+    profiles.filter((p) => p.city),
+    (p) => `${p.city}${p.region ? `, ${p.region}` : ""}`,
+  ).slice(0, 10);
+  const usersBySex = aggregate(profiles, (p) => {
+    const s = (p.sex || "").toLowerCase();
+    if (s === "f" || s === "female" || s === "femenino" || s === "mujer") return "Femenino";
+    if (s === "m" || s === "male" || s === "masculino" || s === "hombre") return "Masculino";
+    if (s) return "Otro";
+    return "No especificado";
+  });
+  const usersByCountry = aggregate(
+    profiles.filter((p) => p.country),
+    (p) => p.country as string,
+  ).slice(0, 10);
 
   if (!isAdmin) return null;
 
@@ -234,6 +253,13 @@ function AdminPage() {
         <ChartCard title="Top regiones" data={byRegion} />
         <ChartCard title="Top ciudades" data={byCity} />
         <ChartCard title="Top categorías / especialidades" data={byCategory} />
+      </div>
+
+      <h2 className="text-xl font-semibold mt-10 mb-3">Distribución de usuarios registrados</h2>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <ChartCard title="Usuarios por ciudad" data={usersByCity} />
+        <ChartCard title="Usuarios por sexo" data={usersBySex} />
+        <ChartCard title="Usuarios por país" data={usersByCountry} />
       </div>
 
       {failedSearches.length > 0 && (
