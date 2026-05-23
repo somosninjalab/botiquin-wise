@@ -327,6 +327,48 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_leads: {
+        Row: {
+          city: string | null
+          created_at: string
+          details: string | null
+          has_digital: boolean | null
+          id: string
+          name: string
+          processed: boolean
+          reference: string | null
+          type: Database["public"]["Enums"]["partner_lead_type"]
+          wants_boost: boolean | null
+          whatsapp: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          details?: string | null
+          has_digital?: boolean | null
+          id?: string
+          name: string
+          processed?: boolean
+          reference?: string | null
+          type: Database["public"]["Enums"]["partner_lead_type"]
+          wants_boost?: boolean | null
+          whatsapp?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          details?: string | null
+          has_digital?: boolean | null
+          id?: string
+          name?: string
+          processed?: boolean
+          reference?: string | null
+          type?: Database["public"]["Enums"]["partner_lead_type"]
+          wants_boost?: boolean | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       pharmacies: {
         Row: {
           created_at: string
@@ -768,6 +810,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      partner_lead_type: "farmacia" | "drogueria"
       tag_kind: "category" | "indication" | "symptom" | "population" | "form"
     }
     CompositeTypes: {
@@ -897,6 +940,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      partner_lead_type: ["farmacia", "drogueria"],
       tag_kind: ["category", "indication", "symptom", "population", "form"],
     },
   },

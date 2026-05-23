@@ -20,9 +20,11 @@ export interface TemplateEntry {
 import { template as priceAlert } from './price-alert'
 import { template as searchResults } from './search-results'
 import { template as weeklyReminder } from './weekly-reminder'
+import { template as partnerLead } from './partner-lead'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'price-alert': priceAlert,
   'search-results': searchResults,
   'weekly-reminder': weeklyReminder,
+  'partner-lead': partnerLead,
 }
