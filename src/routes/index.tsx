@@ -297,6 +297,11 @@ function Index() {
                 <p className="mt-2 text-xs md:text-sm text-muted-foreground hidden sm:block">
                   Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
                 </p>
+                {stats?.total && (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground text-center sm:text-left">
+                    Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
+                  </p>
+                )}
               </div>
               {isSearching && (
                 <a
