@@ -1,6 +1,5 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate, Img, staticFile } from "remotion";
 import { Background, FloatingBlob, Grain } from "../components/Background";
-import { PillIcon } from "../components/PillIcon";
 import { display, body, palette } from "../theme";
 
 export const Scene4Solution: React.FC = () => {
@@ -10,8 +9,7 @@ export const Scene4Solution: React.FC = () => {
   // Burst — concentric rings expanding from center
   const burst = spring({ frame, fps, config: { damping: 11, stiffness: 80 } });
 
-  const pillIn = spring({ frame: frame - 8, fps, config: { damping: 9, stiffness: 130 } });
-  const pillRot = interpolate(frame, [0, 130], [-180, -15]);
+  const logoIn = spring({ frame: frame - 8, fps, config: { damping: 11, stiffness: 130 } });
 
   const wordAlerta = spring({ frame: frame - 20, fps, config: { damping: 14 } });
   const wordMedicina = spring({ frame: frame - 32, fps, config: { damping: 14 } });
@@ -19,15 +17,15 @@ export const Scene4Solution: React.FC = () => {
   const subIn = spring({ frame: frame - 70, fps, config: { damping: 18 } });
 
   return (
-    <AbsoluteFill style={{ background: palette.ink }}>
-      {/* radial wash */}
+    <AbsoluteFill style={{ background: palette.bg }}>
+      {/* brand radial wash */}
       <AbsoluteFill
         style={{
           background:
-            "radial-gradient(circle at 50% 45%, #144B6A 0%, #0B1B2B 60%, #050E18 100%)",
+            `radial-gradient(circle at 50% 45%, ${palette.primary} 0%, ${palette.primaryDeep} 55%, #08332A 100%)`,
         }}
       />
-      <FloatingBlob color={palette.primary} x={-180} y={1300} size={520} />
+      <FloatingBlob color={palette.primaryDeep} x={-180} y={1300} size={520} />
       <FloatingBlob color={palette.accent} x={760} y={-160} size={460} phase={20} />
 
       {/* expanding rings */}
@@ -45,7 +43,7 @@ export const Scene4Solution: React.FC = () => {
               top: 700 - r,
               width: r * 2,
               height: r * 2,
-              border: `4px solid ${palette.primary}`,
+              border: `4px solid ${palette.white}`,
               borderRadius: "50%",
               opacity: op,
             }}
@@ -54,7 +52,7 @@ export const Scene4Solution: React.FC = () => {
       })}
       <Grain />
 
-      {/* Pill icon */}
+      {/* Brand logo */}
       <div
         style={{
           position: "absolute",
@@ -63,12 +61,25 @@ export const Scene4Solution: React.FC = () => {
           top: 460,
           display: "flex",
           justifyContent: "center",
-          opacity: pillIn,
-          transform: `scale(${0.4 + pillIn * 0.6}) rotate(${pillRot}deg)`,
+          opacity: logoIn,
+          transform: `scale(${0.5 + logoIn * 0.5})`,
           transformOrigin: "center",
         }}
       >
-        <PillIcon size={280} rotation={0} colorA={palette.accent} colorB={palette.white} />
+        <div
+          style={{
+            width: 300,
+            height: 300,
+            borderRadius: 64,
+            background: palette.white,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 30px 60px -20px rgba(0,0,0,0.45)",
+          }}
+        >
+          <Img src={staticFile("logo.png")} style={{ width: 230, height: 230, objectFit: "contain" }} />
+        </div>
       </div>
 
       {/* Brand name */}
@@ -91,7 +102,7 @@ export const Scene4Solution: React.FC = () => {
           style={{
             opacity: wordAlerta,
             transform: `translateY(${interpolate(wordAlerta, [0, 1], [40, 0])}px)`,
-            color: palette.accent,
+            color: palette.yellow,
           }}
         >
           ¡ALERTA!
@@ -123,15 +134,15 @@ export const Scene4Solution: React.FC = () => {
         <span
           style={{
             display: "inline-block",
-            background: palette.yellow,
+            background: palette.accent,
             color: palette.ink,
             fontFamily: body,
             fontWeight: 600,
             fontSize: 38,
             padding: "16px 36px",
             borderRadius: 999,
-            border: "4px solid #0B1B2B",
-            boxShadow: "8px 8px 0 #0B1B2B",
+            border: `4px solid ${palette.ink}`,
+            boxShadow: `8px 8px 0 ${palette.ink}`,
           }}
         >
           Encuentra dónde están las más baratas
@@ -145,7 +156,7 @@ export const Scene4Solution: React.FC = () => {
           right: 80,
           top: 1260,
           textAlign: "center",
-          color: "#CDE7E7",
+          color: "#E8F5EE",
           fontFamily: body,
           fontSize: 36,
           lineHeight: 1.3,
