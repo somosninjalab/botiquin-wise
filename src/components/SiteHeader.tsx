@@ -1,15 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, Instagram, LayoutDashboard, LogIn, LogOut, ShoppingCart, User } from "lucide-react";
+import { Bell, Instagram, LayoutDashboard, LogIn, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import logoUrl from "@/assets/logo.png";
-import { useOrder } from "@/lib/order-store";
 
 export function SiteHeader() {
   const { user, isAdmin } = useAuth();
-  const order = useOrder();
-  const count = order.reduce((s, i) => s + i.quantity, 0);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-md">
@@ -66,16 +63,6 @@ export function SiteHeader() {
               </svg>
             </Button>
           </a>
-          <Link to="/mi-orden" aria-label="Mi orden" className="relative">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <ShoppingCart className="h-5 w-5" />
-            </Button>
-            {count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                {count > 99 ? "99+" : count}
-              </span>
-            )}
-          </Link>
           {user ? (
             <>
               <Link to="/mis-alertas" className="hidden sm:flex">
