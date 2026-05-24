@@ -14,10 +14,13 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="container mx-auto flex h-16 md:h-20 items-center justify-between px-4 gap-2">
-        <Link to="/" className="flex items-center gap-2 font-bold text-base md:text-lg min-w-0">
+        <Link to="/" className="flex items-center gap-2 font-bold text-base md:text-lg min-w-1">
           <img src={logoUrl} alt="" className="h-12 w-12 md:h-14 md:w-14 rounded-xl shadow-[var(--shadow-soft)] shrink-0" />
           <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">
             ¡Alerta: Medicina!
+          </span>
+          <span className="shrink-0 ml-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+            Beta
           </span>
         </Link>
 
