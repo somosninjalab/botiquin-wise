@@ -5,14 +5,15 @@ export const display = loadDisplay("normal", { weights: ["500", "700"] }).fontFa
 export const body = loadBody("normal", { weights: ["400", "600"] }).fontFamily;
 
 export const palette = {
-  bg: "#FFF7EC",
-  bgDeep: "#FFE9CC",
-  ink: "#0B1B2B",
-  inkSoft: "#2A3B4C",
-  primary: "#0EA5A4", // teal
-  primaryDeep: "#0D7A79",
-  accent: "#FF5A4E", // coral
-  accentSoft: "#FFB199",
-  yellow: "#FFD166",
+  // Alerta Medicina brand palette (matches src/styles.css tokens)
+  bg: "#F5FBF7",
+  bgDeep: "#D7ECE5",
+  ink: "#0F2A2E",
+  inkSoft: "#2A4A4D",
+  primary: "#16A37A", // brand teal-green
+  primaryDeep: "#0F7A5B",
+  accent: "#F08A4B", // warm orange
+  accentSoft: "#F6B98A",
+  yellow: "#F0D08A",
   white: "#FFFFFF",
 };
