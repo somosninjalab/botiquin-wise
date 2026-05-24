@@ -3,10 +3,10 @@ import { Background, FloatingBlob, Grain } from "../components/Background";
 import { display, body, palette } from "../theme";
 
 const tags = [
-  { name: "Atorvastatina", a: 95, b: 180, delay: 0, x: 70, y: 380, rot: -3 },
-  { name: "Losartán", a: 60, b: 130, delay: 12, x: 480, y: 540, rot: 4 },
-  { name: "Metformina", a: 45, b: 95, delay: 22, x: 100, y: 720, rot: -2 },
-  { name: "Omeprazol", a: 70, b: 155, delay: 32, x: 520, y: 880, rot: 3 },
+  { name: "Atorvastatina", a: 95, b: 180, delay: 0, x: 70, y: 720, rot: -3 },
+  { name: "Losartán", a: 60, b: 130, delay: 12, x: 480, y: 920, rot: 4 },
+  { name: "Metformina", a: 45, b: 95, delay: 22, x: 100, y: 1130, rot: -2 },
+  { name: "Omeprazol", a: 70, b: 155, delay: 32, x: 520, y: 1340, rot: 3 },
 ];
 
 export const Scene2Problem1: React.FC = () => {
