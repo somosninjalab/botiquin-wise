@@ -85,6 +85,12 @@ function Index() {
     brand !== "all" ||
     ai !== "all";
   const bcvRate = useBcvRate();
+  const fetchTotal = useServerFn(getTotalSearches);
+  const { data: stats } = useQuery({
+    queryKey: ["total-searches"],
+    queryFn: () => fetchTotal(),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
