@@ -41,7 +41,7 @@ export const MainVideo: React.FC = () => {
           presentation={slide({ direction: "from-bottom" })}
           timing={springTiming({ config: { damping: 200 }, durationInFrames: 18 })}
         />
-        <TransitionSeries.Sequence durationInFrames={150}>
+        <TransitionSeries.Sequence durationInFrames={140}>
           <Scene5Close />
         </TransitionSeries.Sequence>
       </TransitionSeries>
