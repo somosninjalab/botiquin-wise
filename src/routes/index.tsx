@@ -263,6 +263,11 @@ function Index() {
         <section className="sticky top-16 md:top-20 z-30 bg-background/95 backdrop-blur border-b border-border/60">
           <div className="container mx-auto px-4 py-3">
             <SearchBar size="md" initial={q} onSearch={(value) => updateSearch({ q: value })} />
+            {stats?.total && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground text-center">
+                Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
+              </p>
+            )}
           </div>
         </section>
       ) : (
