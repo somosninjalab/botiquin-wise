@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getTotalSearches } from "@/lib/search-stats.functions";
 import { z } from "zod";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { SearchBar } from "@/components/SearchBar";
@@ -83,6 +85,12 @@ function Index() {
     brand !== "all" ||
     ai !== "all";
   const bcvRate = useBcvRate();
+  const fetchTotal = useServerFn(getTotalSearches);
+  const { data: stats } = useQuery({
+    queryKey: ["total-searches"],
+    queryFn: () => fetchTotal(),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
@@ -255,6 +263,11 @@ function Index() {
         <section className="sticky top-16 md:top-20 z-30 bg-background/95 backdrop-blur border-b border-border/60">
           <div className="container mx-auto px-4 py-3">
             <SearchBar size="md" initial={q} onSearch={(value) => updateSearch({ q: value })} />
+            {stats?.total && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground text-center">
+                Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
+              </p>
+            )}
           </div>
         </section>
       ) : (
@@ -284,6 +297,11 @@ function Index() {
                 <p className="mt-2 text-xs md:text-sm text-muted-foreground hidden sm:block">
                   Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
                 </p>
+                {stats?.total && (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground text-center sm:text-left">
+                    Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
+                  </p>
+                )}
               </div>
               {isSearching && (
                 <a
