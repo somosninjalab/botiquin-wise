@@ -86,11 +86,29 @@ function Index() {
     ai !== "all";
   const bcvRate = useBcvRate();
   const fetchTotal = useServerFn(getTotalSearches);
-  const { data: stats } = useQuery({
+  const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ["total-searches"],
     queryFn: () => fetchTotal(),
-    staleTime: 1000 * 60 * 5,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
+
+  // Realtime: bump count as soon as a new search event is inserted
+  useEffect(() => {
+    const channel = supabase
+      .channel("search-events-counter")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "search_events" },
+        () => {
+          refetchStats();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetchStats]);
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
