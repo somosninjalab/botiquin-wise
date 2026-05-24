@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getTotalSearches } from "@/lib/search-stats.functions";
 import { z } from "zod";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
@@ -86,12 +85,20 @@ function Index() {
     ai !== "all";
   const bcvRate = useBcvRate();
   const fetchTotal = useServerFn(getTotalSearches);
-  const { data: stats, refetch: refetchStats } = useQuery({
-    queryKey: ["total-searches"],
-    queryFn: () => fetchTotal(),
-    refetchInterval: 15000,
-    refetchOnWindowFocus: true,
-  });
+  const [stats, setStats] = useState<{ total: number } | null>(null);
+  const refetchStats = useCallback(async () => {
+    try {
+      const res = await fetchTotal();
+      setStats(res);
+    } catch (e) {
+      // ignore
+    }
+  }, [fetchTotal]);
+  useEffect(() => {
+    refetchStats();
+    const id = setInterval(refetchStats, 15000);
+    return () => clearInterval(id);
+  }, [refetchStats]);
 
   // Realtime: bump count as soon as a new search event is inserted
   useEffect(() => {
