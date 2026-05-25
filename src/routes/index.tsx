@@ -101,21 +101,9 @@ function Index() {
   }, [refetchStats]);
 
   // Realtime: bump count as soon as a new search event is inserted
-  useEffect(() => {
-    const channel = supabase
-      .channel("search-events-counter")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "search_events" },
-        () => {
-          refetchStats();
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetchStats]);
+  // Note: search_events is intentionally NOT published via Supabase Realtime
+  // (it would broadcast user_id, query text and location to any subscriber).
+  // The counter stays fresh via the 15s polling interval above.
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
