@@ -61,3 +61,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+
+async function enrichProfileGeo(userId: string) {
+  try {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("city")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (prof?.city) return; // ya tiene ciudad
+    const geo = await lookupRequestGeo();
+    if (!geo?.city && !geo?.region && !geo?.country) return;
+    await supabase
+      .from("profiles")
+      .update({
+        city: geo.city,
+        region: geo.region,
+        country: geo.country,
+        ip_first_seen: geo.ip ?? undefined,
+      })
+      .eq("user_id", userId);
+  } catch {
+    // no-op
+  }
+}
