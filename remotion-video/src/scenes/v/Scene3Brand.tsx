@@ -34,7 +34,7 @@ export const Scene3Brand = () => {
             opacity: logoS,
           }}
         >
-          <Img src={staticFile("logos/actual.png")} style={{ width: 160, height: 160, objectFit: "contain" }} />
+          <Img src={staticFile("alerta-logo.png")} style={{ width: 180, height: 180, objectFit: "contain" }} />
         </div>
         <div
           style={{
