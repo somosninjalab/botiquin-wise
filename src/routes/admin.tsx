@@ -258,13 +258,6 @@ function AdminPage() {
         <Stat label="Medicamentos en catálogo" value={stats.meds} />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 mt-8">
-        <ChartCard title="Top búsquedas" data={byQuery} />
-        <ChartCard title="Top regiones" data={byRegion} />
-        <ChartCard title="Top ciudades" data={byCity} />
-        <ChartCard title="Top categorías / especialidades" data={byCategory} />
-      </div>
-
       <h2 className="text-xl font-semibold mt-10 mb-3">Mapas de calor</h2>
       <div className="grid lg:grid-cols-2 gap-6">
         <HeatmapCard
@@ -277,6 +270,13 @@ function AdminPage() {
           subtitle="Intensidad según cantidad de perfiles"
           points={usersHeatPoints}
         />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6 mt-8">
+        <ChartCard title="Top búsquedas" data={byQuery} />
+        <ChartCard title="Top regiones" data={byRegion} />
+        <ChartCard title="Top ciudades" data={byCity} />
+        <ChartCard title="Top categorías / especialidades" data={byCategory} />
       </div>
 
       <h2 className="text-xl font-semibold mt-10 mb-3">Distribución de usuarios registrados</h2>
