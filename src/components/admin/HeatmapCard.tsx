@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { lookupCityLatLng, VENEZUELA_CENTER } from "@/lib/venezuela-geo";
 
 type CityPoint = { city: string; weight: number };
@@ -48,6 +49,7 @@ export function HeatmapCard({
 }) {
   const mapEl = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"heat" | "points">("heat");
 
   const { located, unknown } = useMemo(() => {
     const located: Array<CityPoint & { lat: number; lng: number }> = [];
@@ -60,10 +62,17 @@ export function HeatmapCard({
     return { located, unknown };
   }, [points]);
 
+  const maxWeight = useMemo(
+    () => located.reduce((m, p) => Math.max(m, p.weight), 0),
+    [located],
+  );
+
   useEffect(() => {
     let cancelled = false;
     let map: google.maps.Map | null = null;
     let heat: google.maps.visualization.HeatmapLayer | null = null;
+    let markers: google.maps.Marker[] = [];
+    let infoWindow: google.maps.InfoWindow | null = null;
 
     loadGoogleMaps()
       .then((g) => {
@@ -78,24 +87,66 @@ export function HeatmapCard({
             { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
           ],
         });
-        const data = located.map((p) => ({
-          location: new g.maps.LatLng(p.lat, p.lng),
-          weight: p.weight,
-        }));
-        heat = new g.maps.visualization.HeatmapLayer({
-          data,
-          map,
-          radius: 30,
-          opacity: 0.7,
-        });
+
+        if (mode === "heat") {
+          const data = located.map((p) => ({
+            location: new g.maps.LatLng(p.lat, p.lng),
+            weight: p.weight,
+          }));
+          heat = new g.maps.visualization.HeatmapLayer({
+            data,
+            map,
+            radius: 45,
+            opacity: 0.85,
+            dissipating: true,
+            maxIntensity: Math.max(3, maxWeight),
+            gradient: [
+              "rgba(0, 255, 200, 0)",
+              "rgba(0, 200, 180, 0.5)",
+              "rgba(0, 180, 120, 0.7)",
+              "rgba(180, 200, 0, 0.85)",
+              "rgba(240, 160, 0, 0.9)",
+              "rgba(230, 80, 40, 0.95)",
+              "rgba(200, 20, 60, 1)",
+              "rgba(140, 0, 80, 1)",
+            ],
+          });
+        } else {
+          infoWindow = new g.maps.InfoWindow();
+          markers = located.map((p) => {
+            const scale = 8 + Math.min(22, (p.weight / Math.max(1, maxWeight)) * 22);
+            const m = new g.maps.Marker({
+              position: { lat: p.lat, lng: p.lng },
+              map: map!,
+              title: `${p.city}: ${p.weight}`,
+              icon: {
+                path: g.maps.SymbolPath.CIRCLE,
+                scale,
+                fillColor: "#e11d48",
+                fillOpacity: 0.65,
+                strokeColor: "#7f1d1d",
+                strokeWeight: 1.5,
+              },
+            });
+            m.addListener("click", () => {
+              infoWindow!.setContent(
+                `<div style="font-size:12px"><strong>${p.city}</strong><br/>${p.weight} registros</div>`,
+              );
+              infoWindow!.open({ map: map!, anchor: m });
+            });
+            return m;
+          });
+        }
       })
       .catch((e) => setError(e.message));
 
     return () => {
       cancelled = true;
       if (heat) heat.setMap(null);
+      markers.forEach((m) => m.setMap(null));
+      if (infoWindow) infoWindow.close();
     };
-  }, [located]);
+  }, [located, mode, maxWeight]);
 
   return (
     <Card className="p-5">
@@ -105,6 +156,24 @@ export function HeatmapCard({
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         <div className="flex gap-2">
+          <div className="inline-flex rounded-md border overflow-hidden">
+            <Button
+              size="sm"
+              variant={mode === "heat" ? "default" : "ghost"}
+              className="rounded-none h-7 px-2 text-xs"
+              onClick={() => setMode("heat")}
+            >
+              Calor
+            </Button>
+            <Button
+              size="sm"
+              variant={mode === "points" ? "default" : "ghost"}
+              className="rounded-none h-7 px-2 text-xs"
+              onClick={() => setMode("points")}
+            >
+              Puntos
+            </Button>
+          </div>
           <Badge variant="secondary">{located.reduce((s, p) => s + p.weight, 0)} pts</Badge>
           {unknown.length > 0 && (
             <Badge variant="outline" title={unknown.map((u) => u.city).join(", ")}>
