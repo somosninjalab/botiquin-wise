@@ -1,4 +1,3 @@
-/// <reference types="google.maps" />
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +6,10 @@ import { lookupCityLatLng, VENEZUELA_CENTER } from "@/lib/venezuela-geo";
 
 type CityPoint = { city: string; weight: number };
 
-let mapsLoader: Promise<typeof google> | null = null;
+let mapsLoader: Promise<any> | null = null;
 
-function loadGoogleMaps(): Promise<typeof google> {
-  if (typeof window !== "undefined" && (window as any).google?.maps?.visualization) {
+function loadGoogleMaps(): Promise<any> {
+  if (typeof window !== "undefined" && (window as any).google?.maps) {
     return Promise.resolve((window as any).google);
   }
   if (mapsLoader) return mapsLoader;
@@ -24,7 +23,6 @@ function loadGoogleMaps(): Promise<typeof google> {
     const s = document.createElement("script");
     const params = new URLSearchParams({
       key,
-      libraries: "visualization",
       loading: "async",
       callback: "__initLovableMaps",
     });
@@ -77,10 +75,10 @@ export function HeatmapCard({
   useEffect(() => {
     if (!lovableDomain) return;
     let cancelled = false;
-    let map: google.maps.Map | null = null;
-    let heat: google.maps.visualization.HeatmapLayer | null = null;
-    let markers: google.maps.Marker[] = [];
-    let infoWindow: google.maps.InfoWindow | null = null;
+    let map: any = null;
+    let circles: any[] = [];
+    let markers: any[] = [];
+    let infoWindow: any = null;
 
     loadGoogleMaps()
       .then((g) => {
@@ -96,36 +94,51 @@ export function HeatmapCard({
           ],
         });
 
+        infoWindow = new g.maps.InfoWindow();
+
         if (mode === "heat") {
-          const data = located.map((p) => ({
-            location: new g.maps.LatLng(p.lat, p.lng),
-            weight: p.weight,
-          }));
-          heat = new g.maps.visualization.HeatmapLayer({
-            data,
-            map,
-            radius: 45,
-            opacity: 0.85,
-            dissipating: true,
-            maxIntensity: Math.max(3, maxWeight),
-            gradient: [
-              "rgba(0, 255, 200, 0)",
-              "rgba(0, 200, 180, 0.5)",
-              "rgba(0, 180, 120, 0.7)",
-              "rgba(180, 200, 0, 0.85)",
-              "rgba(240, 160, 0, 0.9)",
-              "rgba(230, 80, 40, 0.95)",
-              "rgba(200, 20, 60, 1)",
-              "rgba(140, 0, 80, 1)",
-            ],
+          // Google removed HeatmapLayer in Maps JS v3.65. Simulate a heatmap
+          // with stacked weighted circles colored by intensity.
+          const stops = [
+            { t: 0.0, color: "#00c8b4" },
+            { t: 0.25, color: "#9dc800" },
+            { t: 0.5, color: "#f0a000" },
+            { t: 0.75, color: "#e65028" },
+            { t: 1.0, color: "#8c0050" },
+          ];
+          const pickColor = (ratio: number) => {
+            for (let i = 1; i < stops.length; i++) {
+              if (ratio <= stops[i].t) return stops[i].color;
+            }
+            return stops[stops.length - 1].color;
+          };
+          circles = located.flatMap((p) => {
+            const ratio = p.weight / Math.max(1, maxWeight);
+            const baseRadius = 25000 + ratio * 80000; // meters
+            const color = pickColor(ratio);
+            const layers = [
+              { r: baseRadius * 1.6, opacity: 0.15 },
+              { r: baseRadius * 1.1, opacity: 0.3 },
+              { r: baseRadius * 0.7, opacity: 0.55 },
+            ];
+            return layers.map((l) =>
+              new g.maps.Circle({
+                strokeWeight: 0,
+                fillColor: color,
+                fillOpacity: l.opacity,
+                map,
+                center: { lat: p.lat, lng: p.lng },
+                radius: l.r,
+                clickable: false,
+              }),
+            );
           });
         } else {
-          infoWindow = new g.maps.InfoWindow();
           markers = located.map((p) => {
             const scale = 8 + Math.min(22, (p.weight / Math.max(1, maxWeight)) * 22);
             const m = new g.maps.Marker({
               position: { lat: p.lat, lng: p.lng },
-              map: map!,
+              map,
               title: `${p.city}: ${p.weight}`,
               icon: {
                 path: g.maps.SymbolPath.CIRCLE,
@@ -137,10 +150,10 @@ export function HeatmapCard({
               },
             });
             m.addListener("click", () => {
-              infoWindow!.setContent(
+              infoWindow.setContent(
                 `<div style="font-size:12px"><strong>${p.city}</strong><br/>${p.weight} registros</div>`,
               );
-              infoWindow!.open({ map: map!, anchor: m });
+              infoWindow.open({ map, anchor: m });
             });
             return m;
           });
@@ -150,7 +163,7 @@ export function HeatmapCard({
 
     return () => {
       cancelled = true;
-      if (heat) heat.setMap(null);
+      circles.forEach((c) => c.setMap(null));
       markers.forEach((m) => m.setMap(null));
       if (infoWindow) infoWindow.close();
     };
