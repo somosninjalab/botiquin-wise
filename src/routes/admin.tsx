@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { HeatmapCard } from "@/components/admin/HeatmapCard";
 import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/admin")({ component: AdminPage });
@@ -68,6 +69,15 @@ function AdminPage() {
     profiles.filter((p) => p.country),
     (p) => p.country as string,
   ).slice(0, 10);
+
+  const searchesHeatPoints = aggregate(
+    events.filter((e) => e.city),
+    (e) => e.city as string,
+  ).map((r) => ({ city: r.name, weight: r.value }));
+  const usersHeatPoints = aggregate(
+    profiles.filter((p) => p.city),
+    (p) => p.city as string,
+  ).map((r) => ({ city: r.name, weight: r.value }));
 
   if (!isAdmin) return null;
 
@@ -253,6 +263,20 @@ function AdminPage() {
         <ChartCard title="Top regiones" data={byRegion} />
         <ChartCard title="Top ciudades" data={byCity} />
         <ChartCard title="Top categorías / especialidades" data={byCategory} />
+      </div>
+
+      <h2 className="text-xl font-semibold mt-10 mb-3">Mapas de calor</h2>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <HeatmapCard
+          title="Búsquedas por ciudad"
+          subtitle="Intensidad según cantidad de búsquedas registradas"
+          points={searchesHeatPoints}
+        />
+        <HeatmapCard
+          title="Usuarios registrados por ciudad"
+          subtitle="Intensidad según cantidad de perfiles"
+          points={usersHeatPoints}
+        />
       </div>
 
       <h2 className="text-xl font-semibold mt-10 mb-3">Distribución de usuarios registrados</h2>
