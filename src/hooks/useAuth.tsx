@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { lookupRequestGeo } from "@/lib/profile/geo.functions";
 
 type AuthContextValue = {
   user: User | null;
@@ -35,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .maybeSingle();
           setIsAdmin(!!data);
         }, 0);
+        // Enrich profile location (city/region/country) if missing.
+        setTimeout(() => { enrichProfileGeo(s.user.id); }, 0);
       } else {
         setIsAdmin(false);
       }
@@ -57,4 +60,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   return useContext(AuthContext);
+}
+
+async function enrichProfileGeo(userId: string) {
+  try {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("city")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (prof?.city) return; // ya tiene ciudad
+    const geo = await lookupRequestGeo();
+    if (!geo?.city && !geo?.region && !geo?.country) return;
+    await supabase
+      .from("profiles")
+      .update({
+        city: geo.city,
+        region: geo.region,
+        country: geo.country,
+        ip_first_seen: geo.ip ?? undefined,
+      })
+      .eq("user_id", userId);
+  } catch {
+    // no-op
+  }
 }
