@@ -1,4 +1,3 @@
-/// <reference types="google.maps" />
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +6,10 @@ import { lookupCityLatLng, VENEZUELA_CENTER } from "@/lib/venezuela-geo";
 
 type CityPoint = { city: string; weight: number };
 
-let mapsLoader: Promise<typeof google> | null = null;
+let mapsLoader: Promise<any> | null = null;
 
-function loadGoogleMaps(): Promise<typeof google> {
-  if (typeof window !== "undefined" && (window as any).google?.maps?.visualization) {
+function loadGoogleMaps(): Promise<any> {
+  if (typeof window !== "undefined" && (window as any).google?.maps) {
     return Promise.resolve((window as any).google);
   }
   if (mapsLoader) return mapsLoader;
@@ -24,7 +23,6 @@ function loadGoogleMaps(): Promise<typeof google> {
     const s = document.createElement("script");
     const params = new URLSearchParams({
       key,
-      libraries: "visualization",
       loading: "async",
       callback: "__initLovableMaps",
     });
