@@ -38,6 +38,12 @@ function loadGoogleMaps(): Promise<typeof google> {
   return mapsLoader;
 }
 
+function isLovableDomain() {
+  if (typeof window === "undefined") return true;
+  const host = window.location.hostname;
+  return host.endsWith(".lovable.app") || host.endsWith(".lovableproject.com") || host === "localhost";
+}
+
 export function HeatmapCard({
   title,
   subtitle,
@@ -50,6 +56,7 @@ export function HeatmapCard({
   const mapEl = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"heat" | "points">("heat");
+  const lovableDomain = typeof window !== "undefined" ? isLovableDomain() : true;
 
   const { located, unknown } = useMemo(() => {
     const located: Array<CityPoint & { lat: number; lng: number }> = [];
@@ -68,6 +75,7 @@ export function HeatmapCard({
   );
 
   useEffect(() => {
+    if (!lovableDomain) return;
     let cancelled = false;
     let map: google.maps.Map | null = null;
     let heat: google.maps.visualization.HeatmapLayer | null = null;
@@ -182,7 +190,14 @@ export function HeatmapCard({
           )}
         </div>
       </div>
-      {error ? (
+      {!lovableDomain ? (
+        <div className="h-80 rounded-md border bg-muted/30 grid place-items-center text-sm text-muted-foreground p-4 text-center">
+          <div>
+            <p className="font-medium text-foreground mb-1">Mapa solo disponible en preview</p>
+            <p>El mapa de calor requiere Google Maps Platform, que solo está habilitado en el preview de Lovable.</p>
+          </div>
+        </div>
+      ) : error ? (
         <div className="h-80 rounded-md border bg-muted/30 grid place-items-center text-sm text-muted-foreground p-4 text-center">
           {error}
         </div>
