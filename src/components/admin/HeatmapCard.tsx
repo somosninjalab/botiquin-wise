@@ -38,6 +38,12 @@ function loadGoogleMaps(): Promise<typeof google> {
   return mapsLoader;
 }
 
+function isLovableDomain() {
+  if (typeof window === "undefined") return true;
+  const host = window.location.hostname;
+  return host.endsWith(".lovable.app") || host.endsWith(".lovableproject.com") || host === "localhost";
+}
+
 export function HeatmapCard({
   title,
   subtitle,
@@ -50,6 +56,7 @@ export function HeatmapCard({
   const mapEl = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"heat" | "points">("heat");
+  const lovableDomain = typeof window !== "undefined" ? isLovableDomain() : true;
 
   const { located, unknown } = useMemo(() => {
     const located: Array<CityPoint & { lat: number; lng: number }> = [];
