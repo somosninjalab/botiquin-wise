@@ -26,9 +26,9 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  audioCodec: "aac",
-  outputLocation: "/mnt/documents/alerta-medicina-story-vo-9x16.mp4",
+  outputLocation: "/tmp/alerta-vo-silent.mp4",
   puppeteerInstance: browser,
+  muted: true,
   concurrency: 1,
 });
 
