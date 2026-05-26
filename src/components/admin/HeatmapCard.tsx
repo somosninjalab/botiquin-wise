@@ -75,6 +75,7 @@ export function HeatmapCard({
   );
 
   useEffect(() => {
+    if (!lovableDomain) return;
     let cancelled = false;
     let map: google.maps.Map | null = null;
     let heat: google.maps.visualization.HeatmapLayer | null = null;
