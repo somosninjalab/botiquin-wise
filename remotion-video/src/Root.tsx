@@ -4,6 +4,7 @@ import { AbsoluteFill } from "remotion";
 import { VerticalVideo } from "./VerticalVideo";
 import { ComebackVideo } from "./ComebackVideo";
 import { DynamicVideo, DYNAMIC_DURATION } from "./DynamicVideo";
+import { VerticalStoryVO } from "./VerticalStoryVO";
 
 const VerticalWrap = () => {
   // Letterbox the 1920x1080 MainVideo inside 1080x1920.
@@ -39,6 +40,14 @@ export const RemotionRoot = () => (
   <Composition
     id="vertical-story"
     component={VerticalVideo}
+    durationInFrames={638}
+    fps={30}
+    width={1080}
+    height={1920}
+  />
+  <Composition
+    id="vertical-story-vo"
+    component={VerticalStoryVO}
     durationInFrames={638}
     fps={30}
     width={1080}
