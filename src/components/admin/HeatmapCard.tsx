@@ -189,7 +189,14 @@ export function HeatmapCard({
           )}
         </div>
       </div>
-      {error ? (
+      {!lovableDomain ? (
+        <div className="h-80 rounded-md border bg-muted/30 grid place-items-center text-sm text-muted-foreground p-4 text-center">
+          <div>
+            <p className="font-medium text-foreground mb-1">Mapa solo disponible en preview</p>
+            <p>El mapa de calor requiere Google Maps Platform, que solo está habilitado en el preview de Lovable.</p>
+          </div>
+        </div>
+      ) : error ? (
         <div className="h-80 rounded-md border bg-muted/30 grid place-items-center text-sm text-muted-foreground p-4 text-center">
           {error}
         </div>
