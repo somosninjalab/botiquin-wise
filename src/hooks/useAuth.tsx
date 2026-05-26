@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { lookupRequestGeo } from "@/lib/profile/geo.functions";
 
 type AuthContextValue = {
   user: User | null;
@@ -35,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .maybeSingle();
           setIsAdmin(!!data);
         }, 0);
+        // Enrich profile location (city/region/country) if missing.
+        setTimeout(() => { enrichProfileGeo(s.user.id); }, 0);
       } else {
         setIsAdmin(false);
       }
