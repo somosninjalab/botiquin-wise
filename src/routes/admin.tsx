@@ -21,6 +21,8 @@ function AdminPage() {
   const [scraping, setScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState<string | null>(null);
   const [scrapeStats, setScrapeStats] = useState<Array<{ slug: string; name: string; attempted: number; inserted: number; failed: number }> | null>(null);
+  const [topMeds, setTopMeds] = useState<Array<{ id: string; name: string; active_ingredient: string; slug: string; hits: number }>>([]);
+  const [topMedsDays, setTopMedsDays] = useState<number>(30);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) navigate({ to: "/" });
@@ -41,6 +43,32 @@ function AdminPage() {
       setStats({ users: u ?? 0, follows: f ?? 0, meds: m ?? 0 });
     })();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const since = new Date(Date.now() - topMedsDays * 24 * 60 * 60 * 1000).toISOString();
+      const { data: rows } = await supabase
+        .from("search_events")
+        .select("medication_id")
+        .not("medication_id", "is", null)
+        .gte("created_at", since)
+        .limit(20000);
+      const counts = new Map<string, number>();
+      (rows ?? []).forEach((r: any) => counts.set(r.medication_id, (counts.get(r.medication_id) ?? 0) + 1));
+      const ids = Array.from(counts.keys());
+      if (ids.length === 0) { setTopMeds([]); return; }
+      const { data: meds } = await supabase
+        .from("medications")
+        .select("id, name, active_ingredient, slug")
+        .in("id", ids);
+      const list = (meds ?? []).map((m: any) => ({
+        id: m.id, name: m.name, active_ingredient: m.active_ingredient, slug: m.slug,
+        hits: counts.get(m.id) ?? 0,
+      })).sort((a, b) => b.hits - a.hits).slice(0, 30);
+      setTopMeds(list);
+    })();
+  }, [isAdmin, topMedsDays]);
 
   const byQuery = aggregate(events, (e) => e.query || "(detalle)").slice(0, 10);
   const byRegion = aggregate(events, (e) => e.region || e.country || "Desconocida").slice(0, 10);
@@ -285,6 +313,53 @@ function AdminPage() {
         <ChartCard title="Usuarios por sexo" data={usersBySex} />
         <ChartCard title="Usuarios por país" data={usersByCountry} />
       </div>
+
+      <Card className="p-5 mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="font-semibold">Top 30 medicamentos más buscados</h3>
+            <p className="text-xs text-muted-foreground">Hits = veces que un usuario abrió o seleccionó este medicamento.</p>
+          </div>
+          <div className="flex gap-1">
+            {[7, 30, 90].map((d) => (
+              <Button
+                key={d}
+                size="sm"
+                variant={topMedsDays === d ? "default" : "outline"}
+                onClick={() => setTopMedsDays(d)}
+              >
+                {d}d
+              </Button>
+            ))}
+          </div>
+        </div>
+        {topMeds.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin datos en este período.</p>
+        ) : (
+          <ol className="space-y-1">
+            {topMeds.map((m, i) => {
+              const top3 = i < 3;
+              return (
+                <li
+                  key={m.id}
+                  className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${top3 ? "border-primary/40 bg-primary/5" : "border-border"}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${top3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                      {i + 1}
+                    </span>
+                    <Link to="/medicamento/$slug" params={{ slug: m.slug }} className="truncate hover:underline">
+                      <span className="font-medium">{m.name}</span>
+                      <span className="text-muted-foreground"> · {m.active_ingredient}</span>
+                    </Link>
+                  </div>
+                  <Badge variant={top3 ? "default" : "secondary"}>{m.hits} hits</Badge>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </Card>
 
       {failedSearches.length > 0 && (
         <Card className="p-5 mt-6">
