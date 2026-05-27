@@ -314,6 +314,53 @@ function AdminPage() {
         <ChartCard title="Usuarios por país" data={usersByCountry} />
       </div>
 
+      <Card className="p-5 mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="font-semibold">Top 30 medicamentos más buscados</h3>
+            <p className="text-xs text-muted-foreground">Hits = veces que un usuario abrió o seleccionó este medicamento.</p>
+          </div>
+          <div className="flex gap-1">
+            {[7, 30, 90].map((d) => (
+              <Button
+                key={d}
+                size="sm"
+                variant={topMedsDays === d ? "default" : "outline"}
+                onClick={() => setTopMedsDays(d)}
+              >
+                {d}d
+              </Button>
+            ))}
+          </div>
+        </div>
+        {topMeds.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin datos en este período.</p>
+        ) : (
+          <ol className="space-y-1">
+            {topMeds.map((m, i) => {
+              const top3 = i < 3;
+              return (
+                <li
+                  key={m.id}
+                  className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${top3 ? "border-primary/40 bg-primary/5" : "border-border"}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${top3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                      {i + 1}
+                    </span>
+                    <Link to="/medicamento/$slug" params={{ slug: m.slug }} className="truncate hover:underline">
+                      <span className="font-medium">{m.name}</span>
+                      <span className="text-muted-foreground"> · {m.active_ingredient}</span>
+                    </Link>
+                  </div>
+                  <Badge variant={top3 ? "default" : "secondary"}>{m.hits} hits</Badge>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </Card>
+
       {failedSearches.length > 0 && (
         <Card className="p-5 mt-6">
           <div className="flex items-center justify-between mb-3">
