@@ -21,6 +21,8 @@ function AdminPage() {
   const [scraping, setScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState<string | null>(null);
   const [scrapeStats, setScrapeStats] = useState<Array<{ slug: string; name: string; attempted: number; inserted: number; failed: number }> | null>(null);
+  const [topMeds, setTopMeds] = useState<Array<{ id: string; name: string; active_ingredient: string; slug: string; hits: number }>>([]);
+  const [topMedsDays, setTopMedsDays] = useState<number>(30);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) navigate({ to: "/" });
@@ -41,6 +43,32 @@ function AdminPage() {
       setStats({ users: u ?? 0, follows: f ?? 0, meds: m ?? 0 });
     })();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const since = new Date(Date.now() - topMedsDays * 24 * 60 * 60 * 1000).toISOString();
+      const { data: rows } = await supabase
+        .from("search_events")
+        .select("medication_id")
+        .not("medication_id", "is", null)
+        .gte("created_at", since)
+        .limit(20000);
+      const counts = new Map<string, number>();
+      (rows ?? []).forEach((r: any) => counts.set(r.medication_id, (counts.get(r.medication_id) ?? 0) + 1));
+      const ids = Array.from(counts.keys());
+      if (ids.length === 0) { setTopMeds([]); return; }
+      const { data: meds } = await supabase
+        .from("medications")
+        .select("id, name, active_ingredient, slug")
+        .in("id", ids);
+      const list = (meds ?? []).map((m: any) => ({
+        id: m.id, name: m.name, active_ingredient: m.active_ingredient, slug: m.slug,
+        hits: counts.get(m.id) ?? 0,
+      })).sort((a, b) => b.hits - a.hits).slice(0, 30);
+      setTopMeds(list);
+    })();
+  }, [isAdmin, topMedsDays]);
 
   const byQuery = aggregate(events, (e) => e.query || "(detalle)").slice(0, 10);
   const byRegion = aggregate(events, (e) => e.region || e.country || "Desconocida").slice(0, 10);
