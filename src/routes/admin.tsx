@@ -403,21 +403,29 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function ChartCard({ title, data }: { title: string; data: { name: string; value: number }[] }) {
+function ListCard({ title, data }: { title: string; data: { name: string; value: number }[] }) {
   return (
     <Card className="p-5">
       <h3 className="font-semibold mb-3">{title}</h3>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-            <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" height={60} />
-            <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="value" fill="oklch(0.62 0.16 165)" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <ol className="space-y-1 max-h-64 overflow-y-auto pr-1">
+        {data.map((item, i) => {
+          const top3 = i < 3;
+          return (
+            <li
+              key={item.name}
+              className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${top3 ? "border-primary/40 bg-primary/5" : "border-border"}`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0 ${top3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                  {i + 1}
+                </span>
+                <span className="truncate font-medium">{item.name}</span>
+              </div>
+              <Badge variant={top3 ? "default" : "secondary"}>{item.value}</Badge>
+            </li>
+          );
+        })}
+      </ol>
     </Card>
   );
 }
