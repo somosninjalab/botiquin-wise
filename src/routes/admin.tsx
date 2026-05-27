@@ -300,17 +300,17 @@ function AdminPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 mt-8">
-        <ChartCard title="Top búsquedas" data={byQuery} />
-        <ChartCard title="Top regiones" data={byRegion} />
-        <ChartCard title="Top ciudades" data={byCity} />
-        <ChartCard title="Top categorías / especialidades" data={byCategory} />
+        <ListCard title="Top búsquedas" data={byQuery} />
+        <ListCard title="Top regiones" data={byRegion} />
+        <ListCard title="Top ciudades" data={byCity} />
+        <ListCard title="Top categorías / especialidades" data={byCategory} />
       </div>
 
       <h2 className="text-xl font-semibold mt-10 mb-3">Distribución de usuarios registrados</h2>
       <div className="grid lg:grid-cols-2 gap-6">
-        <ChartCard title="Usuarios por ciudad" data={usersByCity} />
-        <ChartCard title="Usuarios por sexo" data={usersBySex} />
-        <ChartCard title="Usuarios por país" data={usersByCountry} />
+        <ListCard title="Usuarios por ciudad" data={usersByCity} />
+        <ListCard title="Usuarios por sexo" data={usersBySex} />
+        <ListCard title="Usuarios por país" data={usersByCountry} />
       </div>
 
       <Card className="p-5 mt-8">
