@@ -557,6 +557,33 @@ export type Database = {
           },
         ]
       }
+      share_events: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          source: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          id?: string
+          source?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          source?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
