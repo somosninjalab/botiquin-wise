@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { trackSearchServer } from "./track-search.functions";
 
 type TrackArgs = {
   query?: string;
@@ -37,15 +38,16 @@ async function getGeo() {
 export async function trackSearch(args: TrackArgs) {
   try {
     const geo = await getGeo();
-    await supabase.from("search_events").insert({
-      query: args.query ? args.query.slice(0, 200) : null,
-      medication_id: args.medication_id ?? null,
-      category: args.category ?? null,
-      result_count: args.result_count ?? null,
-      user_id: geo.user_id,
-      city: geo.city,
-      region: geo.region,
-      country: geo.country,
+    // Server-side insert: resuelve geo desde IP (Cloudflare / ipapi)
+    // para que también funcione con visitantes anónimos.
+    await trackSearchServer({
+      data: {
+        query: args.query ? args.query.slice(0, 200) : null,
+        medication_id: args.medication_id ?? null,
+        category: args.category ?? null,
+        result_count: args.result_count ?? null,
+        user_id: geo.user_id,
+      },
     });
   } catch {
     // No bloquear UX por fallos de tracking.
