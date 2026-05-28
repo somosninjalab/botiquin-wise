@@ -21,12 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [roleChecked, setRoleChecked] = useState(false);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      setLoading(false);
       if (s?.user) {
+        setRoleChecked(false);
         setTimeout(async () => {
           const { data } = await supabase
             .from("user_roles")
@@ -35,24 +36,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq("role", "admin")
             .maybeSingle();
           setIsAdmin(!!data);
+          setRoleChecked(true);
+          setLoading(false);
         }, 0);
         // Enrich profile location (city/region/country) if missing.
         setTimeout(() => { enrichProfileGeo(s.user.id); }, 0);
       } else {
         setIsAdmin(false);
+        setRoleChecked(true);
+        setLoading(false);
       }
     });
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      setLoading(false);
+      if (!data.session) {
+        setRoleChecked(true);
+        setLoading(false);
+      }
     });
 
     return () => sub.subscription.unsubscribe();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user: session?.user ?? null, session, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user: session?.user ?? null, session, loading: loading || !roleChecked, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
