@@ -135,7 +135,7 @@ async function runTool(name: string, args: any, ctx: { userId: string | null; co
       await supabaseAdmin.from("health_signals").insert({
         conversation_id: ctx.conversationId,
         user_id: ctx.userId,
-        signal_type,
+        signal_type: signal_type as any,
         value,
         normalized_value: value.toLowerCase(),
         city: ctx.city,
@@ -151,7 +151,7 @@ async function runTool(name: string, args: any, ctx: { userId: string | null; co
       if (!field || !value) return JSON.stringify({ ok: false, error: "missing fields" });
 
       if (field === "city" || field === "region") {
-        await supabaseAdmin.from("profiles").update({ [field]: value }).eq("user_id", ctx.userId);
+        await supabaseAdmin.from("profiles").update({ [field]: value } as any).eq("user_id", ctx.userId);
       } else if (field === "sex" || field === "age_range") {
         // age_range goes to user_health_profile (profiles only has birth_date)
         if (field === "sex") {
@@ -159,20 +159,20 @@ async function runTool(name: string, args: any, ctx: { userId: string | null; co
         }
         await supabaseAdmin
           .from("user_health_profile")
-          .upsert({ user_id: ctx.userId, [field]: value }, { onConflict: "user_id" });
+          .upsert({ user_id: ctx.userId, [field]: value } as any, { onConflict: "user_id" });
       } else if (field === "chronic_condition" || field === "current_medication") {
         const col = field === "chronic_condition" ? "chronic_conditions" : "current_medications";
         // append unique
         const { data: existing } = await supabaseAdmin
           .from("user_health_profile")
-          .select(col)
+          .select(col as any)
           .eq("user_id", ctx.userId)
           .maybeSingle();
         const arr: string[] = ((existing as any)?.[col] ?? []) as string[];
         if (!arr.includes(value)) arr.push(value);
         await supabaseAdmin
           .from("user_health_profile")
-          .upsert({ user_id: ctx.userId, [col]: arr }, { onConflict: "user_id" });
+          .upsert({ user_id: ctx.userId, [col]: arr } as any, { onConflict: "user_id" });
       }
       return JSON.stringify({ ok: true });
     }
@@ -256,7 +256,7 @@ export const Route = createFileRoute("/api/public/chat")({
             .insert({
               user_id: userId,
               anon_token: anonToken,
-              entry_context: body.entryContext ?? {},
+              entry_context: (body.entryContext ?? {}) as any,
               city,
               region,
               country,
