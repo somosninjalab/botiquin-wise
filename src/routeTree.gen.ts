@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
+import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -110,6 +111,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
 const AdminPreciosRoute = AdminPreciosRouteImport.update({
   id: '/precios',
   path: '/precios',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInsightsRoute = AdminInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
   getParentRoute: () => AdminRoute,
 } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/populares'
     | '/reset-password'
     | '/unsubscribe'
+    | '/admin/insights'
     | '/admin/precios'
     | '/email/unsubscribe'
     | '/medicamento/$slug'
@@ -367,6 +377,7 @@ export interface FileRouteTypes {
     | '/populares'
     | '/reset-password'
     | '/unsubscribe'
+    | '/admin/insights'
     | '/admin/precios'
     | '/email/unsubscribe'
     | '/medicamento/$slug'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/populares'
     | '/reset-password'
     | '/unsubscribe'
+    | '/admin/insights'
     | '/admin/precios'
     | '/email/unsubscribe'
     | '/medicamento/$slug'
@@ -558,6 +570,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPreciosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/insights': {
+      id: '/admin/insights'
+      path: '/insights'
+      fullPath: '/admin/insights'
+      preLoaderRoute: typeof AdminInsightsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -688,10 +707,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminInsightsRoute: typeof AdminInsightsRoute
   AdminPreciosRoute: typeof AdminPreciosRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminInsightsRoute: AdminInsightsRoute,
   AdminPreciosRoute: AdminPreciosRoute,
 }
 

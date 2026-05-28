@@ -251,6 +251,11 @@ function AdminPage() {
             <LineChartIcon className="h-4 w-4" /> Evolución de precios (20 días)
           </Link>
         </Button>
+        <Button asChild variant="outline" className="gap-2">
+          <Link to="/admin/insights">
+            <LayoutDashboard className="h-4 w-4" /> Insights del chat
+          </Link>
+        </Button>
         <Button
           variant="secondary"
           disabled={scraping}
