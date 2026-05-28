@@ -4,7 +4,7 @@ import { COLORS } from "../../theme";
 const STATS = [
   { value: 9000, label: "personas comparando", suffix: "+", color: COLORS.primary },
   { value: 25000, label: "medicinas buscadas", suffix: "+", color: COLORS.accent },
-  { value: 2000, label: "alertas activas", suffix: "+", color: COLORS.primaryDeep ?? COLORS.primary },
+  { value: 2000, label: "alertas activas", suffix: "+", color: COLORS.ink },
 ];
 
 const formatNumber = (n: number) => {
