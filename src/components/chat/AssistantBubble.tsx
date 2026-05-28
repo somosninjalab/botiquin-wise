@@ -57,7 +57,7 @@ export function AssistantBubble() {
               setNudged(false);
             }}
             aria-label="Abrir asistente"
-            className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+            className="h-14 w-14 rounded-full bg-gradient-to-br from-accent to-accent-glow text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
           >
             <MessageCircle className="h-6 w-6" />
           </button>
