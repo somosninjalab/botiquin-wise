@@ -4,7 +4,6 @@ import appCss from "../styles.css?url";
 import logoUrl from "@/assets/logo.png";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Toaster } from "@/components/ui/sonner";
 import { AssistantBubble } from "@/components/chat/AssistantBubble";
 
@@ -89,7 +88,6 @@ function RootComponent() {
             ¡Alerta: Medicina! · Comparador gratuito de precios de medicamentos
           </div>
         </footer>
-        <MobileBottomNav />
       </div>
       <AssistantBubble />
       <Toaster richColors position="top-right" />
