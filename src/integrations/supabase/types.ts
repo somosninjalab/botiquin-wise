@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_conversations: {
+        Row: {
+          anon_token: string | null
+          city: string | null
+          country: string | null
+          ended_in_signup: boolean
+          entry_context: Json
+          id: string
+          last_activity_at: string
+          message_count: number
+          region: string | null
+          started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          anon_token?: string | null
+          city?: string | null
+          country?: string | null
+          ended_in_signup?: boolean
+          entry_context?: Json
+          id?: string
+          last_activity_at?: string
+          message_count?: number
+          region?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          anon_token?: string | null
+          city?: string | null
+          country?: string | null
+          ended_in_signup?: boolean
+          entry_context?: Json
+          id?: string
+          last_activity_at?: string
+          message_count?: number
+          region?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          tool_calls: Json | null
+        }
+        Insert: {
+          content?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          tool_calls?: Json | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          tool_calls?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_idempotency_keys: {
         Row: {
           created_at: string
@@ -118,6 +195,70 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      health_signals: {
+        Row: {
+          city: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          medication_id: string | null
+          normalized_value: string | null
+          region: string | null
+          signal_type: Database["public"]["Enums"]["health_signal_type"]
+          tag_id: string | null
+          user_id: string | null
+          value: string
+        }
+        Insert: {
+          city?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          medication_id?: string | null
+          normalized_value?: string | null
+          region?: string | null
+          signal_type: Database["public"]["Enums"]["health_signal_type"]
+          tag_id?: string | null
+          user_id?: string | null
+          value: string
+        }
+        Update: {
+          city?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          medication_id?: string | null
+          normalized_value?: string | null
+          region?: string | null
+          signal_type?: Database["public"]["Enums"]["health_signal_type"]
+          tag_id?: string | null
+          user_id?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_signals_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_signals_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_signals_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       medication_aliases: {
         Row: {
@@ -675,6 +816,42 @@ export type Database = {
           },
         ]
       }
+      user_health_profile: {
+        Row: {
+          age_range: string | null
+          chronic_conditions: string[]
+          current_medications: string[]
+          id: string
+          notes: string | null
+          other_meds_text: string[]
+          sex: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_range?: string | null
+          chronic_conditions?: string[]
+          current_medications?: string[]
+          id?: string
+          notes?: string | null
+          other_meds_text?: string[]
+          sex?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_range?: string | null
+          chronic_conditions?: string[]
+          current_medications?: string[]
+          id?: string
+          notes?: string | null
+          other_meds_text?: string[]
+          sex?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_orders: {
         Row: {
           created_at: string
@@ -742,6 +919,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      migrate_anon_conversation: {
+        Args: { p_anon_token: string; p_user_id: string }
+        Returns: number
       }
       move_to_dlq: {
         Args: {
@@ -837,6 +1018,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      health_signal_type:
+        | "symptom"
+        | "condition"
+        | "medication_mentioned"
+        | "medication_unknown"
+        | "price_concern"
+        | "pharmacy_preference"
+        | "location"
+        | "demographic"
       partner_lead_type: "farmacia" | "drogueria"
       tag_kind: "category" | "indication" | "symptom" | "population" | "form"
     }
@@ -967,6 +1157,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      health_signal_type: [
+        "symptom",
+        "condition",
+        "medication_mentioned",
+        "medication_unknown",
+        "price_concern",
+        "pharmacy_preference",
+        "location",
+        "demographic",
+      ],
       partner_lead_type: ["farmacia", "drogueria"],
       tag_kind: ["category", "indication", "symptom", "population", "form"],
     },
