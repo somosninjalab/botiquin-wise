@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { lookupRequestGeo } from "@/lib/profile/geo.functions";
+import { getAnonToken, resetAnonChatState } from "@/lib/assistant/anonymous-storage";
 
 type AuthContextValue = {
   user: User | null;
@@ -41,6 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }, 0);
         // Enrich profile location (city/region/country) if missing.
         setTimeout(() => { enrichProfileGeo(s.user.id); }, 0);
+        // Migrate anonymous chat conversation (if any) to this user.
+        setTimeout(() => { migrateAnonChat(); }, 0);
       } else {
         setIsAdmin(false);
         setRoleChecked(true);
@@ -89,6 +92,25 @@ async function enrichProfileGeo(userId: string) {
         ip_first_seen: geo.ip ?? undefined,
       })
       .eq("user_id", userId);
+  } catch {
+    // no-op
+  }
+}
+
+async function migrateAnonChat() {
+  try {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem("am.chat.anon_token");
+    if (!token) return;
+    const { data, error } = await supabase.rpc("migrate_anon_conversation", {
+      p_anon_token: token,
+      p_user_id: (await supabase.auth.getUser()).data.user?.id,
+    } as any);
+    if (!error && (data ?? 0) > 0) {
+      resetAnonChatState();
+    }
+    // Touch helper to keep import used even if RPC fails.
+    void getAnonToken;
   } catch {
     // no-op
   }
