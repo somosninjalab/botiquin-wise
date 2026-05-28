@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useSearch } from "@tanstack/react-router";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Sparkles, Send } from "lucide-react";
 import { AssistantPanel } from "./AssistantPanel";
 
 export function AssistantBubble() {
@@ -39,29 +39,69 @@ export function AssistantBubble() {
   return (
     <>
       {!open && (
-        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 flex flex-col items-end gap-2">
-          {nudged && (
+        <>
+          {/* Desktop: floating circle */}
+          <div className="hidden md:flex fixed bottom-6 right-6 z-40 flex-col items-end gap-2">
+            {nudged && (
+              <button
+                onClick={() => {
+                  setOpen(true);
+                  setNudged(false);
+                }}
+                className="max-w-[240px] rounded-2xl rounded-br-sm bg-card border border-border shadow-lg px-3 py-2 text-sm text-left animate-in fade-in slide-in-from-bottom-2"
+              >
+                ¿No encontraste lo que buscabas? Te ayudo 👋
+              </button>
+            )}
             <button
               onClick={() => {
                 setOpen(true);
                 setNudged(false);
               }}
-              className="max-w-[240px] rounded-2xl rounded-br-sm bg-card border border-border shadow-lg px-3 py-2 text-sm text-left animate-in fade-in slide-in-from-bottom-2"
+              aria-label="Abrir asistente"
+              className="h-14 w-14 rounded-full bg-gradient-to-br from-accent to-accent-glow text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
             >
-              ¿No encontraste lo que buscabas? Te ayudo 👋
+              <MessageCircle className="h-6 w-6" />
             </button>
-          )}
-          <button
-            onClick={() => {
-              setOpen(true);
-              setNudged(false);
-            }}
-            aria-label="Abrir asistente"
-            className="h-14 w-14 rounded-full bg-gradient-to-br from-accent to-accent-glow text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+          </div>
+
+          {/* Mobile: chat-input bar replacing bottom nav */}
+          <div
+            className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border/70 bg-background/95 backdrop-blur-md"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
           >
-            <MessageCircle className="h-6 w-6" />
-          </button>
-        </div>
+            {nudged && (
+              <button
+                onClick={() => {
+                  setOpen(true);
+                  setNudged(false);
+                }}
+                className="mx-3 mt-2 block rounded-2xl bg-card border border-border shadow-md px-3 py-2 text-sm text-left animate-in fade-in slide-in-from-bottom-2"
+              >
+                ¿No encontraste lo que buscabas? Te ayudo 👋
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(true);
+                setNudged(false);
+              }}
+              aria-label="Abrir asistente"
+              className="w-full flex items-center gap-3 px-3 py-3"
+            >
+              <span className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-accent to-accent-glow text-white flex items-center justify-center shadow-md">
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <span className="flex-1 text-left rounded-full bg-muted/70 border border-border/60 px-4 py-2.5 text-sm text-muted-foreground truncate">
+                Pregúntame sobre tu medicina…
+              </span>
+              <span className="h-9 w-9 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                <Send className="h-4 w-4" />
+              </span>
+            </button>
+          </div>
+        </>
       )}
       {open && <AssistantPanel onClose={() => setOpen(false)} entryContext={entryContext} />}
     </>
