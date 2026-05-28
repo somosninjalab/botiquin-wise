@@ -29,7 +29,10 @@ async function resolveGeo() {
     getRequestHeader('cf-ipcountry') ||
     null
 
-  if (cfCity || cfRegion || cfCountry) {
+  // Only short-circuit if Cloudflare gave us city/region. Country alone is
+  // not enough — we still want ipapi.co to fill in the rest (Lovable's CF
+  // plan does not include cf-ipcity / cf-region, only cf-ipcountry).
+  if (cfCity || cfRegion) {
     return { ip, city: cfCity, region: cfRegion, country: cfCountry }
   }
 
@@ -47,7 +50,7 @@ async function resolveGeo() {
         const out = {
           city: (j.city as string) ?? null,
           region: (j.region as string) ?? null,
-          country: (j.country_name as string) ?? null,
+          country: (j.country_name as string) ?? cfCountry ?? null,
         }
         ipGeoCache.set(ip, { ...out, at: Date.now() })
         return { ip, ...out }
@@ -57,7 +60,7 @@ async function resolveGeo() {
     }
   }
 
-  return { ip, city: null, region: null, country: null }
+  return { ip, city: null, region: null, country: cfCountry }
 }
 
 export const trackSearchServer = createServerFn({ method: 'POST' })
