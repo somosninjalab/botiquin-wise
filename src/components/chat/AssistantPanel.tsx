@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, X, Sparkles } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +18,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 export function AssistantPanel({ onClose, entryContext }: { onClose: () => void; entryContext?: Record<string, unknown> }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "assistant",
@@ -93,6 +94,7 @@ export function AssistantPanel({ onClose, entryContext }: { onClose: () => void;
       const decoder = new TextDecoder();
       let buf = "";
       let acc = "";
+      let pendingSearchQuery: string | null = null;
 
       while (true) {
         const { value, done } = await reader.read();
@@ -114,6 +116,12 @@ export function AssistantPanel({ onClose, entryContext }: { onClose: () => void;
                 next[next.length - 1] = { role: "assistant", content: acc };
                 return next;
               });
+            } else if (data.type === "tool" && data.name === "search_medications") {
+              try {
+                const parsed = JSON.parse(data.result || "{}");
+                const first = Array.isArray(parsed.results) ? parsed.results[0] : null;
+                if (first?.name) pendingSearchQuery = String(first.name);
+              } catch {}
             } else if (data.type === "error") {
               acc = data.message || "Error";
               setMessages((p) => {
@@ -121,6 +129,11 @@ export function AssistantPanel({ onClose, entryContext }: { onClose: () => void;
                 next[next.length - 1] = { role: "assistant", content: acc };
                 return next;
               });
+            } else if (data.type === "done" && pendingSearchQuery) {
+              const q = pendingSearchQuery;
+              pendingSearchQuery = null;
+              onClose();
+              navigate({ to: "/", search: (prev: any) => ({ ...prev, q }) });
             }
           } catch {}
         }
