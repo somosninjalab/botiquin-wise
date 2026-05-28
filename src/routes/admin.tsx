@@ -80,7 +80,10 @@ function AdminPage() {
     })();
   }, [isAdmin, topMedsDays]);
 
-  const byQuery = aggregate(events, (e) => e.query || "(detalle)").slice(0, 10);
+  const byQuery = aggregate(
+    events.filter((e) => e.query && e.query.trim().length > 0),
+    (e) => e.query as string,
+  ).slice(0, 10);
   const byRegion = aggregate(events, (e) => e.region || e.country || "Desconocida").slice(0, 10);
   const byCategory = aggregate(events, (e) => e.category || "Sin categoría").slice(0, 10);
   const byCity = aggregate(
