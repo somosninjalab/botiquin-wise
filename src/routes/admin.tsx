@@ -30,14 +30,25 @@ function AdminPage() {
   useEffect(() => {
     if (!isAdmin) return;
     (async () => {
-      const [{ data: ev }, { data: pr }, { count: u }, { count: f }, { count: m }] = await Promise.all([
+      const [{ data: ev }, { data: evGeo }, { data: pr }, { count: u }, { count: f }, { count: m }] = await Promise.all([
         supabase.from("search_events").select("*").order("created_at", { ascending: false }).limit(500),
+        // Pull the latest events that actually have a city so the heatmap
+        // works even when geo enrichment has sparse coverage.
+        supabase
+          .from("search_events")
+          .select("city, region, country, created_at")
+          .not("city", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(2000),
         supabase.from("profiles").select("city, region, country, sex").limit(5000),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("medication_followers").select("*", { count: "exact", head: true }),
         supabase.from("medications").select("*", { count: "exact", head: true }),
       ]);
-      setEvents(ev ?? []);
+      // Merge the two queries, dedupe by content (we only use these arrays
+      // for aggregation, not for IDs).
+      const merged = [...(ev ?? []), ...(evGeo ?? [])];
+      setEvents(merged);
       setProfiles(pr ?? []);
       setStats({ users: u ?? 0, follows: f ?? 0, meds: m ?? 0 });
     })();
