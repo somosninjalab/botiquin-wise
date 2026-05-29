@@ -18,7 +18,7 @@ const BodySchema = z.object({
 });
 
 const ANON_MSG_LIMIT = 3;
-const AUTH_MSG_LIMIT_24H = 30;
+const AUTH_MSG_LIMIT_24H = 15;
 
 const TOOLS = [
   {
@@ -276,13 +276,14 @@ export const Route = createFileRoute("/api/public/chat")({
           content: body.message,
         });
 
-        // Build conversation history from DB (last 20 turns)
+        // Build conversation history from DB (last ~6 turns) to reduce token usage
         const { data: history } = await supabaseAdmin
           .from("chat_messages")
           .select("role, content, tool_calls")
           .eq("conversation_id", conversationId)
-          .order("created_at", { ascending: true })
-          .limit(40);
+          .order("created_at", { ascending: false })
+          .limit(12);
+        if (history) history.reverse();
 
         // Profile context for system prompt
         let userCity: string | null = city;
@@ -316,12 +317,12 @@ export const Route = createFileRoute("/api/public/chat")({
 
             try {
               let safetyTurns = 0;
-              while (safetyTurns++ < 4) {
+              while (safetyTurns++ < 2) {
                 const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
                   method: "POST",
                   headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    model: "google/gemini-2.5-flash",
+                    model: "google/gemini-2.5-flash-lite",
                     messages: chatMessages,
                     tools: TOOLS,
                     stream: true,
