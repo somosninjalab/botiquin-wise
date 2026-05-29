@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useSearch } from "@tanstack/react-router";
-import { MessageCircle, Sparkles, Send } from "lucide-react";
-import { AssistantPanel } from "./AssistantPanel";
+import { MessageCircle, Sparkles } from "lucide-react";
+
+// Lazy: el bundle del panel (con tool-calls, markdown, etc.) solo carga cuando
+// el usuario abre el asistente. Reduce JS en el primer paint en móvil.
+const AssistantPanel = lazy(() =>
+  import("./AssistantPanel").then((m) => ({ default: m.AssistantPanel })),
+);
 
 export function AssistantBubble() {
   const [open, setOpen] = useState(false);
@@ -65,10 +70,10 @@ export function AssistantBubble() {
             </button>
           </div>
 
-          {/* Mobile: chat-input bar replacing bottom nav */}
+          {/* Mobile: bubble flotante sobre la bottom-nav (lado derecho) */}
           <div
-            className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border/70 bg-background/95 backdrop-blur-md"
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            className="md:hidden fixed right-3 z-40 flex flex-col items-end gap-2"
+            style={{ bottom: `calc(72px + env(safe-area-inset-bottom))` }}
           >
             {nudged && (
               <button
@@ -76,7 +81,7 @@ export function AssistantBubble() {
                   setOpen(true);
                   setNudged(false);
                 }}
-                className="mx-3 mt-2 block rounded-2xl bg-card border border-border shadow-md px-3 py-2 text-sm text-left animate-in fade-in slide-in-from-bottom-2"
+                className="max-w-[220px] rounded-2xl rounded-br-sm bg-card border border-border shadow-lg px-3 py-2 text-xs text-left animate-in fade-in slide-in-from-bottom-2"
               >
                 ¿No encontraste lo que buscabas? Te ayudo 👋
               </button>
@@ -88,22 +93,18 @@ export function AssistantBubble() {
                 setNudged(false);
               }}
               aria-label="Abrir asistente"
-              className="w-full flex items-center gap-3 px-3 py-3"
+              className="h-12 w-12 rounded-full bg-gradient-to-br from-accent to-accent-glow text-white shadow-xl flex items-center justify-center active:scale-95 transition-transform"
             >
-              <span className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-accent to-accent-glow text-white flex items-center justify-center shadow-md">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              <span className="flex-1 text-left rounded-full bg-muted/70 border border-border/60 px-4 py-2.5 text-sm text-muted-foreground truncate">
-                Pregúntame sobre tu medicina…
-              </span>
-              <span className="h-9 w-9 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                <Send className="h-4 w-4" />
-              </span>
+              <Sparkles className="h-5 w-5" />
             </button>
           </div>
         </>
       )}
-      {open && <AssistantPanel onClose={() => setOpen(false)} entryContext={entryContext} />}
+      {open && (
+        <Suspense fallback={null}>
+          <AssistantPanel onClose={() => setOpen(false)} entryContext={entryContext} />
+        </Suspense>
+      )}
     </>
   );
 }

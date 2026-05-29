@@ -286,32 +286,32 @@ function Index() {
       ) : (
       <section className="relative overflow-hidden border-b border-border/60">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)", opacity: 0.22 }} />
-        <div className="container mx-auto px-4 py-4 md:py-16">
+        <div className="container mx-auto px-4 py-3 md:py-16">
           <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center max-w-6xl mx-auto">
             {/* Columna izquierda: mensaje grande y simple */}
             <div className="text-center md:text-left">
               <span className="hidden md:inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base font-semibold text-primary border-2 border-primary/30 shadow-sm">
                 <Bell className="h-4 w-4 md:h-5 md:w-5" /> ¡Alerta: Medicina!
               </span>
-              <h1 className="mt-1 md:mt-5 text-[1.65rem] sm:text-4xl md:text-6xl font-extrabold leading-[1.1] text-foreground tracking-tight">
+              <h1 className="mt-0 md:mt-5 text-[1.45rem] sm:text-4xl md:text-6xl font-extrabold leading-[1.1] text-foreground tracking-tight">
                 Encuentra tu medicina al{" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   precio más bajo
                 </span>
               </h1>
-              <p className="mt-2 md:mt-5 text-sm md:text-2xl text-muted-foreground leading-snug md:leading-relaxed">
+              <p className="mt-1.5 md:mt-5 text-[13px] md:text-2xl text-muted-foreground leading-snug md:leading-relaxed">
                 <span className="hidden md:inline">Compara precios en </span>
                 <strong className="text-foreground">Farmatodo, Locatel, SAAS, Farmago y GoPharma</strong>
                 <span className="md:hidden"> · en segundos</span>
                 <span className="hidden md:inline"> en segundos.</span>
               </p>
-              <div className="mt-3 md:mt-7">
+              <div className="mt-2.5 md:mt-7">
                 <SearchBar size="lg" initial={q} onSearch={(value) => updateSearch({ q: value })} />
                 <p className="mt-2 text-xs md:text-sm text-muted-foreground hidden sm:block">
                   Por ejemplo: <em>Atamel</em>, <em>Losartán</em>, <em>Glucophage</em>…
                 </p>
                 {stats?.total && (
-                  <p className="mt-1.5 text-[11px] text-muted-foreground text-center sm:text-left">
+                  <p className="mt-1 text-[11px] text-muted-foreground text-center sm:text-left">
                     Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
                   </p>
                 )}
@@ -326,7 +326,7 @@ function Index() {
                 </a>
               )}
               {!isSearching && (
-                <div className="mt-4 md:mt-6 flex flex-wrap justify-center md:justify-start gap-x-4 md:gap-x-6 gap-y-2 text-sm md:text-base text-muted-foreground">
+                <div className="mt-2.5 md:mt-6 flex flex-wrap justify-center md:justify-start gap-x-3 md:gap-x-6 gap-y-1 text-xs md:text-base text-muted-foreground">
                   <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 md:h-5 md:w-5 text-primary" /> Gratis</span>
                   <span className="flex items-center gap-1.5"><Bell className="h-4 w-4 md:h-5 md:w-5 text-primary" /> Te avisamos</span>
                   <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 md:h-5 md:w-5 text-primary" /> Sin cuenta</span>
@@ -373,7 +373,7 @@ function Index() {
       ) : (
         <>
           {/* Mi orden + lista de compras */}
-          <section className="container mx-auto px-4 pt-8">
+          <section className="container mx-auto px-4 pt-5 md:pt-8">
             <div className="flex items-end justify-between mb-4 gap-3 flex-wrap">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
