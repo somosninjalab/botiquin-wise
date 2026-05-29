@@ -3,7 +3,7 @@ import { renderMedia, selectComposition, openBrowser } from "@remotion/renderer"
 import path from "path";
 
 const bundled = await bundle({
-  entryPoint: path.resolve("../src/index.ts"),
+  entryPoint: "/dev-server/remotion/src/index.ts",
   webpackOverride: (c) => c,
 });
 
