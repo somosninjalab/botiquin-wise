@@ -49,7 +49,7 @@ export function SiteHeader() {
             type="button"
             variant="ghost"
             size="icon"
-            onClick={handleWhatsAppShare}
+            onClick={handleWhatsAppClick}
             aria-label="Compartir por WhatsApp"
             className="md:hidden h-9 w-9 text-[#25D366] hover:text-[#25D366] hover:bg-[#25D366]/10"
           >
