@@ -105,11 +105,22 @@ function InsightsPage() {
       (c) => signals.some((s) => s.conversation_id === c.id && (s.signal_type === "condition" || s.signal_type === "demographic" || s.signal_type === "location")),
     ).length;
     const ended = convs.filter((c) => c.ended_in_signup).length;
+    const totalMessages = convs.reduce((acc, c) => acc + (c.message_count || 0), 0);
+    const avgMsgsPerSession = total ? Math.round((totalMessages / total) * 10) / 10 : 0;
+    const uniqueUsers = new Set(convs.filter((c) => c.user_id).map((c) => c.user_id as string));
+    const uniqueAnon = new Set(convs.filter((c) => !c.user_id && c.anon_token).map((c) => c.anon_token as string));
+    const uniqueParticipants = uniqueUsers.size + uniqueAnon.size;
+    const sessionsPerUser = uniqueParticipants ? Math.round((total / uniqueParticipants) * 10) / 10 : 0;
     return {
       conversations: total,
       signals: signals.length,
       withProfilePct: total ? Math.round((withProfile / total) * 100) : 0,
       endedPct: total ? Math.round((ended / total) * 100) : 0,
+      totalMessages,
+      avgMsgsPerSession,
+      uniqueUsers: uniqueUsers.size,
+      uniqueAnon: uniqueAnon.size,
+      sessionsPerUser,
     };
   }, [signals, convs]);
 
@@ -228,6 +239,13 @@ function InsightsPage() {
         <Stat label="Señales capturadas" value={kpis.signals} />
         <Stat label="% con perfil" value={`${kpis.withProfilePct}%`} />
         <Stat label="% que terminó en registro" value={`${kpis.endedPct}%`} />
+      </div>
+
+      <div className="grid sm:grid-cols-4 gap-4 mt-4">
+        <Stat label="Mensajes totales" value={kpis.totalMessages} />
+        <Stat label="Mensajes / sesión" value={kpis.avgMsgsPerSession} />
+        <Stat label="Sesiones / usuario" value={kpis.sessionsPerUser} />
+        <Stat label="Usuarios únicos" value={`${kpis.uniqueUsers} reg · ${kpis.uniqueAnon} anon`} />
       </div>
 
       <div className="flex flex-wrap gap-2 mt-6">
