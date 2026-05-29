@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { LayoutDashboard, Download, RefreshCw, LineChart as LineChartIcon } from "lucide-react";
@@ -9,7 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { HeatmapCard } from "@/components/admin/HeatmapCard";
 import * as XLSX from "xlsx";
 
-export const Route = createFileRoute("/admin")({ component: AdminPage });
+export const Route = createFileRoute("/admin")({ component: AdminRoute });
+
+function AdminRoute() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  if (pathname !== "/admin") {
+    return <Outlet />;
+  }
+
+  return <AdminPage />;
+}
 
 function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
