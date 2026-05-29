@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bell, BellOff, ExternalLink, Pill, ShoppingCart, Check } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,7 +94,7 @@ function MedicamentoPage() {
     }
   };
 
-  if (!med) return <div className="container mx-auto px-4 py-16">Cargando…</div>;
+  if (!med) return <MedicamentoSkeleton />;
 
   const lowestVes = latestByPharm[0]
     ? priceToVes(Number(latestByPharm[0].price), latestByPharm[0].currency, bcvRate)
@@ -287,7 +288,7 @@ function MedicamentoPage() {
       {/* Sticky CTAs móvil (sobre la bottom-nav) */}
       <div
         className="md:hidden fixed inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-3 py-2 flex gap-2"
-        style={{ bottom: `calc(56px + env(safe-area-inset-bottom))` }}
+        style={{ bottom: `calc(64px + env(safe-area-inset-bottom))` }}
       >
         <Button
           onClick={toggleFollow}
