@@ -9,12 +9,9 @@ import logoUrl from "@/assets/logo.png";
 export function SiteHeader() {
   const { user, isAdmin } = useAuth();
 
-  const handleWhatsAppShare = () => {
-    const url = "https://alertamedicina.com";
-    const text = `Antes de comprar medicina, compara precios gratis en ${url} 💊`;
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    void trackShare({ channel: "whatsapp", source: "mobile_header", url });
-    window.open(waUrl, "_blank", "noopener,noreferrer");
+  const handleWhatsAppClick = () => {
+    void trackShare({ channel: "whatsapp", source: "mobile_header", url: "https://whatsapp.com/channel/0029Vb8IEJ11Hsq4ANQNFw3G" });
+    window.open("https://whatsapp.com/channel/0029Vb8IEJ11Hsq4ANQNFw3G", "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -52,7 +49,7 @@ export function SiteHeader() {
             type="button"
             variant="ghost"
             size="icon"
-            onClick={handleWhatsAppShare}
+            onClick={handleWhatsAppClick}
             aria-label="Compartir por WhatsApp"
             className="md:hidden h-9 w-9 text-[#25D366] hover:text-[#25D366] hover:bg-[#25D366]/10"
           >
