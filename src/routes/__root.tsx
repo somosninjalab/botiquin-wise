@@ -6,6 +6,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { AssistantBubble } from "@/components/chat/AssistantBubble";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 function NotFoundComponent() {
   return (
@@ -89,6 +90,7 @@ function RootComponent() {
           </div>
         </footer>
       </div>
+      <MobileBottomNav />
       <AssistantBubble />
       <Toaster richColors position="top-right" />
     </AuthProvider>
