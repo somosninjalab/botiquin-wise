@@ -18,6 +18,33 @@ export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
 });
 
+function MedicamentoSkeleton() {
+  return (
+    <div className="container mx-auto px-4 py-4 md:py-10 max-w-6xl pb-28 md:pb-10">
+      <Skeleton className="h-4 w-16" />
+      <header className="mt-4 flex items-start gap-3 md:gap-4">
+        <Skeleton className="h-14 w-14 md:h-20 md:w-20 rounded-xl shrink-0" />
+        <div className="flex-1 min-w-0 space-y-2">
+          <Skeleton className="h-7 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      </header>
+      <div className="mt-3 flex gap-2">
+        <Skeleton className="h-7 w-20 rounded-full" />
+        <Skeleton className="h-7 w-24 rounded-full" />
+        <Skeleton className="h-7 w-16 rounded-full" />
+      </div>
+      <Skeleton className="mt-5 h-24 rounded-2xl" />
+      <Skeleton className="mt-6 h-5 w-56" />
+      <div className="mt-3 space-y-2">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-[68px] w-full rounded-md" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MedicamentoPage() {
   const { slug } = Route.useParams();
   const { user } = useAuth();
