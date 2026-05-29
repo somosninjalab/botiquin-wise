@@ -373,7 +373,7 @@ function Index() {
       ) : (
         <>
           {/* Mi orden + lista de compras */}
-          <section className="container mx-auto px-4 pt-8">
+          <section className="container mx-auto px-4 pt-5 md:pt-8">
             <div className="flex items-end justify-between mb-4 gap-3 flex-wrap">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
