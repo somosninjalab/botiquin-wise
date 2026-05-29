@@ -58,6 +58,7 @@ function InsightsPage() {
   const [search, setSearch] = useState("");
   const [openConv, setOpenConv] = useState<Conv | null>(null);
   const [convDetail, setConvDetail] = useState<{ messages: any[]; signals: Signal[] } | null>(null);
+  const [shares, setShares] = useState<{ source: string | null; created_at: string }[]>([]);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/" });
@@ -67,7 +68,7 @@ function InsightsPage() {
     if (!isAdmin) return;
     (async () => {
       const since = new Date(Date.now() - days * 86400_000).toISOString();
-      const [{ data: s }, { data: c }] = await Promise.all([
+      const [{ data: s }, { data: c }, { data: sh }] = await Promise.all([
         supabase
           .from("health_signals")
           .select("*")
@@ -80,9 +81,16 @@ function InsightsPage() {
           .gte("started_at", since)
           .order("last_activity_at", { ascending: false })
           .limit(2000),
+        supabase
+          .from("share_events")
+          .select("source, created_at")
+          .eq("channel", "whatsapp")
+          .gte("created_at", since)
+          .limit(10000),
       ]);
       setSignals((s ?? []) as any);
       setConvs((c ?? []) as any);
+      setShares((sh ?? []) as any);
 
       const medIds = Array.from(new Set((s ?? []).map((x: any) => x.medication_id).filter(Boolean)));
       if (medIds.length) {
@@ -140,6 +148,11 @@ function InsightsPage() {
   const topCities = useMemo(
     () => aggregate(signals.filter((s) => s.city), (s) => `${s.city}${s.region ? `, ${s.region}` : ""}`).slice(0, 15),
     [signals],
+  );
+
+  const whatsappBySource = useMemo(
+    () => aggregate(shares, (s) => s.source || "(desconocido)"),
+    [shares],
   );
 
   const filteredConvs = useMemo(() => {
@@ -246,6 +259,13 @@ function InsightsPage() {
         <Stat label="Mensajes / sesión" value={kpis.avgMsgsPerSession} />
         <Stat label="Sesiones / usuario" value={kpis.sessionsPerUser} />
         <Stat label="Usuarios únicos" value={`${kpis.uniqueUsers} reg · ${kpis.uniqueAnon} anon`} />
+      </div>
+
+      <div className="grid sm:grid-cols-4 gap-4 mt-4">
+        <Stat label="Clics WhatsApp (compartir)" value={shares.length} />
+        {whatsappBySource.slice(0, 3).map((r) => (
+          <Stat key={r.name} label={`WA · ${r.name}`} value={r.value} />
+        ))}
       </div>
 
       <div className="flex flex-wrap gap-2 mt-6">
