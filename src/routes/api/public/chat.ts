@@ -13,23 +13,25 @@ import { buildSystemPrompt } from "@/lib/assistant/system-prompt.server";
 const BodySchema = z.object({
   conversationId: z.string().uuid().nullable().optional(),
   anonToken: z.string().min(8).max(64).nullable().optional(),
-  message: z.string().min(1).max(2000),
+  message: z.string().min(1).max(800),
   entryContext: z.record(z.string(), z.unknown()).optional(),
 });
 
 const ANON_MSG_LIMIT = 3;
-const AUTH_MSG_LIMIT_24H = 15;
+const AUTH_MSG_LIMIT_24H = 10;
+// Cap how much past context we resend on every turn (token cost is per-call).
+const HISTORY_TURNS = 6; // = 3 user + 3 assistant messages
+const HISTORY_CHAR_CAP = 500;
 
 const TOOLS = [
   {
     type: "function" as const,
     function: {
       name: "search_medications",
-      description:
-        "Busca medicinas en el catálogo de Alerta Medicina por nombre, ingrediente activo o marca. Devuelve hasta 5 resultados con precios.",
+      description: "Busca medicinas por nombre/ingrediente/marca. Top 5 con precios.",
       parameters: {
         type: "object",
-        properties: { query: { type: "string", description: "Término a buscar (ej. ibuprofeno, losartan, atorva)" } },
+        properties: { query: { type: "string" } },
         required: ["query"],
         additionalProperties: false,
       },
@@ -39,8 +41,7 @@ const TOOLS = [
     type: "function" as const,
     function: {
       name: "record_signal",
-      description:
-        "Guarda un dato observado de la conversación para analítica de mercado. Usar cuando el usuario menciona síntomas, condiciones crónicas, medicinas que toma, preocupación de precio, preferencia de farmacia, o cuando una búsqueda no devuelve resultados.",
+      description: "Guarda dato observado (síntoma, condición, medicina, precio, farmacia, no encontrada).",
       parameters: {
         type: "object",
         properties: {
@@ -56,7 +57,7 @@ const TOOLS = [
               "demographic",
             ],
           },
-          value: { type: "string", description: "Texto observado, tal como lo dijo el usuario." },
+          value: { type: "string" },
         },
         required: ["signal_type", "value"],
         additionalProperties: false,
@@ -67,8 +68,7 @@ const TOOLS = [
     type: "function" as const,
     function: {
       name: "save_profile_field",
-      description:
-        "Guarda un dato del perfil del usuario (requiere que esté registrado). Campos: city, region, age_range, sex, chronic_condition, current_medication.",
+      description: "Guarda dato de perfil (requiere usuario registrado).",
       parameters: {
         type: "object",
         properties: {
@@ -76,7 +76,7 @@ const TOOLS = [
             type: "string",
             enum: ["city", "region", "age_range", "sex", "chronic_condition", "current_medication"],
           },
-          value: { type: "string", description: "Valor a guardar." },
+          value: { type: "string" },
         },
         required: ["field", "value"],
         additionalProperties: false,
@@ -276,13 +276,14 @@ export const Route = createFileRoute("/api/public/chat")({
           content: body.message,
         });
 
-        // Build conversation history from DB (last ~6 turns) to reduce token usage
+        // Build conversation history (last few turns, truncated) to reduce token cost.
         const { data: history } = await supabaseAdmin
           .from("chat_messages")
-          .select("role, content, tool_calls")
+          .select("role, content")
           .eq("conversation_id", conversationId)
+          .in("role", ["user", "assistant"])
           .order("created_at", { ascending: false })
-          .limit(12);
+          .limit(HISTORY_TURNS);
         if (history) history.reverse();
 
         // Profile context for system prompt
@@ -304,8 +305,9 @@ export const Route = createFileRoute("/api/public/chat")({
 
         const chatMessages: any[] = [{ role: "system", content: systemPrompt }];
         for (const m of history ?? []) {
-          if (m.role === "tool") continue; // tool replies are inline below
-          chatMessages.push({ role: m.role, content: m.content });
+          const content = (m.content ?? "").slice(0, HISTORY_CHAR_CAP);
+          if (!content) continue;
+          chatMessages.push({ role: m.role, content });
         }
 
         // ---- Streaming with tool-call loop ----

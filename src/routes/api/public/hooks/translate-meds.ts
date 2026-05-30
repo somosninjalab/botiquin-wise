@@ -62,7 +62,8 @@ export const Route = createFileRoute("/api/public/hooks/translate-meds")({
 
         let updated = 0;
         const errors: string[] = [];
-        const BATCH = 10;
+        // Bigger batch = fewer model calls = más rinde el saldo de IA.
+        const BATCH = 25;
         for (let i = 0; i < rows.length; i += BATCH) {
           const chunk = rows.slice(i, i + BATCH);
           try {
