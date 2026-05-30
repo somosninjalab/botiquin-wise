@@ -100,6 +100,7 @@ function RootComponent() {
                 Cookies
               </Link>
             </div>
+            <div className="text-xs text-muted-foreground/70">Última modificación: mayo de 2026</div>
           </div>
         </footer>
       </div>
