@@ -85,8 +85,21 @@ function RootComponent() {
           <Outlet />
         </main>
         <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
-          <div className="container mx-auto px-4">
-            ¡Alerta: Medicina! · Comparador gratuito de precios de medicamentos
+          <div className="container mx-auto px-4 flex flex-col items-center gap-2">
+            <div>¡Alerta: Medicina! · Comparador gratuito de precios de medicamentos</div>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+              <Link to="/legal" hash="terminos" className="hover:text-foreground transition-colors">
+                Términos y Condiciones
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link to="/legal" hash="privacidad" className="hover:text-foreground transition-colors">
+                Privacidad
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link to="/legal" hash="cookies" className="hover:text-foreground transition-colors">
+                Cookies
+              </Link>
+            </div>
           </div>
         </footer>
       </div>

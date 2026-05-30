@@ -14,6 +14,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PopularesRouteImport } from './routes/populares'
 import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
 import { Route as MiOrdenRouteImport } from './routes/mi-orden'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as BuscarRouteImport } from './routes/buscar'
@@ -67,6 +68,11 @@ const MisAlertasRoute = MisAlertasRouteImport.update({
 const MiOrdenRoute = MiOrdenRouteImport.update({
   id: '/mi-orden',
   path: '/mi-orden',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
@@ -272,6 +279,7 @@ export interface FileRoutesByTo {
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
@@ -309,6 +317,7 @@ export interface FileRoutesById {
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
@@ -347,6 +356,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/como-funciona'
     | '/forgot-password'
+    | '/legal'
     | '/mi-orden'
     | '/mis-alertas'
     | '/populares'
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/como-funciona'
     | '/forgot-password'
+    | '/legal'
     | '/mi-orden'
     | '/mis-alertas'
     | '/populares'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/como-funciona'
     | '/forgot-password'
+    | '/legal'
     | '/mi-orden'
     | '/mis-alertas'
     | '/populares'
@@ -456,6 +468,7 @@ export interface RootRouteChildren {
   BuscarRoute: typeof BuscarRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LegalRoute: typeof LegalRoute
   MiOrdenRoute: typeof MiOrdenRoute
   MisAlertasRoute: typeof MisAlertasRoute
   PopularesRoute: typeof PopularesRoute
@@ -519,6 +532,13 @@ declare module '@tanstack/react-router' {
       path: '/mi-orden'
       fullPath: '/mi-orden'
       preLoaderRoute: typeof MiOrdenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -746,6 +766,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuscarRoute: BuscarRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  LegalRoute: LegalRoute,
   MiOrdenRoute: MiOrdenRoute,
   MisAlertasRoute: MisAlertasRoute,
   PopularesRoute: PopularesRoute,
@@ -776,12 +797,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
