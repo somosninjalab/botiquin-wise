@@ -33,8 +33,53 @@ function LegalPage() {
     }
   }, []);
 
+  // Protección de contenido: deshabilitar copiar, cortar, menú contextual,
+  // arrastrar, atajos de teclado (copiar/guardar/imprimir/devtools) y ocultar
+  // el contenido al imprimir o al cambiar de pestaña (mitigación contra
+  // capturas de pantalla; no es bloqueo absoluto, los SO no lo permiten).
+  useEffect(() => {
+    const block = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      const mod = e.ctrlKey || e.metaKey;
+      if (
+        (mod && ["c", "x", "a", "s", "p", "u"].includes(k)) ||
+        k === "printscreen" ||
+        (e.shiftKey && mod && ["i", "j", "c"].includes(k)) ||
+        k === "f12"
+      ) {
+        e.preventDefault();
+      }
+    };
+    const onVis = () => {
+      document.body.dataset.legalHidden = document.hidden ? "1" : "0";
+    };
+    document.addEventListener("copy", block);
+    document.addEventListener("cut", block);
+    document.addEventListener("contextmenu", block);
+    document.addEventListener("dragstart", block);
+    document.addEventListener("selectstart", block);
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("visibilitychange", onVis);
+    document.body.classList.add("legal-protected");
+    return () => {
+      document.removeEventListener("copy", block);
+      document.removeEventListener("cut", block);
+      document.removeEventListener("contextmenu", block);
+      document.removeEventListener("dragstart", block);
+      document.removeEventListener("selectstart", block);
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("visibilitychange", onVis);
+      document.body.classList.remove("legal-protected");
+      delete document.body.dataset.legalHidden;
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground legal-no-copy">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">

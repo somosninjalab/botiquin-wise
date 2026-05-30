@@ -155,3 +155,38 @@
     color: var(--color-foreground);
   }
 }
+
+/* Protección de contenido en la página /legal */
+.legal-no-copy,
+.legal-no-copy * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+.legal-no-copy a,
+.legal-no-copy button,
+.legal-no-copy input,
+.legal-no-copy textarea {
+  -webkit-user-select: auto !important;
+  user-select: auto !important;
+}
+/* Ocultar al cambiar de pestaña (mitigación screenshot) */
+body[data-legal-hidden="1"] .legal-no-copy {
+  filter: blur(24px);
+}
+/* Bloquear impresión */
+@media print {
+  body.legal-protected * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  body.legal-protected::after {
+    content: "La impresión de esta página no está permitida.";
+    display: block !important;
+    visibility: visible !important;
+    font: 16px sans-serif;
+    padding: 2rem;
+  }
+}
