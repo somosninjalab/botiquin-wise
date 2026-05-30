@@ -30,6 +30,9 @@ const signUpSchema = z.object({
       const min = new Date(now.getFullYear() - 120, now.getMonth(), now.getDate());
       return d <= now && d >= min;
     }, "Fecha de nacimiento fuera de rango"),
+  accept_terms: z.literal(true, {
+    errorMap: () => ({ message: "Debes aceptar los Términos y Condiciones" }),
+  }),
 });
 const signInSchema = z.object({
   email: z.string().trim().email().max(255),
@@ -59,6 +62,7 @@ export default function AuthPage() {
     password: "",
     sex: "" as "" | "femenino" | "masculino" | "otro" | "prefiero_no_decir",
     birth_date: "",
+    accept_terms: true,
   });
   const [si, setSi] = useState({ email: "", password: "" });
 
@@ -207,6 +211,25 @@ export default function AuthPage() {
                 </div>
               </div>
               <div><Label>Contraseña (mín. 8)</Label><Input type="password" value={up.password} onChange={(e) => setUp({ ...up, password: e.target.value })} minLength={8} maxLength={100} required /></div>
+              <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={up.accept_terms}
+                  onChange={(e) => setUp({ ...up, accept_terms: e.target.checked })}
+                  className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
+                />
+                <span>
+                  Acepto los{" "}
+                  <Link to="/legal" hash="terminos" target="_blank" className="text-primary hover:underline font-medium">
+                    Términos y Condiciones
+                  </Link>{" "}
+                  y la{" "}
+                  <Link to="/legal" hash="privacidad" target="_blank" className="text-primary hover:underline font-medium">
+                    Política de Privacidad
+                  </Link>{" "}
+                  de ¡Alerta: Medicina!
+                </span>
+              </label>
               <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">Crear cuenta</Button>
               <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
