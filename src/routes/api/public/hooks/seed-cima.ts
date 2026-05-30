@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Carga masiva desde CIMA (AEMPS, España). API pública sin key:
@@ -78,6 +79,8 @@ export const Route = createFileRoute("/api/public/hooks/seed-cima")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const maxPerTerm = Math.min(Number(url.searchParams.get("pages") ?? 4) || 4, 10);
         const onlyTerm = url.searchParams.get("term");

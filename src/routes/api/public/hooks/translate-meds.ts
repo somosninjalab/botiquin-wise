@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Traduce al español el campo `indication` de medicamentos usando Lovable AI Gateway
@@ -42,6 +43,8 @@ export const Route = createFileRoute("/api/public/hooks/translate-meds")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const limit = Math.min(Number(url.searchParams.get("limit") ?? 60) || 60, 200);
         const force = url.searchParams.get("force") === "1";

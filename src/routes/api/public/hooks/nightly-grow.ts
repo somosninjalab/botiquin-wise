@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { SEED_TERMS } from "./seed-cima";
 
 // Cron diario: rota un subconjunto de términos de CIMA cada noche y luego
@@ -19,8 +20,12 @@ export const Route = createFileRoute("/api/public/hooks/nightly-grow")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const origin = url.origin;
+        const cronSecret = process.env.CRON_SECRET ?? "";
+        const authHeaders = { Authorization: `Bearer ${cronSecret}` };
 
         // Selección rotativa de términos
         const doy = dayOfYear(new Date());
@@ -36,7 +41,7 @@ export const Route = createFileRoute("/api/public/hooks/nightly-grow")({
           try {
             const r = await fetch(
               `${origin}/api/public/hooks/seed-cima?term=${encodeURIComponent(term)}&pages=${PAGES_PER_TERM}`,
-              { method: "POST" },
+              { method: "POST", headers: authHeaders },
             );
             const body = await r.json().catch(() => ({}));
             seedResults.push({ term, ok: r.ok, createdMeds: body?.createdMeds, createdAliases: body?.createdAliases });
@@ -50,7 +55,7 @@ export const Route = createFileRoute("/api/public/hooks/nightly-grow")({
         try {
           const r = await fetch(
             `${origin}/api/public/hooks/enrich-meds?limit=${ENRICH_LIMIT}`,
-            { method: "POST" },
+            { method: "POST", headers: authHeaders },
           );
           enrich = await r.json().catch(() => ({ ok: r.ok }));
         } catch (e) {

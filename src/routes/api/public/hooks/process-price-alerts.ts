@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueTransactionalEmail } from "@/lib/email/enqueue.server";
 
@@ -16,6 +17,8 @@ export const Route = createFileRoute("/api/public/hooks/process-price-alerts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const threshold = Math.max(1, Math.min(Number(url.searchParams.get("threshold") ?? 5) || 5, 90));
         // Ventana por defecto = 24h: el resumen diario solo agrupa cambios

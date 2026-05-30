@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Enriquece medicamentos consultando RxNorm (NIH) y OpenFDA. Ambas APIs son
@@ -93,6 +94,8 @@ export const Route = createFileRoute("/api/public/hooks/enrich-meds")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const limit = Math.min(Number(url.searchParams.get("limit") ?? 40) || 40, 100);
         const force = url.searchParams.get("force") === "1";
