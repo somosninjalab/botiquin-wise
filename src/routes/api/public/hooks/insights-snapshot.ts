@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Snapshot semanal de inteligencia de mercado: exporta CSVs de señales,
@@ -33,7 +34,9 @@ async function upload(path: string, csv: string) {
 export const Route = createFileRoute("/api/public/hooks/insights-snapshot")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const week = new Date().toISOString().slice(0, 10);
         const prefix = `weekly/${week}`;

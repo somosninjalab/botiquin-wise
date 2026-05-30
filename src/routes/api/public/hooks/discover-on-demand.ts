@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Fallback en vivo: cuando una búsqueda no devuelve nada, este endpoint
@@ -89,6 +90,8 @@ export const Route = createFileRoute("/api/public/hooks/discover-on-demand")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         let q = "";
         try {
           const body = (await request.json()) as { q?: string };

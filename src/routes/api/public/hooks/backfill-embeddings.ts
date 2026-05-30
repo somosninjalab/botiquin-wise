@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { embedTexts, buildMedicationEmbeddingText } from "@/lib/medications/embed.server";
 
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/api/public/hooks/backfill-embeddings")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         let body: { limit?: number; force?: boolean } = {};
         try { body = (await request.json()) as typeof body; } catch { /* empty */ }
         const limit = Math.min(Math.max(body.limit ?? 100, 1), 500);

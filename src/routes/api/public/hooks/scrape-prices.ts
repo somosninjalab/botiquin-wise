@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyCronAuth } from "@/lib/cron-auth.server";
 import Firecrawl from "@mendable/firecrawl-js";
 import * as cheerio from "cheerio";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -1074,6 +1075,8 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const unauthorized = verifyCronAuth(request);
+        if (unauthorized) return unauthorized;
         const apiKey = process.env.FIRECRAWL_API_KEY;
         if (!apiKey) {
           return Response.json({ ok: false, error: "FIRECRAWL_API_KEY missing" }, { status: 500 });
