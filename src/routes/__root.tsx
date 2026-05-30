@@ -100,9 +100,6 @@ function RootComponent() {
                 Cookies
               </Link>
             </div>
-            <div className="text-[10px] text-muted-foreground/60 tracking-wide uppercase">
-              v2.0 · Edición Mayor
-            </div>
           </div>
         </footer>
       </div>
