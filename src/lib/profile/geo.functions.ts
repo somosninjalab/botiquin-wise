@@ -25,7 +25,11 @@ export const lookupRequestGeo = createServerFn({ method: 'GET' }).handler(
       getRequestHeader('cf-ipcountry') ||
       null
 
-    if (cfCity || cfRegion || cfCountry) {
+    // Cloudflare's free/Pro plans only expose cf-ipcountry; cf-ipcity and
+    // cf-region require Enterprise. So if we already have city, trust the
+    // edge; otherwise fall back to ipapi.co and only keep cfCountry as a
+    // safety net.
+    if (cfCity) {
       return {
         city: cfCity,
         region: cfRegion,
@@ -45,7 +49,7 @@ export const lookupRequestGeo = createServerFn({ method: 'GET' }).handler(
           return {
             city: j.city ?? null,
             region: j.region ?? null,
-            country: j.country_name ?? null,
+            country: j.country_name ?? cfCountry ?? null,
             ip,
           }
         }
@@ -54,6 +58,6 @@ export const lookupRequestGeo = createServerFn({ method: 'GET' }).handler(
       }
     }
 
-    return { city: null, region: null, country: null, ip }
+    return { city: null, region: null, country: cfCountry, ip }
   },
 )

@@ -210,10 +210,33 @@ export const Route = createFileRoute("/api/public/chat")({
           return new Response(JSON.stringify({ error: "Falta token" }), { status: 400, headers: { "content-type": "application/json", ...cors } });
         }
 
-        // Geo from CF headers (best effort)
-        const city = request.headers.get("cf-ipcity");
-        const region = request.headers.get("cf-region");
-        const country = request.headers.get("cf-ipcountry-name") || request.headers.get("cf-ipcountry");
+        // Geo from CF headers (best effort). cf-ipcity / cf-region require
+        // a Cloudflare Enterprise plan, so they're usually missing — fall
+        // back to ipapi.co using cf-connecting-ip when needed.
+        let city = request.headers.get("cf-ipcity");
+        let region = request.headers.get("cf-region");
+        let country = request.headers.get("cf-ipcountry-name") || request.headers.get("cf-ipcountry");
+        if (!city) {
+          const ip =
+            request.headers.get("cf-connecting-ip") ||
+            request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+            null;
+          if (ip) {
+            try {
+              const r = await fetch(`https://ipapi.co/${ip}/json/`, {
+                headers: { "User-Agent": "alertamedicina/1.0" },
+              });
+              if (r.ok) {
+                const j: any = await r.json();
+                city = j.city ?? city;
+                region = j.region ?? region;
+                country = j.country_name ?? country;
+              }
+            } catch {
+              // ignore
+            }
+          }
+        }
 
         // Rate limit
         if (userId) {
