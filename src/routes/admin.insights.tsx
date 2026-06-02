@@ -340,7 +340,7 @@ function InsightsPage() {
                     {c.user_id ? <Badge variant="default">user</Badge> : <Badge variant="secondary">anon</Badge>}
                   </td>
                   <td className="py-2 pr-2">{c.city ? `${c.city}${c.region ? `, ${c.region}` : ""}` : <span className="text-muted-foreground">—</span>}</td>
-                  <td className="py-2 pr-2">{c.message_count}</td>
+                  <td className="py-2 pr-2">{msgCountByConv.get(c.id) ?? c.message_count ?? 0}</td>
                   <td className="py-2 pr-2">{c.ended_in_signup ? <Badge>✓</Badge> : <span className="text-muted-foreground">—</span>}</td>
                 </tr>
               ))}
