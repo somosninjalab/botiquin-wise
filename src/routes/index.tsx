@@ -48,6 +48,8 @@ import {
   Tag,
   ArrowDownAZ,
   Stethoscope,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import { SlidersHorizontal } from "lucide-react";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
