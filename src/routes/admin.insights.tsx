@@ -59,6 +59,7 @@ function InsightsPage() {
   const [openConv, setOpenConv] = useState<Conv | null>(null);
   const [convDetail, setConvDetail] = useState<{ messages: any[]; signals: Signal[] } | null>(null);
   const [shares, setShares] = useState<{ source: string | null; created_at: string }[]>([]);
+  const [msgCountByConv, setMsgCountByConv] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/" });
@@ -68,7 +69,7 @@ function InsightsPage() {
     if (!isAdmin) return;
     (async () => {
       const since = new Date(Date.now() - days * 86400_000).toISOString();
-      const [{ data: s }, { data: c }, { data: sh }] = await Promise.all([
+      const [{ data: s }, { data: c }, { data: sh }, { data: msgs }] = await Promise.all([
         supabase
           .from("health_signals")
           .select("*")
@@ -87,10 +88,21 @@ function InsightsPage() {
           .eq("channel", "whatsapp")
           .gte("created_at", since)
           .limit(10000),
+        supabase
+          .from("chat_messages")
+          .select("conversation_id")
+          .gte("created_at", since)
+          .limit(50000),
       ]);
       setSignals((s ?? []) as any);
       setConvs((c ?? []) as any);
       setShares((sh ?? []) as any);
+      const counts = new Map<string, number>();
+      (msgs ?? []).forEach((m: any) => {
+        if (!m.conversation_id) return;
+        counts.set(m.conversation_id, (counts.get(m.conversation_id) ?? 0) + 1);
+      });
+      setMsgCountByConv(counts);
 
       const medIds = Array.from(new Set((s ?? []).map((x: any) => x.medication_id).filter(Boolean)));
       if (medIds.length) {
@@ -113,7 +125,10 @@ function InsightsPage() {
       (c) => signals.some((s) => s.conversation_id === c.id && (s.signal_type === "condition" || s.signal_type === "demographic" || s.signal_type === "location")),
     ).length;
     const ended = convs.filter((c) => c.ended_in_signup).length;
-    const totalMessages = convs.reduce((acc, c) => acc + (c.message_count || 0), 0);
+    const totalMessages = convs.reduce(
+      (acc, c) => acc + (msgCountByConv.get(c.id) ?? c.message_count ?? 0),
+      0,
+    );
     const avgMsgsPerSession = total ? Math.round((totalMessages / total) * 10) / 10 : 0;
     const uniqueUsers = new Set(convs.filter((c) => c.user_id).map((c) => c.user_id as string));
     const uniqueAnon = new Set(convs.filter((c) => !c.user_id && c.anon_token).map((c) => c.anon_token as string));
@@ -130,7 +145,7 @@ function InsightsPage() {
       uniqueAnon: uniqueAnon.size,
       sessionsPerUser,
     };
-  }, [signals, convs]);
+  }, [signals, convs, msgCountByConv]);
 
   const byType = useMemo(() => aggregate(signals, (s) => s.signal_type), [signals]);
   const topConditions = useMemo(
@@ -206,7 +221,7 @@ function InsightsPage() {
       return {
         started_at: c.started_at,
         last_activity_at: c.last_activity_at,
-        messages: c.message_count,
+        messages: msgCountByConv.get(c.id) ?? c.message_count ?? 0,
         anonymous: c.user_id ? "no" : "sí",
         registered_after: c.ended_in_signup ? "sí" : "no",
         city: c.city ?? "",
@@ -325,7 +340,7 @@ function InsightsPage() {
                     {c.user_id ? <Badge variant="default">user</Badge> : <Badge variant="secondary">anon</Badge>}
                   </td>
                   <td className="py-2 pr-2">{c.city ? `${c.city}${c.region ? `, ${c.region}` : ""}` : <span className="text-muted-foreground">—</span>}</td>
-                  <td className="py-2 pr-2">{c.message_count}</td>
+                  <td className="py-2 pr-2">{msgCountByConv.get(c.id) ?? c.message_count ?? 0}</td>
                   <td className="py-2 pr-2">{c.ended_in_signup ? <Badge>✓</Badge> : <span className="text-muted-foreground">—</span>}</td>
                 </tr>
               ))}
