@@ -32,6 +32,8 @@ function AdminPage() {
   const [scrapeStats, setScrapeStats] = useState<Array<{ slug: string; name: string; attempted: number; inserted: number; failed: number }> | null>(null);
   const [topMeds, setTopMeds] = useState<Array<{ id: string; name: string; active_ingredient: string; slug: string; hits: number }>>([]);
   const [topMedsDays, setTopMedsDays] = useState<number>(30);
+  const [pathologies, setPathologies] = useState<Array<{ category: string; users: number; hits: number; chronic: boolean }>>([]);
+  const [pathologiesDays, setPathologiesDays] = useState<number>(30);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) navigate({ to: "/" });
@@ -89,6 +91,47 @@ function AdminPage() {
       setTopMeds(list);
     })();
   }, [isAdmin, topMedsDays]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const since = new Date(Date.now() - pathologiesDays * 24 * 60 * 60 * 1000).toISOString();
+      const { data: rows } = await supabase
+        .from("search_events")
+        .select("medication_id, user_id")
+        .not("medication_id", "is", null)
+        .gte("created_at", since)
+        .limit(20000);
+      const medIds = Array.from(new Set((rows ?? []).map((r: any) => r.medication_id).filter(Boolean)));
+      if (medIds.length === 0) { setPathologies([]); return; }
+      const { data: meds } = await supabase
+        .from("medications")
+        .select("id, category")
+        .in("id", medIds);
+      const catByMed = new Map<string, string>();
+      (meds ?? []).forEach((m: any) => { if (m.category) catByMed.set(m.id, m.category); });
+      const agg = new Map<string, { users: Set<string>; hits: number }>();
+      (rows ?? []).forEach((r: any) => {
+        const cat = catByMed.get(r.medication_id);
+        if (!cat) return;
+        const e = agg.get(cat) ?? { users: new Set<string>(), hits: 0 };
+        e.hits += 1;
+        if (r.user_id) e.users.add(r.user_id);
+        agg.set(cat, e);
+      });
+      const list = Array.from(agg.entries()).map(([category, v]) => ({
+        category,
+        users: v.users.size,
+        hits: v.hits,
+        chronic: CHRONIC_CATEGORIES.has(category),
+      })).sort((a, b) => {
+        if (a.chronic !== b.chronic) return a.chronic ? -1 : 1;
+        if (b.users !== a.users) return b.users - a.users;
+        return b.hits - a.hits;
+      });
+      setPathologies(list);
+    })();
+  }, [isAdmin, pathologiesDays]);
 
   const byQuery = aggregate(
     events.filter((e) => e.query && e.query.trim().length > 0),
