@@ -402,8 +402,8 @@ function Index() {
                 <p className="text-muted-foreground mt-1">Los más buscados con su mejor precio actual.</p>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featured.map(({ med: m, lo, drop }) => (
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${showAllFeatured ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+              {featured.slice(0, showAllFeatured ? 8 : 3).map(({ med: m, lo, drop }) => (
                 <Link key={m.id} to="/medicamento/$slug" params={{ slug: m.slug }}>
                   <Card className="p-5 h-full hover:shadow-[var(--shadow-elevated)] hover:border-primary/40 transition-all">
                     <div className="flex items-start justify-between gap-2">
@@ -450,6 +450,13 @@ function Index() {
                 </Link>
               ))}
             </div>
+            {featured.length > 3 && (
+              <div className="mt-6 text-center">
+                <Button variant="outline" onClick={() => setShowAllFeatured((v) => !v)}>
+                  {showAllFeatured ? "Ver menos" : "Ver más"}
+                </Button>
+              </div>
+            )}
           </section>
 
           {/* Lista popular tipo "drug list" GoodRx */}
