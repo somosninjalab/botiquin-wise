@@ -221,7 +221,7 @@ function InsightsPage() {
       return {
         started_at: c.started_at,
         last_activity_at: c.last_activity_at,
-        messages: c.message_count,
+        messages: msgCountByConv.get(c.id) ?? c.message_count ?? 0,
         anonymous: c.user_id ? "no" : "sí",
         registered_after: c.ended_in_signup ? "sí" : "no",
         city: c.city ?? "",
