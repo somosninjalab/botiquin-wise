@@ -9,6 +9,26 @@ import { Badge } from "@/components/ui/badge";
 import { HeatmapCard } from "@/components/admin/HeatmapCard";
 import * as XLSX from "xlsx";
 
+const CHRONIC_CATEGORIES = new Set<string>([
+  "Antihipertensivo",
+  "Antidiabético",
+  "Antidepresivo",
+  "Hipolipemiante",
+  "Antiepiléptico",
+  "Anticoagulante",
+  "Antipsicótico",
+  "Antiulceroso",
+  "Betabloqueante",
+  "Hormonal",
+  "Antiagregante",
+  "Broncodilatador",
+  "Corticoide",
+  "Ansiolítico",
+  "Diurético",
+  "Antiparkinsoniano",
+  "Inmunosupresor",
+]);
+
 export const Route = createFileRoute("/admin")({ component: AdminRoute });
 
 function AdminRoute() {
