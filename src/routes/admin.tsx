@@ -9,6 +9,26 @@ import { Badge } from "@/components/ui/badge";
 import { HeatmapCard } from "@/components/admin/HeatmapCard";
 import * as XLSX from "xlsx";
 
+const CHRONIC_CATEGORIES = new Set<string>([
+  "Antihipertensivo",
+  "Antidiabético",
+  "Antidepresivo",
+  "Hipolipemiante",
+  "Antiepiléptico",
+  "Anticoagulante",
+  "Antipsicótico",
+  "Antiulceroso",
+  "Betabloqueante",
+  "Hormonal",
+  "Antiagregante",
+  "Broncodilatador",
+  "Corticoide",
+  "Ansiolítico",
+  "Diurético",
+  "Antiparkinsoniano",
+  "Inmunosupresor",
+]);
+
 export const Route = createFileRoute("/admin")({ component: AdminRoute });
 
 function AdminRoute() {
@@ -32,6 +52,8 @@ function AdminPage() {
   const [scrapeStats, setScrapeStats] = useState<Array<{ slug: string; name: string; attempted: number; inserted: number; failed: number }> | null>(null);
   const [topMeds, setTopMeds] = useState<Array<{ id: string; name: string; active_ingredient: string; slug: string; hits: number }>>([]);
   const [topMedsDays, setTopMedsDays] = useState<number>(30);
+  const [pathologies, setPathologies] = useState<Array<{ category: string; users: number; hits: number; chronic: boolean }>>([]);
+  const [pathologiesDays, setPathologiesDays] = useState<number>(30);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) navigate({ to: "/" });
@@ -89,6 +111,47 @@ function AdminPage() {
       setTopMeds(list);
     })();
   }, [isAdmin, topMedsDays]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const since = new Date(Date.now() - pathologiesDays * 24 * 60 * 60 * 1000).toISOString();
+      const { data: rows } = await supabase
+        .from("search_events")
+        .select("medication_id, user_id")
+        .not("medication_id", "is", null)
+        .gte("created_at", since)
+        .limit(20000);
+      const medIds = Array.from(new Set((rows ?? []).map((r: any) => r.medication_id).filter(Boolean)));
+      if (medIds.length === 0) { setPathologies([]); return; }
+      const { data: meds } = await supabase
+        .from("medications")
+        .select("id, category")
+        .in("id", medIds);
+      const catByMed = new Map<string, string>();
+      (meds ?? []).forEach((m: any) => { if (m.category) catByMed.set(m.id, m.category); });
+      const agg = new Map<string, { users: Set<string>; hits: number }>();
+      (rows ?? []).forEach((r: any) => {
+        const cat = catByMed.get(r.medication_id);
+        if (!cat) return;
+        const e = agg.get(cat) ?? { users: new Set<string>(), hits: 0 };
+        e.hits += 1;
+        if (r.user_id) e.users.add(r.user_id);
+        agg.set(cat, e);
+      });
+      const list = Array.from(agg.entries()).map(([category, v]) => ({
+        category,
+        users: v.users.size,
+        hits: v.hits,
+        chronic: CHRONIC_CATEGORIES.has(category),
+      })).sort((a, b) => {
+        if (a.chronic !== b.chronic) return a.chronic ? -1 : 1;
+        if (b.users !== a.users) return b.users - a.users;
+        return b.hits - a.hits;
+      });
+      setPathologies(list);
+    })();
+  }, [isAdmin, pathologiesDays]);
 
   const byQuery = aggregate(
     events.filter((e) => e.query && e.query.trim().length > 0),
@@ -385,6 +448,53 @@ function AdminPage() {
                 </li>
               );
             })}
+          </ol>
+        )}
+      </Card>
+
+      <Card className="p-5 mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="font-semibold">Patologías más buscadas</h3>
+            <p className="text-xs text-muted-foreground">
+              Inferidas a partir de la categoría terapéutica de los medicamentos buscados. Las crónicas aparecen primero.
+            </p>
+          </div>
+          <div className="flex gap-1">
+            {[7, 30, 90].map((d) => (
+              <Button
+                key={d}
+                size="sm"
+                variant={pathologiesDays === d ? "default" : "outline"}
+                onClick={() => setPathologiesDays(d)}
+              >
+                {d}d
+              </Button>
+            ))}
+          </div>
+        </div>
+        {pathologies.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin datos en este período.</p>
+        ) : (
+          <ol className="space-y-1">
+            {pathologies.map((p, i) => (
+              <li
+                key={p.category}
+                className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${p.chronic ? "border-primary/40 bg-primary/5" : "border-border"}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0 ${p.chronic ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    {i + 1}
+                  </span>
+                  <span className="font-medium truncate">{p.category}</span>
+                  {p.chronic && <Badge variant="secondary" className="text-[10px]">Crónica</Badge>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={p.chronic ? "default" : "secondary"}>{p.users} usuarios</Badge>
+                  <span className="text-xs text-muted-foreground">{p.hits} búsquedas</span>
+                </div>
+              </li>
+            ))}
           </ol>
         )}
       </Card>
