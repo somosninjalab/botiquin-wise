@@ -531,39 +531,36 @@ function BrowseByCondition({
   }, []);
   if (!conditions.length) return null;
   return (
-    <section className="container mx-auto px-4 py-12 md:py-14">
-      <div className="flex items-end justify-between mb-6">
+    <section className="container mx-auto px-4 py-8 md:py-10">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <Stethoscope className="h-6 w-6 text-primary" />
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+            <Stethoscope className="h-5 w-5 md:h-6 md:w-6 text-primary" />
             Explora por condición
           </h2>
-          <p className="text-muted-foreground mt-1">
-            Encuentra tratamientos para lo que necesitas resolver.
+          <p className="text-muted-foreground mt-1 text-sm">
+            Selecciona lo que necesitas resolver.
           </p>
         </div>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {conditions.map((c) => (
-          <button
-            key={c.ind}
-            onClick={() => onPick({ ind: c.ind, cat: "all", q: "", pharm: "all", med: "all" })}
-            className="group text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 hover:shadow-[var(--shadow-soft)] transition-all"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="rounded-lg bg-accent/10 p-2 text-accent">
-                <Stethoscope className="h-4 w-4" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                {c.count} med{c.count === 1 ? "" : "s"}
-              </span>
-            </div>
-            <h3 className="mt-3 font-semibold leading-tight group-hover:text-primary line-clamp-2">
-              {c.label}
-            </h3>
-            {c.cat && <p className="text-xs text-muted-foreground mt-1">{c.cat}</p>}
-          </button>
-        ))}
+        <Select
+          onValueChange={(value) => {
+            if (value) onPick({ ind: value, cat: "all", q: "", pharm: "all", med: "all" });
+          }}
+        >
+          <SelectTrigger className="w-full sm:w-72">
+            <SelectValue placeholder="Selecciona una condición…" />
+          </SelectTrigger>
+          <SelectContent>
+            {conditions.map((c) => (
+              <SelectItem key={c.ind} value={c.ind}>
+                <span className="flex items-center justify-between w-full gap-4">
+                  <span>{c.label}</span>
+                  <span className="text-xs text-muted-foreground">{c.count} med{c.count === 1 ? "" : "s"}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </section>
   );
