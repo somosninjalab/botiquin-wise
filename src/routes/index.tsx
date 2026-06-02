@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getTotalSearches } from "@/lib/search-stats.functions";
 import { z } from "zod";
@@ -16,6 +17,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
   Pill,
   TrendingDown,
   Bell,
@@ -27,6 +49,8 @@ import {
   Tag,
   ArrowDownAZ,
   Stethoscope,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import { SlidersHorizontal } from "lucide-react";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
@@ -512,6 +536,10 @@ function BrowseByCondition({
   onPick: (patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string }>) => void;
 }) {
   const [conditions, setConditions] = useState<{ ind: string; label: string; cat: string | null; count: number }[]>([]);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const isMobile = useIsMobile();
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -529,6 +557,62 @@ function BrowseByCondition({
       setConditions(Array.from(map.values()).sort((a, b) => b.count - a.count));
     })();
   }, []);
+
+  const selectedLabel = useMemo(
+    () => conditions.find((c) => c.ind === value)?.label,
+    [conditions, value],
+  );
+
+  const handleSelect = (ind: string) => {
+    setValue(ind);
+    setOpen(false);
+    onPick({ ind, cat: "all", q: "", pharm: "all", med: "all" });
+  };
+
+  const triggerButton = (
+    <Button
+      variant="outline"
+      role="combobox"
+      aria-expanded={open}
+      className="w-full sm:w-72 justify-between"
+    >
+      <span className="flex items-center gap-2 truncate">
+        <Stethoscope className="h-4 w-4 shrink-0 text-primary" />
+        <span className="truncate">{selectedLabel || "Selecciona una condición…"}</span>
+      </span>
+      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+    </Button>
+  );
+
+  const commandContent = (
+    <Command>
+      <CommandInput placeholder="Busca condición…" />
+      <CommandList>
+        <CommandEmpty>No se encontró ninguna condición.</CommandEmpty>
+        <CommandGroup>
+          {conditions.map((c) => (
+            <CommandItem
+              key={c.ind}
+              value={c.label}
+              onSelect={() => handleSelect(c.ind)}
+            >
+              <Check
+                className={cn(
+                  "mr-2 h-4 w-4 shrink-0",
+                  value === c.ind ? "opacity-100" : "opacity-0",
+                )}
+              />
+              <span className="flex-1 truncate">{c.label}</span>
+              <span className="ml-2 text-xs text-muted-foreground shrink-0">
+                {c.count} med{c.count === 1 ? "" : "s"}
+              </span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  );
+
   if (!conditions.length) return null;
   return (
     <section className="container mx-auto px-4 py-8 md:py-10">
@@ -542,25 +626,27 @@ function BrowseByCondition({
             Selecciona lo que necesitas resolver.
           </p>
         </div>
-        <Select
-          onValueChange={(value) => {
-            if (value) onPick({ ind: value, cat: "all", q: "", pharm: "all", med: "all" });
-          }}
-        >
-          <SelectTrigger className="w-full sm:w-72">
-            <SelectValue placeholder="Selecciona una condición…" />
-          </SelectTrigger>
-          <SelectContent>
-            {conditions.map((c) => (
-              <SelectItem key={c.ind} value={c.ind}>
-                <span className="flex items-center justify-between w-full gap-4">
-                  <span>{c.label}</span>
-                  <span className="text-xs text-muted-foreground">{c.count} med{c.count === 1 ? "" : "s"}</span>
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isMobile ? (
+          <Drawer open={open} onOpenChange={setOpen}>
+            <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader className="text-left">
+                <DrawerTitle className="flex items-center gap-2">
+                  <Stethoscope className="h-5 w-5 text-primary" />
+                  Explora por condición
+                </DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 pb-6">{commandContent}</div>
+            </DrawerContent>
+          </Drawer>
+        ) : (
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+            <PopoverContent className="w-80 p-0">
+              {commandContent}
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
     </section>
   );
