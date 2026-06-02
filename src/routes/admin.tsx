@@ -452,6 +452,53 @@ function AdminPage() {
         )}
       </Card>
 
+      <Card className="p-5 mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 className="font-semibold">Patologías más buscadas</h3>
+            <p className="text-xs text-muted-foreground">
+              Inferidas a partir de la categoría terapéutica de los medicamentos buscados. Las crónicas aparecen primero.
+            </p>
+          </div>
+          <div className="flex gap-1">
+            {[7, 30, 90].map((d) => (
+              <Button
+                key={d}
+                size="sm"
+                variant={pathologiesDays === d ? "default" : "outline"}
+                onClick={() => setPathologiesDays(d)}
+              >
+                {d}d
+              </Button>
+            ))}
+          </div>
+        </div>
+        {pathologies.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin datos en este período.</p>
+        ) : (
+          <ol className="space-y-1">
+            {pathologies.map((p, i) => (
+              <li
+                key={p.category}
+                className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${p.chronic ? "border-primary/40 bg-primary/5" : "border-border"}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0 ${p.chronic ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    {i + 1}
+                  </span>
+                  <span className="font-medium truncate">{p.category}</span>
+                  {p.chronic && <Badge variant="secondary" className="text-[10px]">Crónica</Badge>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={p.chronic ? "default" : "secondary"}>{p.users} usuarios</Badge>
+                  <span className="text-xs text-muted-foreground">{p.hits} búsquedas</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Card>
+
       {failedSearches.length > 0 && (
         <Card className="p-5 mt-6">
           <div className="flex items-center justify-between mb-3">
