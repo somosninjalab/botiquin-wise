@@ -115,6 +115,7 @@ function Index() {
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
+  const [showAllFeatured, setShowAllFeatured] = useState(false);
 
   // Load pharmacies once
   useEffect(() => {
@@ -401,8 +402,8 @@ function Index() {
                 <p className="text-muted-foreground mt-1">Los más buscados con su mejor precio actual.</p>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featured.map(({ med: m, lo, drop }) => (
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${showAllFeatured ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+              {featured.slice(0, showAllFeatured ? 8 : 3).map(({ med: m, lo, drop }) => (
                 <Link key={m.id} to="/medicamento/$slug" params={{ slug: m.slug }}>
                   <Card className="p-5 h-full hover:shadow-[var(--shadow-elevated)] hover:border-primary/40 transition-all">
                     <div className="flex items-start justify-between gap-2">
@@ -449,6 +450,13 @@ function Index() {
                 </Link>
               ))}
             </div>
+            {featured.length > 3 && (
+              <div className="mt-6 text-center">
+                <Button variant="outline" onClick={() => setShowAllFeatured((v) => !v)}>
+                  {showAllFeatured ? "Ver menos" : "Ver más"}
+                </Button>
+              </div>
+            )}
           </section>
 
           {/* Lista popular tipo "drug list" GoodRx */}
@@ -563,6 +571,7 @@ function BrowseByCondition({
 
 function PopularList() {
   const [items, setItems] = useState<MedicationRow[]>([]);
+  const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -583,6 +592,20 @@ function PopularList() {
     }
     return Array.from(m.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [items]);
+  // Limit items when collapsed
+  const { visibleGroups, totalVisible, totalItems } = useMemo(() => {
+    if (expanded) return { visibleGroups: groups, totalVisible: items.length, totalItems: items.length };
+    let count = 0;
+    const limit = 12;
+    const result: [string, MedicationRow[]][] = [];
+    for (const [letter, arr] of groups) {
+      const take = Math.min(arr.length, limit - count);
+      if (take <= 0) break;
+      result.push([letter, arr.slice(0, take)]);
+      count += take;
+    }
+    return { visibleGroups: result, totalVisible: count, totalItems: items.length };
+  }, [groups, items.length, expanded]);
   if (!items.length) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -594,7 +617,7 @@ function PopularList() {
   }
   return (
     <div className="space-y-6">
-      {groups.map(([letter, arr]) => (
+      {visibleGroups.map(([letter, arr]) => (
         <div key={letter}>
           <div className="flex items-center gap-3 mb-3">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
@@ -619,6 +642,13 @@ function PopularList() {
           </div>
         </div>
       ))}
+      {totalItems > totalVisible && (
+        <div className="pt-2 text-center">
+          <Button variant="outline" onClick={() => setExpanded((v) => !v)}>
+            {expanded ? "Ver menos" : "Ver más"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
