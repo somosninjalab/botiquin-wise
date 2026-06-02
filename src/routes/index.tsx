@@ -115,6 +115,7 @@ function Index() {
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
+  const [showAllFeatured, setShowAllFeatured] = useState(false);
 
   // Load pharmacies once
   useEffect(() => {
