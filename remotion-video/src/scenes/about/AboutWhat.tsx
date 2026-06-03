@@ -2,9 +2,9 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } fr
 import { COLORS } from "../../theme";
 
 const BULLETS = [
-  { icon: "🔎", text: "Busca tu medicina" },
-  { icon: "⚖️", text: "Compara precios en farmacias" },
-  { icon: "🔔", text: "Te avisamos cuando baje" },
+  { n: "1", text: "Busca tu medicina" },
+  { n: "2", text: "Compara precios en farmacias" },
+  { n: "3", text: "Te avisamos cuando baje" },
 ];
 
 export const AboutWhat = () => {
@@ -85,7 +85,23 @@ export const AboutWhat = () => {
                 opacity: enter,
               }}
             >
-              <div style={{ fontSize: 64, lineHeight: 1 }}>{b.icon}</div>
+              <div
+                style={{
+                  width: 78,
+                  height: 78,
+                  borderRadius: "50%",
+                  background: COLORS.primary,
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 44,
+                  fontWeight: 900,
+                  flexShrink: 0,
+                }}
+              >
+                {b.n}
+              </div>
               <div style={{ fontSize: 40, fontWeight: 700, color: COLORS.ink, lineHeight: 1.2 }}>
                 {b.text}
               </div>
