@@ -51,7 +51,7 @@ export const AboutWhat = () => {
           transform: `translateY(${interpolate(titleS, [0, 1], [20, 0])}px)`,
         }}
       >
-        La app que te ayuda a
+        La web que te ayuda a
         <br />
         <span style={{ color: COLORS.primary }}>gastar menos</span> en medicinas.
       </div>
