@@ -7,6 +7,7 @@ import { DynamicVideo, DYNAMIC_DURATION } from "./DynamicVideo";
 import { VerticalStoryVO } from "./VerticalStoryVO";
 import { MilestonesStory } from "./MilestonesStory";
 import { ThanksVideo, THANKS_DURATION } from "./ThanksVideo";
+import { AboutVideo, ABOUT_DURATION } from "./AboutVideo";
 
 const VerticalWrap = () => {
   // Letterbox the 1920x1080 MainVideo inside 1080x1920.
@@ -83,6 +84,14 @@ export const RemotionRoot = () => (
     id="thanks-story"
     component={ThanksVideo}
     durationInFrames={THANKS_DURATION}
+    fps={30}
+    width={1080}
+    height={1920}
+  />
+  <Composition
+    id="about-15s"
+    component={AboutVideo}
+    durationInFrames={ABOUT_DURATION}
     fps={30}
     width={1080}
     height={1920}
