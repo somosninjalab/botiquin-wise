@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { verifyCronAuth } from "@/lib/cron-auth.server";
-import Firecrawl from "@mendable/firecrawl-js";
-import * as cheerio from "cheerio";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type PharmRow = { id: string; slug: string; name: string; website_url: string | null };
