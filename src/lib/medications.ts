@@ -46,6 +46,39 @@ export type PriceRow = {
   scraped_at: string;
 };
 
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function hashString(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return Math.abs(h).toString(36);
+}
+
+function parsePrice(raw: unknown): number | null {
+  if (raw == null) return null;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw > 0 ? raw : null;
+  if (typeof raw !== "string") return null;
+  let s = raw.replace(/[\s\u00A0]/g, "").replace(/(usd|ves|bs\.?s?|us\$|\$|€)/gi, "");
+  const lastComma = s.lastIndexOf(",");
+  const lastDot = s.lastIndexOf(".");
+  if (lastComma !== -1 && lastDot !== -1) {
+    s = lastComma > lastDot ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
+  } else if (lastComma !== -1) {
+    const decimals = s.length - lastComma - 1;
+    s = decimals > 0 && decimals <= 2 ? `${s.slice(0, lastComma).replace(/,/g, "")}.${s.slice(lastComma + 1)}` : s.replace(/,/g, "");
+  }
+  const n = Number(s.replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 export async function searchMedications(q: string, limit = 30) {
   if (!q.trim()) {
     const { data, error } = await supabase
@@ -53,104 +86,72 @@ export async function searchMedications(q: string, limit = 30) {
     if (error) throw error;
     return (data ?? []) as MedicationRow[];
   }
-  const safe = q.replace(/[,()]/g, " ");
+  const term = q.replace(/[,()]/g, " ").trim();
+  const res = await fetch(`/api/public/search-prices?q=${encodeURIComponent(term)}&limit=${limit}`);
+  if (!res.ok) return [];
+  const json = (await res.json()) as { products?: ApiProduct[] };
+  const meds = new Map<string, MedicationRow>();
+  const priceRows: PriceRow[] = [];
+  const now = new Date().toISOString();
 
-  // 0) Búsqueda semántica unificada (embeddings + filtros + fallback trigram).
-  //    Respeta el RPC search_medications_semantic. Si la query es muy corta
-  //    (< 3 chars) saltamos el embedding y dejamos que el RPC use trigram.
-  const useSemantic = safe.trim().length >= 3;
-  const qEmbedding = useSemantic ? await getQueryEmbedding(safe) : null;
-  if (useSemantic) {
-    try {
-      const { data: semantic, error: semErr } = await supabase.rpc(
-        "search_medications_semantic",
-        {
-          q_embedding: (qEmbedding as unknown as string) ?? null,
-          q_text: safe,
-          lim: limit,
-        },
-      );
-      if (!semErr && semantic && (semantic as unknown[]).length) {
-        return (semantic as MedicationRow[]).slice(0, limit);
-      }
-    } catch (err) {
-      console.warn("search_medications_semantic failed, falling back:", err);
+  for (const product of json.products ?? []) {
+    const source = (product.source ?? "").toLowerCase();
+    const pharmacy = API_PHARMACIES[source];
+    const name = (product.name ?? "").trim();
+    if (!pharmacy || !name) continue;
+
+    const key = norm(`${product.brand ?? ""} ${name}`) || hashString(name);
+    const medId = `api-${key}`;
+    if (!meds.has(medId)) {
+      meds.set(medId, {
+        id: medId,
+        slug: medId,
+        name,
+        active_ingredient: (product.brand || name.split(/\s+/)[0] || term).trim(),
+        presentation: null,
+        category: "Resultados del API",
+        indication: null,
+        indication_es: null,
+        manufacturer: null,
+        image_url: product.image || null,
+        brand_names: product.brand ? [product.brand] : null,
+      });
+    }
+
+    const ves = parsePrice(product.price);
+    const usd = parsePrice(product.priceUSD);
+    const inStock = (product.status ?? "").toLowerCase() !== "no disponible";
+    if (ves !== null) {
+      priceRows.push({
+        id: `${medId}-${source}-ves`,
+        medication_id: medId,
+        pharmacy_id: pharmacy.id,
+        price: ves,
+        currency: "VES",
+        product_url: product.url || null,
+        in_stock: inStock,
+        scraped_at: now,
+      });
+    }
+    if (usd !== null) {
+      priceRows.push({
+        id: `${medId}-${source}-usd`,
+        medication_id: medId,
+        pharmacy_id: pharmacy.id,
+        price: usd,
+        currency: "USD",
+        product_url: product.url || null,
+        in_stock: inStock,
+        scraped_at: now,
+      });
     }
   }
 
-  // 1a) coincidencias directas en nombre, principio activo, indicación, categoría, marcas y síntomas
-  const { data: direct, error } = await supabase
-    .from("medications")
-    .select("*")
-    .or(
-      `name.ilike.%${safe}%,active_ingredient.ilike.%${safe}%,indication.ilike.%${safe}%,category.ilike.%${safe}%,brand_names_text.ilike.%${safe}%,symptoms_text.ilike.%${safe}%`
-    )
-    .order("name")
-    .limit(limit);
-  if (error) throw error;
-  let directRows = (direct ?? []) as MedicationRow[];
-
-  // 1b) coincidencias por alias (marcas comerciales: Tylenol, Atamel, Panadol...)
-  const { data: aliasHits } = await supabase
-    .from("medication_aliases")
-    .select("medication_id")
-    .ilike("alias", `%${safe}%`)
-    .limit(limit);
-  const aliasIds = Array.from(new Set((aliasHits ?? []).map((a: { medication_id: string }) => a.medication_id)));
-  if (aliasIds.length) {
-    const { data: aliasMeds } = await supabase
-      .from("medications").select("*").in("id", aliasIds).limit(limit);
-    const have = new Set(directRows.map((m) => m.id));
-    for (const m of (aliasMeds ?? []) as MedicationRow[]) if (!have.has(m.id)) directRows.push(m);
+  const medList = Array.from(meds.values()).slice(0, limit);
+  for (const med of medList) {
+    apiPriceCache.set(med.id, priceRows.filter((p) => p.medication_id === med.id));
   }
-
-  // 2) Si no hubo coincidencia directa, intentar búsqueda difusa (tolera errores tipográficos)
-  let baseRows = directRows;
-  if (!baseRows.length && q.trim().length >= 3) {
-    const { data: fuzzy } = await supabase.rpc("search_medications_fuzzy", {
-      q: safe,
-      lim: limit,
-    });
-    baseRows = ((fuzzy ?? []) as MedicationRow[]);
-  }
-
-  // 2b) Fallback en vivo: si seguimos sin nada, pedir al servidor que descubra
-  // este término en CIMA y/o pharmacies, lo cree, y reintentamos la búsqueda.
-  if (!baseRows.length && q.trim().length >= 3) {
-    try {
-      const res = await fetch(`/api/public/hooks/discover-on-demand`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ q: safe }),
-      });
-      if (res.ok) {
-        const j = (await res.json()) as { created?: number };
-        if ((j.created ?? 0) > 0) {
-          const { data: again } = await supabase.rpc("search_medications_fuzzy", { q: safe, lim: limit });
-          baseRows = ((again ?? []) as MedicationRow[]);
-        }
-      }
-    } catch { /* silencioso */ }
-  }
-
-  // 3) Expandir por principio activo para incluir alternativas equivalentes
-  const ingredients = Array.from(
-    new Set(baseRows.map((m) => m.active_ingredient).filter(Boolean)),
-  );
-  if (!ingredients.length) return baseRows;
-
-  const { data: byIng } = await supabase
-    .from("medications")
-    .select("*")
-    .in("active_ingredient", ingredients)
-    .order("name")
-    .limit(limit);
-
-  // Merge sin duplicados, manteniendo primero las coincidencias directas
-  const map = new Map<string, MedicationRow>();
-  for (const m of baseRows) map.set(m.id, m);
-  for (const m of (byIng ?? []) as MedicationRow[]) if (!map.has(m.id)) map.set(m.id, m);
-  return Array.from(map.values()).slice(0, limit);
+  return medList;
 }
 
 export async function getLatestPricesForMedications(medIds: string[]) {
