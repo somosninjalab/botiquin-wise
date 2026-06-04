@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
 
         try {
           const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 45_000);
+          const tid = setTimeout(() => ctrl.abort(), 110_000);
           const res = await fetch(upstreamUrl.toString(), {
             headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
             signal: ctrl.signal,
