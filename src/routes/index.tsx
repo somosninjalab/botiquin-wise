@@ -139,73 +139,53 @@ function Index() {
 
   const [meds, setMeds] = useState<MedicationRow[]>([]);
   const [prices, setPrices] = useState<PriceRow[]>([]);
-  // Catálogo global ligero para alimentar las opciones de los filtros
-  // (categoría, indicación, nombre comercial, compuesto activo). Sin esto
-  // los selects solo mostrarían criterios de los pocos meds visibles.
-  const [allMeds, setAllMeds] = useState<MedicationRow[]>([]);
+  // Sin catálogo local: la única fuente de datos es el API externo.
+  const [allMeds] = useState<MedicationRow[]>([]);
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
   const [showAllFeatured, setShowAllFeatured] = useState(false);
 
-  // Load pharmacies once
+  // Mapas estáticos de farmacias (solo las que devuelve el API).
   useEffect(() => {
-    (async () => {
-      const { data: ph } = await supabase.from("pharmacies").select("id,name,slug");
-      setPharmaciesMap({
-        ...Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.name])),
-        ...API_PHARMACY_NAMES,
-      });
-      setPharmacySlugMap({
-        ...Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.slug])),
-        farmatodo: "farmatodo",
-        locatel: "locatel",
-        farmago: "farmago",
-        saas: "saas",
-        actual: "actual",
-      });
-    })();
+    setPharmaciesMap({ ...API_PHARMACY_NAMES });
+    setPharmacySlugMap({
+      farmatodo: "farmatodo",
+      locatel: "locatel",
+      farmago: "farmago",
+      saas: "saas",
+      actual: "actual",
+    });
   }, []);
 
-  // Carga única del catálogo completo solo para los filtros
+  // Resultados de búsqueda: solo desde el API externo. Sin query no hay datos.
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("medications")
-        .select("id,name,slug,active_ingredient,category,indication,indication_es,brand_names")
-        .order("name")
-        .limit(1000);
-      setAllMeds((data ?? []) as unknown as MedicationRow[]);
-    })();
-  }, []);
-
-  // Featured (no search) or search results
-  useEffect(() => {
+    if (!q.trim()) {
+      setMeds([]);
+      setPrices([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
     setLoading(true);
     (async () => {
-      let m: MedicationRow[];
-      if (q.trim()) {
-        m = await searchMedications(q, 80);
-      } else if (cat !== "all" || ind !== "all") {
-        let qb = supabase.from("medications").select("*").order("name").limit(80);
-        if (cat !== "all") qb = qb.eq("category", cat);
-        if (ind !== "all") qb = qb.eq("indication", ind);
-        const { data } = await qb;
-        m = (data ?? []) as MedicationRow[];
-      } else {
-        m = await searchMedications("", isSearching ? 80 : 8);
-      }
-      setMeds(m);
-      const p = await getLatestPricesForMedications(m.map((x) => x.id));
-      setPrices(p);
-      if (q.trim()) {
+      try {
+        const m = await searchMedications(q, 80);
+        if (cancelled) return;
+        const p = await getLatestPricesForMedications(m.map((x) => x.id));
+        if (cancelled) return;
+        setMeds(m);
+        setPrices(p);
         await trackSearch({ query: q, result_count: m.length });
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
-
     })();
-  }, [q, cat, ind, isSearching]);
+    return () => {
+      cancelled = true;
+    };
+  }, [q]);
 
   const updateSearch = (
     patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
