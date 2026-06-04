@@ -3,12 +3,12 @@ import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
- * Scrape prices via external API (http://18.191.16.43:3001/api/scraper/search).
+ * Scrape prices via external API (https://admin.clubestarbien.com/api/scraper/search).
  * Single source of truth for price scraping: the external API returns
  * products across multiple Venezuelan pharmacies in a single call.
  */
 
-const API_BASE = "http://18.191.16.43:3001/api/scraper/search";
+const API_BASE = "https://admin.clubestarbien.com/api/scraper/search";
 
 // Map API source slug → our pharmacies.slug
 const SOURCE_TO_PHARM: Record<string, string> = {
