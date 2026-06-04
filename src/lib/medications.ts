@@ -156,14 +156,20 @@ export async function searchMedications(q: string, limit = 30) {
 
 export async function getLatestPricesForMedications(medIds: string[]) {
   if (!medIds.length) return [] as PriceRow[];
+  if (medIds.every((id) => id.startsWith("api-"))) {
+    return medIds.flatMap((id) => apiPriceCache.get(id) ?? []);
+  }
+  const apiRows = medIds.flatMap((id) => id.startsWith("api-") ? (apiPriceCache.get(id) ?? []) : []);
+  const dbIds = medIds.filter((id) => !id.startsWith("api-"));
+  if (!dbIds.length) return apiRows;
   const { data, error } = await supabase
     .from("medication_prices")
     .select("*")
-    .in("medication_id", medIds)
+    .in("medication_id", dbIds)
     .order("scraped_at", { ascending: false })
     .limit(2000);
   if (error) throw error;
-  return (data ?? []) as PriceRow[];
+  return [...apiRows, ...((data ?? []) as PriceRow[])];
 }
 
 export function priceToVes(amount: number, currency: string, bcvRate: number | null): number | null {
