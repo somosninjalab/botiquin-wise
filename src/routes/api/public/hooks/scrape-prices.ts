@@ -204,6 +204,22 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         const { data: meds } = await medsQuery.limit(limit);
         const medList = (meds ?? []) as MedRow[];
 
+        // ── Clear old prices for the medications we're about to scrape ──
+        const medIds = medList.map((m) => m.id);
+        if (medIds.length > 0) {
+          const pharmIds = Array.from(pharmBySlug.values());
+          const { error: delErr } = await supabaseAdmin
+            .from("medication_prices")
+            .delete()
+            .in("medication_id", medIds)
+            .in("pharmacy_id", pharmIds);
+          if (delErr) {
+            console.warn("[scrape-prices] failed to clear old prices:", delErr.message);
+          } else {
+            console.log(`[scrape-prices] cleared old prices for ${medIds.length} meds × ${pharmIds.length} pharmacies`);
+          }
+        }
+
         let attempted = 0;
         let inserted = 0;
         const errors: string[] = [];
