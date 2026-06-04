@@ -1,0 +1,1 @@
+TRUNCATE TABLE public.price_alerts; TRUNCATE TABLE public.medication_prices;
