@@ -1098,7 +1098,12 @@ function SearchResults(props: {
                   const drop = prev && lo && prev.price > lo.price ? ((prev.price - lo.price) / prev.price) * 100 : 0;
                   const isCheapest = idx === 0 && lo;
                   return (
-                    <Link key={m.id} to="/medicamento/$slug" params={{ slug: m.slug }}>
+                    <a
+                      key={m.id}
+                      href={m.id.startsWith("api-") ? (lo?.product_url ?? "#") : `/medicamento/${m.slug}`}
+                      target={m.id.startsWith("api-") && lo?.product_url ? "_blank" : undefined}
+                      rel={m.id.startsWith("api-") && lo?.product_url ? "noreferrer" : undefined}
+                    >
                       <Card
                         className="p-5 h-full hover:shadow-[var(--shadow-elevated)] transition-all hover:-translate-y-0.5 relative"
                         style={{ background: "var(--gradient-card)" }}
@@ -1176,7 +1181,7 @@ function SearchResults(props: {
                           </div>
                         )}
                       </Card>
-                    </Link>
+                    </a>
                   );
                 })}
               </div>
