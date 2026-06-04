@@ -1245,3 +1245,49 @@ function NoResults({
     </Card>
   );
 }
+
+function SearchProgress() {
+  const stages = [
+    "Conectando con farmacias…",
+    "Consultando Farmatodo, Locatel y Saas…",
+    "Consultando Farmahorro, Farmadon y otras…",
+    "Comparando precios y descuentos…",
+    "Casi listo, preparando resultados…",
+  ];
+  const [stage, setStage] = useState(0);
+  const [progress, setProgress] = useState(8);
+
+  useEffect(() => {
+    const stageTimer = setInterval(() => {
+      setStage((s) => (s < stages.length - 1 ? s + 1 : s));
+    }, 1800);
+    const progTimer = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 95) return p;
+        const remaining = 95 - p;
+        return Math.min(95, p + Math.max(1, remaining * 0.06));
+      });
+    }, 250);
+    return () => {
+      clearInterval(stageTimer);
+      clearInterval(progTimer);
+    };
+  }, []);
+
+  return (
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-medium text-primary">
+          {stages[stage]}
+        </p>
+        <span className="text-xs font-semibold text-primary tabular-nums">
+          {Math.round(progress)}%
+        </span>
+      </div>
+      <Progress value={progress} className="h-2" />
+      <p className="text-xs text-muted-foreground mt-2 text-center">
+        Buscamos en más de 6 farmacias. Ten paciencia, esto puede tomar unos segundos.
+      </p>
+    </div>
+  );
+}
