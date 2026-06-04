@@ -1030,14 +1030,7 @@ function SearchResults(props: {
       {/* Results */}
       {loading ? (
         <div className="space-y-4">
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-center">
-            <p className="text-sm font-medium text-primary">
-              Estamos buscando en más de 6 farmacias, esto puede tomar unos segundos…
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Ten paciencia, queremos asegurarnos de mostrarte el mejor precio disponible.
-            </p>
-          </div>
+          <SearchProgress />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-44 rounded-xl" />
