@@ -266,7 +266,7 @@ function Index() {
     return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredMeds, lowestByMed, bcvRate]);
 
-  const pharmacyOptions = Object.entries(pharmaciesMap).sort(([, a], [, b]) =>
+  const pharmacyOptions = Object.entries(q.trim() ? API_PHARMACY_NAMES : pharmaciesMap).sort(([, a], [, b]) =>
     a.localeCompare(b),
   );
 
@@ -750,7 +750,7 @@ function SearchResults(props: {
 
   // Fuente para opciones de filtros: catálogo global cuando esté cargado;
   // si no, los resultados actuales. Así los selects muestran muchos criterios.
-  const optionsSource = allMeds.length ? allMeds : meds;
+  const optionsSource = q.trim() ? meds : (allMeds.length ? allMeds : meds);
   const categories = useMemo(
     () => Array.from(new Set(optionsSource.map((m) => m.category).filter(Boolean) as string[])).sort(),
     [optionsSource],
