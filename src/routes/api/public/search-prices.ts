@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const API_BASE = "https://admin.clubestarbien.com/api/scraper/search";
-const SEARCH_TIMEOUT_MS = 120_000;
+const SEARCH_TIMEOUT_MS = 25_000;
 
 const ALLOWED_SOURCES = new Set([
   "farmatodo",
