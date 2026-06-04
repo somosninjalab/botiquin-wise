@@ -109,15 +109,11 @@ function productMatchesMed(p: ApiProduct, med: MedRow): boolean {
   return true;
 }
 
-function buildQueryVariants(med: MedRow): string[] {
-  const variants = new Set<string>();
-  const ai = med.active_ingredient.trim();
-  if (ai) variants.add(ai);
-  for (const b of med.brand_names ?? []) {
-    if (b && b.trim()) variants.add(b.trim());
-  }
-  if (!variants.size) variants.add(med.name);
-  return Array.from(variants).slice(0, 4);
+function buildQuery(med: MedRow): string {
+  // Use the medication name as the single API query. The external API
+  // already returns the relevant matches; broadening to active_ingredient
+  // or every brand pulls in unrelated products.
+  return (med.name || med.active_ingredient || "").trim();
 }
 
 async function fetchApi(product: string, token: string, sources: string[]): Promise<ApiProduct[]> {
@@ -199,19 +195,14 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         }
 
         for (const med of medList) {
-          // 1) Fetch candidates from API across all variants and dedupe by url.
-          const seen = new Map<string, ApiProduct>();
-          for (const q of buildQueryVariants(med)) {
-            const products = await fetchApi(q, token, activeSources);
-            for (const p of products) {
-              const key = p.url || `${p.source}|${p.name}`;
-              if (!seen.has(key)) seen.set(key, p);
-            }
-            if (seen.size >= 40) break;
-          }
+          // 1) Single API call per medication — trust the API's query.
+          const q = buildQuery(med);
+          if (!q) continue;
+          const products = await fetchApi(q, token, activeSources);
 
-          // 2) Filter products that actually match this medication.
-          const matched = Array.from(seen.values()).filter((p) => productMatchesMed(p, med));
+          // 2) Safety filter: keep only products that mention the medication
+          //    (name, active ingredient, or one of its brands).
+          const matched = products.filter((p) => productMatchesMed(p, med));
 
           // 3) Group by pharmacy and pick the lowest-price in-stock candidate.
           const bestByPharm = new Map<string, { product: ApiProduct; price: number }>();
