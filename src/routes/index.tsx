@@ -619,43 +619,20 @@ function BrowseByCondition({
 }
 
 function PopularList() {
-  const [items, setItems] = useState<MedicationRow[]>([]);
+  const fetchPopular = useServerFn(getPopularQueries);
+  const [items, setItems] = useState<{ label: string; count: number }[] | null>(null);
   const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("medications")
-        .select("*")
-        .order("name")
-        .limit(60);
-      setItems((data ?? []) as MedicationRow[]);
+      try {
+        const res = await fetchPopular();
+        setItems(res.items ?? []);
+      } catch {
+        setItems([]);
+      }
     })();
-  }, []);
-  // Group by leading letter, A–Z chip nav.
-  const groups = useMemo(() => {
-    const m = new Map<string, MedicationRow[]>();
-    for (const it of items) {
-      const k = (it.name[0] ?? "#").toUpperCase();
-      if (!m.has(k)) m.set(k, []);
-      m.get(k)!.push(it);
-    }
-    return Array.from(m.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [items]);
-  // Limit items when collapsed
-  const { visibleGroups, totalVisible, totalItems } = useMemo(() => {
-    if (expanded) return { visibleGroups: groups, totalVisible: items.length, totalItems: items.length };
-    let count = 0;
-    const limit = 12;
-    const result: [string, MedicationRow[]][] = [];
-    for (const [letter, arr] of groups) {
-      const take = Math.min(arr.length, limit - count);
-      if (take <= 0) break;
-      result.push([letter, arr.slice(0, take)]);
-      count += take;
-    }
-    return { visibleGroups: result, totalVisible: count, totalItems: items.length };
-  }, [groups, items.length, expanded]);
-  if (!items.length) {
+  }, [fetchPopular]);
+  if (items === null) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {Array.from({ length: 12 }).map((_, i) => (
@@ -664,34 +641,30 @@ function PopularList() {
       </div>
     );
   }
+  if (!items.length) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Todavía no hay búsquedas populares. Empieza a buscar y aquí aparecerá lo más buscado.
+      </p>
+    );
+  }
+  const visible = expanded ? items : items.slice(0, 18);
   return (
-    <div className="space-y-6">
-      {visibleGroups.map(([letter, arr]) => (
-        <div key={letter}>
-          <div className="flex items-center gap-3 mb-3">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
-              {letter}
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {arr.map((m) => (
-              <Link
-                key={m.id}
-                to="/medicamento/$slug"
-                params={{ slug: m.slug }}
-                className="group flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm hover:border-primary/50 hover:bg-primary/5 transition-colors"
-              >
-                <span className="truncate font-medium group-hover:text-primary">
-                  {(m.brand_names ?? [])[0] || m.name}
-                </span>
-                <span className="text-xs text-muted-foreground truncate ml-2">{m.active_ingredient}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      ))}
-      {totalItems > totalVisible && (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {visible.map((it) => (
+          <Link
+            key={it.label}
+            to="/"
+            search={{ q: it.label, pharm: "all", med: "all", cat: "all", ind: "all", brand: "all", ai: "all" }}
+            className="group inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-primary/50 hover:bg-primary/5 transition-colors"
+          >
+            <span className="font-medium group-hover:text-primary capitalize">{it.label}</span>
+            <span className="text-xs text-muted-foreground">{it.count}</span>
+          </Link>
+        ))}
+      </div>
+      {items.length > 18 && (
         <div className="pt-2 text-center">
           <Button variant="outline" onClick={() => setExpanded((v) => !v)}>
             {expanded ? "Ver menos" : "Ver más"}
