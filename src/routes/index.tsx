@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getTotalSearches } from "@/lib/search-stats.functions";
+import { getPopularQueries } from "@/lib/search-stats.functions";
 import { z } from "zod";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { SearchBar } from "@/components/SearchBar";
