@@ -20,7 +20,10 @@ const SOURCE_TO_PHARM: Record<string, string> = {
   // farmadon → no pharmacy in DB, ignored
 };
 
-const PRICE_RANGES = { VES: { min: 30, max: 5_000_000 } };
+const PRICE_RANGES = {
+  VES: { min: 30, max: 5_000_000 },
+  USD: { min: 0.1, max: 10_000 },
+};
 
 type ApiProduct = {
   name: string;
@@ -235,20 +238,33 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
             const pharmId = pharmBySlug.get(slug);
             if (!pharmId) continue;
             const inStock = (product.status ?? "").toLowerCase() !== "no disponible";
-            const { error } = await supabaseAdmin.from("medication_prices").insert({
-              medication_id: med.id,
-              pharmacy_id: pharmId,
-              price,
-              currency: "VES",
-              in_stock: inStock,
-              product_url: product.url || null,
-            });
+            const rows: Array<{ currency: string; price: number }> = [
+              { currency: "VES", price },
+            ];
+            const priceUsd = parsePrice(product.priceUSD);
+            if (
+              priceUsd !== null &&
+              priceUsd >= PRICE_RANGES.USD.min &&
+              priceUsd <= PRICE_RANGES.USD.max
+            ) {
+              rows.push({ currency: "USD", price: priceUsd });
+            }
+            const { error } = await supabaseAdmin.from("medication_prices").insert(
+              rows.map((r) => ({
+                medication_id: med.id,
+                pharmacy_id: pharmId,
+                price: r.price,
+                currency: r.currency,
+                in_stock: inStock,
+                product_url: product.url || null,
+              })),
+            );
             if (error) {
               errors.push(`${slug}/${med.name}: ${error.message}`);
               byPharmacy[slug].failed++;
             } else {
-              inserted++;
-              byPharmacy[slug].inserted++;
+              inserted += rows.length;
+              byPharmacy[slug].inserted += rows.length;
               if (!firstImage && product.image) firstImage = product.image;
             }
           }
