@@ -26,6 +26,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
 import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicSearchPricesRouteImport } from './routes/api/public/search-prices'
 import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -126,6 +127,11 @@ const AdminInsightsRoute = AdminInsightsRouteImport.update({
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSearchPricesRoute = ApiPublicSearchPricesRouteImport.update({
+  id: '/api/public/search-prices',
+  path: '/api/public/search-prices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicChatRoute = ApiPublicChatRouteImport.update({
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
+  '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
+  '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -310,6 +318,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
+  '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -347,6 +356,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/api/public/chat'
+    | '/api/public/search-prices'
     | '/lovable/email/suppression'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/api/public/chat'
+    | '/api/public/search-prices'
     | '/lovable/email/suppression'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/api/public/chat'
+    | '/api/public/search-prices'
     | '/lovable/email/suppression'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
@@ -451,6 +463,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
   ApiPublicChatRoute: typeof ApiPublicChatRoute
+  ApiPublicSearchPricesRoute: typeof ApiPublicSearchPricesRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBackfillEmbeddingsRoute: typeof ApiPublicHooksBackfillEmbeddingsRoute
   ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -588,6 +601,13 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/suppression'
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/search-prices': {
+      id: '/api/public/search-prices'
+      path: '/api/public/search-prices'
+      fullPath: '/api/public/search-prices'
+      preLoaderRoute: typeof ApiPublicSearchPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/chat': {
@@ -733,6 +753,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
   ApiPublicChatRoute: ApiPublicChatRoute,
+  ApiPublicSearchPricesRoute: ApiPublicSearchPricesRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBackfillEmbeddingsRoute: ApiPublicHooksBackfillEmbeddingsRoute,
   ApiPublicHooksDiscoverOnDemandRoute: ApiPublicHooksDiscoverOnDemandRoute,

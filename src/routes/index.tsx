@@ -81,6 +81,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { sendSearchResultsEmail } from "@/lib/email/send-search-results.functions";
 import { toast } from "sonner";
 
+const API_PHARMACY_NAMES: Record<string, string> = {
+  farmatodo: "Farmatodo",
+  locatel: "Locatel",
+  farmago: "Farmago",
+  saas: "SAAS",
+  actual: "Tu Farmacia Actual",
+};
+
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
   pharm: fallback(z.string(), "all").default("all"),
@@ -145,8 +153,18 @@ function Index() {
   useEffect(() => {
     (async () => {
       const { data: ph } = await supabase.from("pharmacies").select("id,name,slug");
-      setPharmaciesMap(Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.name])));
-      setPharmacySlugMap(Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.slug])));
+      setPharmaciesMap({
+        ...Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.name])),
+        ...API_PHARMACY_NAMES,
+      });
+      setPharmacySlugMap({
+        ...Object.fromEntries((ph ?? []).map((x: any) => [x.id, x.slug])),
+        farmatodo: "farmatodo",
+        locatel: "locatel",
+        farmago: "farmago",
+        saas: "saas",
+        actual: "actual",
+      });
     })();
   }, []);
 
@@ -186,39 +204,6 @@ function Index() {
       }
       setLoading(false);
 
-      // Scrape on-demand: si la búsqueda devolvió medicamentos sin precios,
-      // disparamos el scrape (Farmatodo, SAAS, etc.) en segundo plano y
-      // recargamos los precios cuando termine cada uno.
-      if (q.trim() && m.length) {
-        const withPrices = new Set(p.map((x) => x.medication_id));
-        const missing = m.filter((x) => !withPrices.has(x.id)).slice(0, 3);
-        if (missing.length) {
-          setScrapingIds(new Set(missing.map((x) => x.id)));
-          await Promise.all(
-            missing.map(async (med) => {
-              try {
-                const res = await fetch(
-                  `/api/public/hooks/scrape-prices?med=${encodeURIComponent(med.slug)}&limit=1`,
-                  { method: "POST" },
-                );
-                if (!res.ok) return;
-                const j = (await res.json()) as { inserted?: number };
-                if ((j.inserted ?? 0) > 0) {
-                  const fresh = await getLatestPricesForMedications(m.map((x) => x.id));
-                  setPrices(fresh);
-                }
-              } catch { /* silencioso */ }
-              finally {
-                setScrapingIds((prev) => {
-                  const next = new Set(prev);
-                  next.delete(med.id);
-                  return next;
-                });
-              }
-            }),
-          );
-        }
-      }
     })();
   }, [q, cat, ind, isSearching]);
 
@@ -281,7 +266,7 @@ function Index() {
     return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredMeds, lowestByMed, bcvRate]);
 
-  const pharmacyOptions = Object.entries(pharmaciesMap).sort(([, a], [, b]) =>
+  const pharmacyOptions = Object.entries(q.trim() ? API_PHARMACY_NAMES : pharmaciesMap).sort(([, a], [, b]) =>
     a.localeCompare(b),
   );
 
@@ -765,7 +750,7 @@ function SearchResults(props: {
 
   // Fuente para opciones de filtros: catálogo global cuando esté cargado;
   // si no, los resultados actuales. Así los selects muestran muchos criterios.
-  const optionsSource = allMeds.length ? allMeds : meds;
+  const optionsSource = q.trim() ? meds : (allMeds.length ? allMeds : meds);
   const categories = useMemo(
     () => Array.from(new Set(optionsSource.map((m) => m.category).filter(Boolean) as string[])).sort(),
     [optionsSource],
@@ -1113,7 +1098,12 @@ function SearchResults(props: {
                   const drop = prev && lo && prev.price > lo.price ? ((prev.price - lo.price) / prev.price) * 100 : 0;
                   const isCheapest = idx === 0 && lo;
                   return (
-                    <Link key={m.id} to="/medicamento/$slug" params={{ slug: m.slug }}>
+                    <a
+                      key={m.id}
+                      href={m.id.startsWith("api-") ? (lo?.product_url ?? "#") : `/medicamento/${m.slug}`}
+                      target={m.id.startsWith("api-") && lo?.product_url ? "_blank" : undefined}
+                      rel={m.id.startsWith("api-") && lo?.product_url ? "noreferrer" : undefined}
+                    >
                       <Card
                         className="p-5 h-full hover:shadow-[var(--shadow-elevated)] transition-all hover:-translate-y-0.5 relative"
                         style={{ background: "var(--gradient-card)" }}
@@ -1191,7 +1181,7 @@ function SearchResults(props: {
                           </div>
                         )}
                       </Card>
-                    </Link>
+                    </a>
                   );
                 })}
               </div>
