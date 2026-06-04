@@ -94,17 +94,29 @@ function extractDose(med: MedRow): string {
 function productMatchesMed(p: ApiProduct, med: MedRow): boolean {
   const text = norm(`${p.name} ${p.brand ?? ""}`);
   if (!text) return false;
-  const ai = norm(med.active_ingredient);
+  // Reject obvious junk URLs (cart, wishlist, search, generic landing pages).
+  const url = (p.url ?? "").toLowerCase();
+  if (/\/(wishlist|cart|carrito|search|busqueda|categoria|category)(\/|$|\?)/.test(url)) {
+    return false;
+  }
   const brands = (med.brand_names ?? []).map(norm).filter(Boolean);
-  const dose = norm(extractDose(med));
-  const aiHit = !!ai && text.includes(ai);
+  // Require at least one brand-name hit. The active ingredient alone is too
+  // broad (e.g. "Bencidamina" matches many products that are not Tantum).
   const brandHit = brands.some((b) => text.includes(b));
-  if (!aiHit && !brandHit) return false;
+  if (!brandHit) return false;
+  const dose = norm(extractDose(med));
   if (dose) {
     const doseCompact = dose.replace(/\s+/g, "");
-    if (text.includes(dose) || text.includes(doseCompact)) return true;
-    // Dose mismatch: only accept if both AI + brand matched.
-    return aiHit && brandHit;
+    if (!(text.includes(dose) || text.includes(doseCompact))) return false;
+  }
+  // Require distinctive tokens from the med name (besides the brand) to match.
+  // e.g. "Tantum Verde Spray" → "spray" must appear in the product text.
+  const medTokens = norm(med.name)
+    .split(" ")
+    .filter((t) => t.length >= 4 && !brands.some((b) => b.includes(t)));
+  if (medTokens.length) {
+    const hits = medTokens.filter((t) => text.includes(t)).length;
+    if (hits === 0) return false;
   }
   return true;
 }
