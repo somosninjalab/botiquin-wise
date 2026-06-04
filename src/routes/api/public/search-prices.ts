@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 const API_BASE = "https://admin.clubestarbien.com/api/scraper/search";
 
+const FALLBACK_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhcGlfY2xpZW50IiwibmFtZSI6IkFQSSIsImxhc3RfbmFtZSI6IkNsaWVudCIsInVzZXJfdHlwZV9pZCI6MSwidXNlcl90eXBlX25hbWUiOiJTdXBlckFkbWluIiwidXNlcl9wcm9maWxlX2lkIjoxLCJ0b2tlbl9zeXN0ZW0iOiIiLCJwZXJtaXNzaW9ucyI6WyJzY3JhcGVyX2FjY2VzcyJdLCJpc19hZG1pbiI6MSwicmVzdHJpY3RlZF9hZ3JlZW1lbnRzIjpbXSwiaXNfYXBpX3Rva2VuIjp0cnVlLCJpYXQiOjE3ODA2MTEzNTN9.kZ3yrvCQN8ojkm7m8wvZ0-QK46aCER2P02wXDvhqaUQ";
+
 const ALLOWED_SOURCES = new Set([
   "farmatodo",
   "locatel",
@@ -14,10 +17,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const token = process.env.PRICE_SCRAPER_API_TOKEN;
-        if (!token) {
-          return Response.json({ ok: false, error: "PRICE_SCRAPER_API_TOKEN missing" }, { status: 500 });
-        }
+        const token = process.env.PRICE_SCRAPER_API_TOKEN ?? FALLBACK_TOKEN;
 
         const incoming = new URL(request.url);
         const q = (incoming.searchParams.get("q") ?? incoming.searchParams.get("product") ?? "").trim();
