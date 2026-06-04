@@ -1,25 +1,25 @@
 import { supabase } from "@/integrations/supabase/client";
-import { embedQuery } from "@/lib/medications/embed.functions";
 
-// Cache de embeddings de query por sesión, para no llamar al server en cada keystroke.
-const queryEmbeddingCache = new Map<string, number[]>();
+type ApiProduct = {
+  name?: string;
+  brand?: string;
+  price?: string | number;
+  priceUSD?: string | number;
+  status?: string;
+  image?: string;
+  url?: string;
+  source?: string;
+};
 
-async function getQueryEmbedding(q: string): Promise<number[] | null> {
-  const key = q.trim().toLowerCase();
-  if (!key) return null;
-  const cached = queryEmbeddingCache.get(key);
-  if (cached) return cached;
-  try {
-    const { embedding } = await embedQuery({ data: { q: key } });
-    if (embedding && embedding.length) {
-      queryEmbeddingCache.set(key, embedding);
-      return embedding;
-    }
-  } catch (err) {
-    console.warn("embedQuery failed, falling back to text search:", err);
-  }
-  return null;
-}
+const API_PHARMACIES: Record<string, { id: string; slug: string; name: string }> = {
+  farmatodo: { id: "farmatodo", slug: "farmatodo", name: "Farmatodo" },
+  locatel: { id: "locatel", slug: "locatel", name: "Locatel" },
+  farmago: { id: "farmago", slug: "farmago", name: "Farmago" },
+  farmaciasaas: { id: "saas", slug: "saas", name: "SAAS" },
+  tufarmaciaactual: { id: "actual", slug: "actual", name: "Tu Farmacia Actual" },
+};
+
+const apiPriceCache = new Map<string, PriceRow[]>();
 
 export type MedicationRow = {
   id: string;
