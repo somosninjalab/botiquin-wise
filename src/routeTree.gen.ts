@@ -34,7 +34,6 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
 import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
-import { Route as ApiPublicHooksSitemapCrawlRouteImport } from './routes/api/public/hooks/sitemap-crawl'
 import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
 import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
 import { Route as ApiPublicHooksProcessPriceAlertsRouteImport } from './routes/api/public/hooks/process-price-alerts'
@@ -42,7 +41,6 @@ import { Route as ApiPublicHooksNightlyGrowRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksInsightsSnapshotRouteImport } from './routes/api/public/hooks/insights-snapshot'
 import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
 import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
-import { Route as ApiPublicHooksDiscoverMedsRouteImport } from './routes/api/public/hooks/discover-meds'
 import { Route as ApiPublicHooksBackfillEmbeddingsRouteImport } from './routes/api/public/hooks/backfill-embeddings'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -175,12 +173,6 @@ const ApiPublicHooksTranslateMedsRoute =
     path: '/api/public/hooks/translate-meds',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksSitemapCrawlRoute =
-  ApiPublicHooksSitemapCrawlRouteImport.update({
-    id: '/api/public/hooks/sitemap-crawl',
-    path: '/api/public/hooks/sitemap-crawl',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksSeedCimaRoute = ApiPublicHooksSeedCimaRouteImport.update({
   id: '/api/public/hooks/seed-cima',
   path: '/api/public/hooks/seed-cima',
@@ -222,12 +214,6 @@ const ApiPublicHooksDiscoverOnDemandRoute =
     path: '/api/public/hooks/discover-on-demand',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksDiscoverMedsRoute =
-  ApiPublicHooksDiscoverMedsRouteImport.update({
-    id: '/api/public/hooks/discover-meds',
-    path: '/api/public/hooks/discover-meds',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksBackfillEmbeddingsRoute =
   ApiPublicHooksBackfillEmbeddingsRouteImport.update({
     id: '/api/public/hooks/backfill-embeddings',
@@ -255,7 +241,6 @@ export interface FileRoutesByFullPath {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
-  '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/insights-snapshot': typeof ApiPublicHooksInsightsSnapshotRoute
@@ -263,7 +248,6 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-price-alerts': typeof ApiPublicHooksProcessPriceAlertsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
-  '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -292,7 +276,6 @@ export interface FileRoutesByTo {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
-  '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/insights-snapshot': typeof ApiPublicHooksInsightsSnapshotRoute
@@ -300,7 +283,6 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-price-alerts': typeof ApiPublicHooksProcessPriceAlertsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
-  '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -330,7 +312,6 @@ export interface FileRoutesById {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
-  '/api/public/hooks/discover-meds': typeof ApiPublicHooksDiscoverMedsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
   '/api/public/hooks/insights-snapshot': typeof ApiPublicHooksInsightsSnapshotRoute
@@ -338,7 +319,6 @@ export interface FileRoutesById {
   '/api/public/hooks/process-price-alerts': typeof ApiPublicHooksProcessPriceAlertsRoute
   '/api/public/hooks/scrape-prices': typeof ApiPublicHooksScrapePricesRoute
   '/api/public/hooks/seed-cima': typeof ApiPublicHooksSeedCimaRoute
-  '/api/public/hooks/sitemap-crawl': typeof ApiPublicHooksSitemapCrawlRoute
   '/api/public/hooks/translate-meds': typeof ApiPublicHooksTranslateMedsRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -369,7 +349,6 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/lovable/email/suppression'
     | '/api/public/hooks/backfill-embeddings'
-    | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/insights-snapshot'
@@ -377,7 +356,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-price-alerts'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
-    | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
@@ -406,7 +384,6 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/lovable/email/suppression'
     | '/api/public/hooks/backfill-embeddings'
-    | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/insights-snapshot'
@@ -414,7 +391,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-price-alerts'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
-    | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
@@ -443,7 +419,6 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/lovable/email/suppression'
     | '/api/public/hooks/backfill-embeddings'
-    | '/api/public/hooks/discover-meds'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
     | '/api/public/hooks/insights-snapshot'
@@ -451,7 +426,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-price-alerts'
     | '/api/public/hooks/scrape-prices'
     | '/api/public/hooks/seed-cima'
-    | '/api/public/hooks/sitemap-crawl'
     | '/api/public/hooks/translate-meds'
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
@@ -479,7 +453,6 @@ export interface RootRouteChildren {
   ApiPublicChatRoute: typeof ApiPublicChatRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBackfillEmbeddingsRoute: typeof ApiPublicHooksBackfillEmbeddingsRoute
-  ApiPublicHooksDiscoverMedsRoute: typeof ApiPublicHooksDiscoverMedsRoute
   ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
   ApiPublicHooksEnrichMedsRoute: typeof ApiPublicHooksEnrichMedsRoute
   ApiPublicHooksInsightsSnapshotRoute: typeof ApiPublicHooksInsightsSnapshotRoute
@@ -487,7 +460,6 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessPriceAlertsRoute: typeof ApiPublicHooksProcessPriceAlertsRoute
   ApiPublicHooksScrapePricesRoute: typeof ApiPublicHooksScrapePricesRoute
   ApiPublicHooksSeedCimaRoute: typeof ApiPublicHooksSeedCimaRoute
-  ApiPublicHooksSitemapCrawlRoute: typeof ApiPublicHooksSitemapCrawlRoute
   ApiPublicHooksTranslateMedsRoute: typeof ApiPublicHooksTranslateMedsRoute
   ApiPublicHooksWeeklyReminderRoute: typeof ApiPublicHooksWeeklyReminderRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -674,13 +646,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTranslateMedsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/sitemap-crawl': {
-      id: '/api/public/hooks/sitemap-crawl'
-      path: '/api/public/hooks/sitemap-crawl'
-      fullPath: '/api/public/hooks/sitemap-crawl'
-      preLoaderRoute: typeof ApiPublicHooksSitemapCrawlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/seed-cima': {
       id: '/api/public/hooks/seed-cima'
       path: '/api/public/hooks/seed-cima'
@@ -730,13 +695,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDiscoverOnDemandRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/discover-meds': {
-      id: '/api/public/hooks/discover-meds'
-      path: '/api/public/hooks/discover-meds'
-      fullPath: '/api/public/hooks/discover-meds'
-      preLoaderRoute: typeof ApiPublicHooksDiscoverMedsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/backfill-embeddings': {
       id: '/api/public/hooks/backfill-embeddings'
       path: '/api/public/hooks/backfill-embeddings'
@@ -777,7 +735,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicChatRoute: ApiPublicChatRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBackfillEmbeddingsRoute: ApiPublicHooksBackfillEmbeddingsRoute,
-  ApiPublicHooksDiscoverMedsRoute: ApiPublicHooksDiscoverMedsRoute,
   ApiPublicHooksDiscoverOnDemandRoute: ApiPublicHooksDiscoverOnDemandRoute,
   ApiPublicHooksEnrichMedsRoute: ApiPublicHooksEnrichMedsRoute,
   ApiPublicHooksInsightsSnapshotRoute: ApiPublicHooksInsightsSnapshotRoute,
@@ -785,7 +742,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksProcessPriceAlertsRoute: ApiPublicHooksProcessPriceAlertsRoute,
   ApiPublicHooksScrapePricesRoute: ApiPublicHooksScrapePricesRoute,
   ApiPublicHooksSeedCimaRoute: ApiPublicHooksSeedCimaRoute,
-  ApiPublicHooksSitemapCrawlRoute: ApiPublicHooksSitemapCrawlRoute,
   ApiPublicHooksTranslateMedsRoute: ApiPublicHooksTranslateMedsRoute,
   ApiPublicHooksWeeklyReminderRoute: ApiPublicHooksWeeklyReminderRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

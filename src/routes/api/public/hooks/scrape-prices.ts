@@ -4,8 +4,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
  * Scrape prices via external API (http://18.191.16.43:3001/api/scraper/search).
- * Replaces the previous Firecrawl-based scraper. The API returns products
- * across multiple Venezuelan pharmacies in a single call.
+ * Single source of truth for price scraping: the external API returns
+ * products across multiple Venezuelan pharmacies in a single call.
  */
 
 const API_BASE = "http://18.191.16.43:3001/api/scraper/search";
