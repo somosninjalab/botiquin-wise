@@ -149,7 +149,9 @@ async function fetchApi(product: string, token: string, sources: string[]): Prom
       return [];
     }
     const j = (await res.json()) as ApiResponse;
-    return Array.isArray(j?.products) ? j.products : [];
+    const arr = Array.isArray(j?.products) ? j.products : [];
+    console.log(`[scrape-api] ok product="${product}" count=${arr.length}`);
+    return arr;
   } catch (err) {
     console.warn(`[scrape-api] fetch failed for "${product}":`, err);
     return [];
