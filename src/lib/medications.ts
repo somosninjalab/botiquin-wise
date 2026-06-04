@@ -109,7 +109,7 @@ export async function searchMedications(q: string, limit = 30) {
         name,
         active_ingredient: (product.brand || name.split(/\s+/)[0] || term).trim(),
         presentation: null,
-        category: "Resultados del API",
+        category: "Resultados",
         indication: null,
         indication_es: null,
         manufacturer: null,

@@ -807,7 +807,7 @@ function SearchResults(props: {
           <div className="flex items-center gap-2">
             <ArrowDownAZ className="h-4 w-4 text-primary shrink-0" />
             <h2 className="font-semibold truncate text-sm md:text-base">
-              {loading ? "Buscando…" : `${totalResults} resultado${totalResults === 1 ? "" : "s"}`}
+              {loading ? "Buscando en farmacias…" : `${totalResults} resultado${totalResults === 1 ? "" : "s"}`}
               {q && <span className="text-muted-foreground font-normal"> para "{q}"</span>}
             </h2>
             <div className="flex-1" />
@@ -1029,10 +1029,20 @@ function SearchResults(props: {
 
       {/* Results */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-44 rounded-xl" />
-          ))}
+        <div className="space-y-4">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-center">
+            <p className="text-sm font-medium text-primary">
+              Estamos buscando en más de 6 farmacias, esto puede tomar unos segundos…
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ten paciencia, queremos asegurarnos de mostrarte el mejor precio disponible.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 rounded-xl" />
+            ))}
+          </div>
         </div>
       ) : totalResults === 0 ? (
         <NoResults query={q} updateSearch={updateSearch} />
