@@ -122,10 +122,11 @@ function productMatchesMed(p: ApiProduct, med: MedRow): boolean {
 }
 
 function buildQuery(med: MedRow): string {
-  // Use the medication name as the single API query. The external API
-  // already returns the relevant matches; broadening to active_ingredient
-  // or every brand pulls in unrelated products.
-  return (med.name || med.active_ingredient || "").trim();
+  // Query the API with the brand name (short, distinctive). The full med
+  // name like "Tantum Verde Spray" is too specific and the API often
+  // returns nothing. The brand match + dose/token filter does the narrowing.
+  const firstBrand = (med.brand_names ?? []).map((b) => b?.trim()).filter(Boolean)[0];
+  return (firstBrand || med.name || med.active_ingredient || "").trim();
 }
 
 async function fetchApi(product: string, token: string, sources: string[]): Promise<ApiProduct[]> {
