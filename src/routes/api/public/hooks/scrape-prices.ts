@@ -142,7 +142,10 @@ async function fetchApi(product: string, token: string, sources: string[]): Prom
     });
     clearTimeout(tid);
     if (!res.ok) {
-      console.warn(`[scrape-api] ${url} → HTTP ${res.status}`);
+      const body = await res.text().catch(() => "");
+      console.warn(
+        `[scrape-api] ${url} → HTTP ${res.status} body=${body.slice(0, 200)} tokenLen=${token.length} tokenHead=${token.slice(0, 12)}`,
+      );
       return [];
     }
     const j = (await res.json()) as ApiResponse;
