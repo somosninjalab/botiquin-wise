@@ -268,9 +268,7 @@ export type SuggestionRow = {
  * por principio activo para no repetir presentaciones del mismo medicamento.
  */
 export async function suggestMedications(q: string, limit = 6): Promise<SuggestionRow[]> {
-  const term = q.trim();
-  if (term.length < 2) return [];
-  const { data, error } = await supabase.rpc("suggest_medications", { q: term, lim: limit });
-  if (error) return [];
-  return (data ?? []) as SuggestionRow[];
+  void q;
+  void limit;
+  return [];
 }
