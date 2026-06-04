@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -1030,14 +1031,7 @@ function SearchResults(props: {
       {/* Results */}
       {loading ? (
         <div className="space-y-4">
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-center">
-            <p className="text-sm font-medium text-primary">
-              Estamos buscando en más de 6 farmacias, esto puede tomar unos segundos…
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Ten paciencia, queremos asegurarnos de mostrarte el mejor precio disponible.
-            </p>
-          </div>
+          <SearchProgress />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-44 rounded-xl" />
@@ -1249,5 +1243,51 @@ function NoResults({
         </p>
       )}
     </Card>
+  );
+}
+
+function SearchProgress() {
+  const stages = [
+    "Conectando con farmacias…",
+    "Consultando Farmatodo, Locatel y Saas…",
+    "Consultando Farmahorro, Farmadon y otras…",
+    "Comparando precios y descuentos…",
+    "Casi listo, preparando resultados…",
+  ];
+  const [stage, setStage] = useState(0);
+  const [progress, setProgress] = useState(8);
+
+  useEffect(() => {
+    const stageTimer = setInterval(() => {
+      setStage((s) => (s < stages.length - 1 ? s + 1 : s));
+    }, 1800);
+    const progTimer = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 95) return p;
+        const remaining = 95 - p;
+        return Math.min(95, p + Math.max(1, remaining * 0.06));
+      });
+    }, 250);
+    return () => {
+      clearInterval(stageTimer);
+      clearInterval(progTimer);
+    };
+  }, []);
+
+  return (
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-medium text-primary">
+          {stages[stage]}
+        </p>
+        <span className="text-xs font-semibold text-primary tabular-nums">
+          {Math.round(progress)}%
+        </span>
+      </div>
+      <Progress value={progress} className="h-2" />
+      <p className="text-xs text-muted-foreground mt-2 text-center">
+        Buscamos en más de 6 farmacias. Ten paciencia, esto puede tomar unos segundos.
+      </p>
+    </div>
   );
 }
