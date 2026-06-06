@@ -2,13 +2,13 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getRequestHeader, getRequestIP } from '@tanstack/react-start/server'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
+import { createClient } from '@supabase/supabase-js'
 
 const InputSchema = z.object({
   query: z.string().max(200).optional().nullable(),
   medication_id: z.string().uuid().optional().nullable(),
   category: z.string().max(100).optional().nullable(),
   result_count: z.number().int().min(0).max(100000).optional().nullable(),
-  user_id: z.string().uuid().optional().nullable(),
 })
 
 // In-memory cache per worker instance to avoid hitting ipapi.co on every search.
@@ -67,13 +67,37 @@ export const trackSearchServer = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
     try {
+      // Resolve the real authenticated user server-side. Never trust a
+      // client-supplied user_id — `createServerFn` exposes a POST endpoint
+      // that anyone can hit directly, so accepting `user_id` from the body
+      // would let callers spoof search events for arbitrary users.
+      let resolvedUserId: string | null = null
+      const authHeader = getRequestHeader('authorization') || getRequestHeader('Authorization')
+      const token = authHeader?.toLowerCase().startsWith('bearer ')
+        ? authHeader.slice(7).trim()
+        : null
+      if (token) {
+        try {
+          const url = process.env.SUPABASE_URL!
+          const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY!
+          const sb = createClient(url, anonKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+            global: { headers: { Authorization: `Bearer ${token}` } },
+          })
+          const { data: u } = await sb.auth.getUser(token)
+          resolvedUserId = u.user?.id ?? null
+        } catch {
+          resolvedUserId = null
+        }
+      }
+
       const geo = await resolveGeo()
       await supabaseAdmin.from('search_events').insert({
         query: data.query ?? null,
         medication_id: data.medication_id ?? null,
         category: data.category ?? null,
         result_count: data.result_count ?? null,
-        user_id: data.user_id ?? null,
+        user_id: resolvedUserId,
         city: geo.city,
         region: geo.region,
         country: geo.country,
