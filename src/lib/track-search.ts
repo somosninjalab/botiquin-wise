@@ -40,13 +40,15 @@ export async function trackSearch(args: TrackArgs) {
     const geo = await getGeo();
     // Server-side insert: resuelve geo desde IP (Cloudflare / ipapi)
     // para que también funcione con visitantes anónimos.
+    // Note: user_id is intentionally NOT sent — the server resolves it from
+    // the Authorization header to prevent analytics spoofing.
+    void geo;
     await trackSearchServer({
       data: {
         query: args.query ? args.query.slice(0, 200) : null,
         medication_id: args.medication_id ?? null,
         category: args.category ?? null,
         result_count: args.result_count ?? null,
-        user_id: geo.user_id,
       },
     });
   } catch {
