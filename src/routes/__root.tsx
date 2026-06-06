@@ -5,6 +5,7 @@ import logoUrl from "@/assets/logo.png";
 import faviconUrl from "@/assets/favicon.png";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
+import { StatusTicker } from "@/components/StatusTicker";
 import { Toaster } from "@/components/ui/sonner";
 import { AssistantBubble } from "@/components/chat/AssistantBubble";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -81,6 +82,7 @@ function RootComponent() {
   return (
     <AuthProvider>
       <div className="min-h-screen flex flex-col">
+        <StatusTicker />
         <SiteHeader />
         <main className="flex-1 pb-20 md:pb-0">
           <Outlet />
