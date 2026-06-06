@@ -157,6 +157,19 @@
 }
 
 /* Protección de contenido en la página /legal */
+
+/* Marquee/ticker animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker {
+  animation: ticker-scroll 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker { animation: none; }
+}
+
 .legal-no-copy,
 .legal-no-copy * {
   -webkit-user-select: none !important;
