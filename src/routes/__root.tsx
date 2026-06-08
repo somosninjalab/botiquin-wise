@@ -90,6 +90,17 @@ function RootComponent() {
         <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
           <div className="container mx-auto px-4 flex flex-col items-center gap-2">
             <div>¡Alerta: Medicina! · Comparador gratuito de precios de medicamentos</div>
+            <div className="text-xs">
+              Powered by{" "}
+              <a
+                href="https://socialninjalab.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                Social Ninja Lab
+              </a>
+            </div>
             <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
               <Link to="/legal" hash="terminos" className="hover:text-foreground transition-colors">
                 Términos y Condiciones
