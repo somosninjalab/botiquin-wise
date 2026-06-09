@@ -35,6 +35,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
 
         const upstreamUrl = new URL(API_BASE);
         upstreamUrl.searchParams.set("product", q);
+        upstreamUrl.searchParams.set("token", token);
         if (requestedSources.length) upstreamUrl.searchParams.set("sources", requestedSources.join(","));
 
         try {
