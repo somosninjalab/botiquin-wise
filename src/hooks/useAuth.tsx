@@ -104,7 +104,6 @@ async function migrateAnonChat() {
     if (!token) return;
     const { data, error } = await supabase.rpc("migrate_anon_conversation", {
       p_anon_token: token,
-      p_user_id: (await supabase.auth.getUser()).data.user?.id,
     } as any);
     if (!error && (data ?? 0) > 0) {
       resetAnonChatState();
