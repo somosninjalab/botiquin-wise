@@ -109,7 +109,7 @@ function PopularesPage() {
               <Link
                 key={q}
                 to="/buscar"
-                search={{ q, pharm: "all", med: "all", cat: "all", ind: "all", brand: "all", ai: "all" }}
+                search={{ q }}
                 className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium hover:border-primary/50 hover:bg-primary/5 transition-colors"
               >
                 {q}

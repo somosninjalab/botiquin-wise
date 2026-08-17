@@ -3,14 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 const API_BASE = "https://admin.clubestarbien.com/api/scraper/search";
 const SEARCH_TIMEOUT_MS = 25_000;
 
-const ALLOWED_SOURCES = new Set([
-  "farmatodo",
-  "locatel",
-  "farmago",
-  "farmaciasaas",
-  "tufarmaciaactual",
-]);
-
 export const Route = createFileRoute("/api/public/search-prices")({
   server: {
     handlers: {
@@ -28,15 +20,9 @@ export const Route = createFileRoute("/api/public/search-prices")({
         }
 
         const limit = Math.min(Number(incoming.searchParams.get("limit") ?? 80) || 80, 120);
-        const requestedSources = (incoming.searchParams.get("sources") ?? "")
-          .split(",")
-          .map((s) => s.trim().toLowerCase())
-          .filter((s) => ALLOWED_SOURCES.has(s));
 
         const upstreamUrl = new URL(API_BASE);
         upstreamUrl.searchParams.set("product", q);
-        upstreamUrl.searchParams.set("token", token);
-        if (requestedSources.length) upstreamUrl.searchParams.set("sources", requestedSources.join(","));
 
         try {
           const ctrl = new AbortController();
