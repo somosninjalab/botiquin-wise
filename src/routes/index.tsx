@@ -171,18 +171,36 @@ function Index() {
     }
     let cancelled = false;
     setLoading(true);
+    setMeds([]);
+    setPrices([]);
+    setSourcesDone(0);
     (async () => {
-      try {
-        const m = await searchMedications(q, 80);
-        if (cancelled) return;
-        const p = await getLatestPricesForMedications(m.map((x) => x.id));
-        if (cancelled) return;
-        setMeds(m);
-        setPrices(p);
-        await trackSearch({ query: q, result_count: m.length });
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      let total = 0;
+      // Una consulta por farmacia: los resultados se muestran a medida que llegan.
+      await Promise.allSettled(
+        API_SOURCE_IDS.map(async (source) => {
+          try {
+            const { meds: m, prices: p } = await searchMedicationsBySource(q, source, 40);
+            if (cancelled) return;
+            if (m.length) {
+              total += m.length;
+              setMeds((prev) => {
+                const seen = new Set(prev.map((x) => x.id));
+                return [...prev, ...m.filter((x) => !seen.has(x.id))];
+              });
+              setPrices((prev) => [...prev, ...p]);
+            }
+          } finally {
+            if (!cancelled) {
+              setSourcesDone((n) => n + 1);
+              setLoading(false);
+            }
+          }
+        }),
+      );
+      if (cancelled) return;
+      setLoading(false);
+      await trackSearch({ query: q, result_count: total });
     })();
     return () => {
       cancelled = true;
