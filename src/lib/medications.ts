@@ -13,10 +13,14 @@ type ApiProduct = {
 
 const API_PHARMACIES: Record<string, { id: string; slug: string; name: string }> = {
   farmatodo: { id: "farmatodo", slug: "farmatodo", name: "Farmatodo" },
+  fundafarmacia: { id: "fundafarmacia", slug: "fundafarmacia", name: "Fundafarmacia" },
   locatel: { id: "locatel", slug: "locatel", name: "Locatel" },
-  farmago: { id: "farmago", slug: "farmago", name: "Farmago" },
-  farmaciasaas: { id: "saas", slug: "saas", name: "SAAS" },
-  tufarmaciaactual: { id: "actual", slug: "actual", name: "Tu Farmacia Actual" },
+  farmadon: { id: "farmadon", slug: "farmadon", name: "Farmadon" },
+  farmago: { id: "farmago", slug: "farmago", name: "Fármaco" },
+  farmaciasaas: { id: "farmaciasaas", slug: "farmaciasaas", name: "Farmacia SAAS" },
+  tufarmaciaactual: { id: "tufarmaciaactual", slug: "tufarmaciaactual", name: "Tu Farmacia Actual" },
+  gopharma: { id: "gopharma", slug: "gopharma", name: "GoPharma" },
+  farmabien: { id: "farmabien", slug: "farmabien", name: "Farmabien" },
 };
 
 const apiPriceCache = new Map<string, PriceRow[]>();
@@ -87,6 +91,9 @@ export async function searchMedications(q: string, limit = 30) {
     return (data ?? []) as MedicationRow[];
   }
   const term = q.replace(/[,()]/g, " ").trim();
+  const queryTokens = norm(term)
+    .split("-")
+    .filter((t) => t.length >= 3);
   const res = await fetch(`/api/public/search-prices?q=${encodeURIComponent(term)}&limit=${limit}`);
   if (!res.ok) return [];
   const json = (await res.json()) as { products?: ApiProduct[] };
@@ -99,6 +106,9 @@ export async function searchMedications(q: string, limit = 30) {
     const pharmacy = API_PHARMACIES[source];
     const name = (product.name ?? "").trim();
     if (!pharmacy || !name) continue;
+    // Solo productos cuyo nombre/marca contenga lo consultado
+    const haystack = norm(`${name} ${product.brand ?? ""}`);
+    if (queryTokens.length && !queryTokens.every((t) => haystack.includes(t))) continue;
 
     const key = norm(`${product.brand ?? ""} ${name}`) || hashString(name);
     const medId = `api-${key}`;

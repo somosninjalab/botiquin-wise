@@ -85,10 +85,14 @@ import { toast } from "sonner";
 
 const API_PHARMACY_NAMES: Record<string, string> = {
   farmatodo: "Farmatodo",
+  fundafarmacia: "Fundafarmacia",
   locatel: "Locatel",
-  farmago: "Farmago",
-  saas: "SAAS",
-  actual: "Tu Farmacia Actual",
+  farmadon: "Farmadon",
+  farmago: "Fármaco",
+  farmaciasaas: "Farmacia SAAS",
+  tufarmaciaactual: "Tu Farmacia Actual",
+  gopharma: "GoPharma",
+  farmabien: "Farmabien",
 };
 
 const searchSchema = z.object({
@@ -152,13 +156,9 @@ function Index() {
   // Mapas estáticos de farmacias (solo las que devuelve el API).
   useEffect(() => {
     setPharmaciesMap({ ...API_PHARMACY_NAMES });
-    setPharmacySlugMap({
-      farmatodo: "farmatodo",
-      locatel: "locatel",
-      farmago: "farmago",
-      saas: "saas",
-      actual: "actual",
-    });
+    setPharmacySlugMap(
+      Object.fromEntries(Object.keys(API_PHARMACY_NAMES).map((k) => [k, k])),
+    );
   }, []);
 
   // Resultados de búsqueda: solo desde el API externo. Sin query no hay datos.
