@@ -1063,6 +1063,12 @@ function SearchResults(props: {
         <NoResults query={q} updateSearch={updateSearch} />
       ) : (
         <div className="space-y-10">
+          {q.trim() && sourcesDone < API_SOURCE_IDS.length && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm text-primary flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              Buscando en más farmacias… ({sourcesDone}/{API_SOURCE_IDS.length})
+            </div>
+          )}
           {grouped.map(([category, items]) => (
             <div key={category}>
               <div className="flex items-center gap-3 mb-4">
