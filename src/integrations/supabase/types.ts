@@ -922,7 +922,7 @@ export type Database = {
         Returns: boolean
       }
       migrate_anon_conversation: {
-        Args: { p_anon_token: string; p_user_id: string }
+        Args: { p_anon_token: string }
         Returns: number
       }
       move_to_dlq: {
