@@ -67,6 +67,28 @@ function hashString(s: string): string {
 }
 
 function parsePrice(raw: unknown): number | null {
+  return parsePriceImpl(raw);
+}
+
+// Deriva un nombre de producto legible desde la URL cuando el API no envía "name"
+function nameFromUrl(url?: string): string {
+  if (!url) return "";
+  try {
+    const path = new URL(url).pathname;
+    const seg = path.split("/").filter((s) => s && s !== "p" && s !== "shop" && s !== "product").pop() ?? "";
+    const words = decodeURIComponent(seg)
+      .replace(/^[0-9]+-/, "")
+      .replace(/-[0-9]{3,}$/, "")
+      .split("-")
+      .filter(Boolean);
+    if (!words.length) return "";
+    return words.join(" ").replace(/\b\w/g, (c) => c.toUpperCase());
+  } catch {
+    return "";
+  }
+}
+
+function parsePriceImpl(raw: unknown): number | null {
   if (raw == null) return null;
   if (typeof raw === "number" && Number.isFinite(raw)) return raw > 0 ? raw : null;
   if (typeof raw !== "string") return null;
@@ -104,8 +126,7 @@ export async function searchMedications(q: string, limit = 30) {
   for (const product of json.products ?? []) {
     const source = (product.source ?? "").toLowerCase();
     const pharmacy = API_PHARMACIES[source];
-    const name = (product.name ?? "").trim();
-    if (!pharmacy || !name) continue;
+    if (!pharmacy) continue;
     // La "brand" del API a veces trae la farmacia o "No especificada": no es marca del producto
     const rawBrand = (product.brand ?? "").trim();
     const brandNorm = norm(rawBrand);
@@ -115,6 +136,9 @@ export async function searchMedications(q: string, limit = 30) {
       brandNorm === "no especificado" ||
       Object.values(API_PHARMACIES).some((p) => norm(p.name) === brandNorm || p.slug === brandNorm);
     const brand = isNoiseBrand ? "" : rawBrand;
+    // El nombre real del producto: si el API no lo trae, se deriva de la URL (nunca la farmacia/laboratorio)
+    const name = (product.name ?? "").trim() || nameFromUrl(product.url);
+    if (!name) continue;
     // Solo productos cuyo nombre/marca contenga lo consultado
     const haystack = norm(name);
     if (queryTokens.length && !queryTokens.every((t) => haystack.includes(t))) continue;
@@ -126,7 +150,7 @@ export async function searchMedications(q: string, limit = 30) {
         id: medId,
         slug: medId,
         name,
-        active_ingredient: (name.split(/\s+/)[0] || term).trim(),
+        active_ingredient: term.trim(),
         presentation: null,
         category: "Resultados",
         indication: null,
