@@ -67,6 +67,8 @@ import {
   lowestCurrent,
   priorPrice,
   searchMedications,
+  searchMedicationsBySource,
+  API_SOURCE_IDS,
   suggestMedications,
   type SuggestionRow,
   type MedicationRow,
@@ -150,6 +152,7 @@ function Index() {
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [sourcesDone, setSourcesDone] = useState(0);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
   const [showAllFeatured, setShowAllFeatured] = useState(false);
 
@@ -171,18 +174,36 @@ function Index() {
     }
     let cancelled = false;
     setLoading(true);
+    setMeds([]);
+    setPrices([]);
+    setSourcesDone(0);
     (async () => {
-      try {
-        const m = await searchMedications(q, 80);
-        if (cancelled) return;
-        const p = await getLatestPricesForMedications(m.map((x) => x.id));
-        if (cancelled) return;
-        setMeds(m);
-        setPrices(p);
-        await trackSearch({ query: q, result_count: m.length });
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      let total = 0;
+      // Una consulta por farmacia: los resultados se muestran a medida que llegan.
+      await Promise.allSettled(
+        API_SOURCE_IDS.map(async (source) => {
+          try {
+            const { meds: m, prices: p } = await searchMedicationsBySource(q, source, 40);
+            if (cancelled) return;
+            if (m.length) {
+              total += m.length;
+              setMeds((prev) => {
+                const seen = new Set(prev.map((x) => x.id));
+                return [...prev, ...m.filter((x) => !seen.has(x.id))];
+              });
+              setPrices((prev) => [...prev, ...p]);
+              setLoading(false);
+            }
+          } finally {
+            if (!cancelled) {
+              setSourcesDone((n) => n + 1);
+            }
+          }
+        }),
+      );
+      if (cancelled) return;
+      setLoading(false);
+      await trackSearch({ query: q, result_count: total });
     })();
     return () => {
       cancelled = true;
@@ -361,6 +382,7 @@ function Index() {
           updateSearch={updateSearch}
           bcvRate={bcvRate}
           scrapingIds={scrapingIds}
+          sourcesDone={sourcesDone}
         />
       ) : (
         <>
@@ -697,10 +719,11 @@ function SearchResults(props: {
   updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>) => void;
   bcvRate: number | null;
   scrapingIds: Set<string>;
+  sourcesDone: number;
 }) {
   const {
     q, pharm, med, cat, ind, brand, ai, loading, meds, allMeds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm,
+    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm, sourcesDone,
   } = props;
 
   // Fuente para opciones de filtros: catálogo global cuando esté cargado;
@@ -1042,6 +1065,12 @@ function SearchResults(props: {
         <NoResults query={q} updateSearch={updateSearch} />
       ) : (
         <div className="space-y-10">
+          {q.trim() && sourcesDone < API_SOURCE_IDS.length && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm text-primary flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              Buscando en más farmacias… ({sourcesDone}/{API_SOURCE_IDS.length})
+            </div>
+          )}
           {grouped.map(([category, items]) => (
             <div key={category}>
               <div className="flex items-center gap-3 mb-4">

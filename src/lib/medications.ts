@@ -105,25 +105,18 @@ function parsePriceImpl(raw: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-export async function searchMedications(q: string, limit = 30) {
-  if (!q.trim()) {
-    const { data, error } = await supabase
-      .from("medications").select("*").order("name").limit(limit);
-    if (error) throw error;
-    return (data ?? []) as MedicationRow[];
-  }
-  const term = q.replace(/[,()]/g, " ").trim();
+/** Farmacias del comparador, en el orden en que se consultan. */
+export const API_SOURCE_IDS = Object.keys(API_PHARMACIES);
+
+function mapProducts(term: string, products: ApiProduct[], limit: number) {
   const queryTokens = norm(term)
     .split("-")
     .filter((t) => t.length >= 3);
-  const res = await fetch(`/api/public/search-prices?q=${encodeURIComponent(term)}&limit=${limit}`);
-  if (!res.ok) return [];
-  const json = (await res.json()) as { products?: ApiProduct[] };
   const meds = new Map<string, MedicationRow>();
   const priceRows: PriceRow[] = [];
   const now = new Date().toISOString();
 
-  for (const product of json.products ?? []) {
+  for (const product of products) {
     const source = (product.source ?? "").toLowerCase();
     const pharmacy = API_PHARMACIES[source];
     if (!pharmacy) continue;
@@ -192,9 +185,36 @@ export async function searchMedications(q: string, limit = 30) {
 
   const medList = Array.from(meds.values()).slice(0, limit);
   for (const med of medList) {
-    apiPriceCache.set(med.id, priceRows.filter((p) => p.medication_id === med.id));
+    const rows = priceRows.filter((p) => p.medication_id === med.id);
+    apiPriceCache.set(med.id, [...(apiPriceCache.get(med.id) ?? []), ...rows]);
   }
-  return medList;
+  return { meds: medList, prices: priceRows.filter((p) => meds.has(p.medication_id)) };
+}
+
+/** Búsqueda en UNA farmacia (streaming: se llama una vez por farmacia). */
+export async function searchMedicationsBySource(q: string, source: string, limit = 40) {
+  const term = q.replace(/[,()]/g, " ").trim();
+  if (!term) return { meds: [] as MedicationRow[], prices: [] as PriceRow[] };
+  const res = await fetch(
+    `/api/public/search-prices?q=${encodeURIComponent(term)}&source=${encodeURIComponent(source)}&limit=${limit}`,
+  );
+  if (!res.ok) return { meds: [] as MedicationRow[], prices: [] as PriceRow[] };
+  const json = (await res.json()) as { products?: ApiProduct[] };
+  return mapProducts(term, json.products ?? [], limit);
+}
+
+export async function searchMedications(q: string, limit = 30) {
+  if (!q.trim()) {
+    const { data, error } = await supabase
+      .from("medications").select("*").order("name").limit(limit);
+    if (error) throw error;
+    return (data ?? []) as MedicationRow[];
+  }
+  const term = q.replace(/[,()]/g, " ").trim();
+  const res = await fetch(`/api/public/search-prices?q=${encodeURIComponent(term)}&limit=${limit}`);
+  if (!res.ok) return [];
+  const json = (await res.json()) as { products?: ApiProduct[] };
+  return mapProducts(term, json.products ?? [], limit).meds;
 }
 
 export async function getLatestPricesForMedications(medIds: string[]) {
