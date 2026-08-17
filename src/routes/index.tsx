@@ -192,11 +192,11 @@ function Index() {
                 return [...prev, ...m.filter((x) => !seen.has(x.id))];
               });
               setPrices((prev) => [...prev, ...p]);
+              setLoading(false);
             }
           } finally {
             if (!cancelled) {
               setSourcesDone((n) => n + 1);
-              setLoading(false);
             }
           }
         }),
