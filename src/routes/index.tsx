@@ -152,6 +152,7 @@ function Index() {
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [sourcesDone, setSourcesDone] = useState(0);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
   const [showAllFeatured, setShowAllFeatured] = useState(false);
 
