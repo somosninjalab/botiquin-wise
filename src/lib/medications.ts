@@ -67,6 +67,28 @@ function hashString(s: string): string {
 }
 
 function parsePrice(raw: unknown): number | null {
+  return parsePriceImpl(raw);
+}
+
+// Deriva un nombre de producto legible desde la URL cuando el API no envía "name"
+function nameFromUrl(url?: string): string {
+  if (!url) return "";
+  try {
+    const path = new URL(url).pathname;
+    const seg = path.split("/").filter((s) => s && s !== "p" && s !== "shop" && s !== "product").pop() ?? "";
+    const words = decodeURIComponent(seg)
+      .replace(/^[0-9]+-/, "")
+      .replace(/-[0-9]{3,}$/, "")
+      .split("-")
+      .filter(Boolean);
+    if (!words.length) return "";
+    return words.join(" ").replace(/\b\w/g, (c) => c.toUpperCase());
+  } catch {
+    return "";
+  }
+}
+
+function parsePriceImpl(raw: unknown): number | null {
   if (raw == null) return null;
   if (typeof raw === "number" && Number.isFinite(raw)) return raw > 0 ? raw : null;
   if (typeof raw !== "string") return null;
