@@ -1092,7 +1092,7 @@ function SearchResults(props: {
                           )}
                         </div>
                         <h3 className="mt-3 font-semibold">
-                          {(m.brand_names ?? [])[0] || m.name}
+                          {m.name || (m.brand_names ?? [])[0]}
                         </h3>
                         <p className="text-xs text-muted-foreground">
                           {m.active_ingredient}{m.presentation ? ` · ${m.presentation}` : ""}

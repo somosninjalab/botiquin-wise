@@ -106,25 +106,34 @@ export async function searchMedications(q: string, limit = 30) {
     const pharmacy = API_PHARMACIES[source];
     const name = (product.name ?? "").trim();
     if (!pharmacy || !name) continue;
+    // La "brand" del API a veces trae la farmacia o "No especificada": no es marca del producto
+    const rawBrand = (product.brand ?? "").trim();
+    const brandNorm = norm(rawBrand);
+    const isNoiseBrand =
+      !rawBrand ||
+      brandNorm === "no especificada" ||
+      brandNorm === "no especificado" ||
+      Object.values(API_PHARMACIES).some((p) => norm(p.name) === brandNorm || p.slug === brandNorm);
+    const brand = isNoiseBrand ? "" : rawBrand;
     // Solo productos cuyo nombre/marca contenga lo consultado
-    const haystack = norm(`${name} ${product.brand ?? ""}`);
+    const haystack = norm(name);
     if (queryTokens.length && !queryTokens.every((t) => haystack.includes(t))) continue;
 
-    const key = norm(`${product.brand ?? ""} ${name}`) || hashString(name);
+    const key = norm(name) || hashString(name);
     const medId = `api-${key}`;
     if (!meds.has(medId)) {
       meds.set(medId, {
         id: medId,
         slug: medId,
         name,
-        active_ingredient: (product.brand || name.split(/\s+/)[0] || term).trim(),
+        active_ingredient: (name.split(/\s+/)[0] || term).trim(),
         presentation: null,
         category: "Resultados",
         indication: null,
         indication_es: null,
-        manufacturer: null,
+        manufacturer: brand || null,
         image_url: product.image || null,
-        brand_names: product.brand ? [product.brand] : null,
+        brand_names: brand ? [brand] : null,
       });
     }
 
