@@ -126,8 +126,7 @@ export async function searchMedications(q: string, limit = 30) {
   for (const product of json.products ?? []) {
     const source = (product.source ?? "").toLowerCase();
     const pharmacy = API_PHARMACIES[source];
-    const name = (product.name ?? "").trim();
-    if (!pharmacy || !name) continue;
+    if (!pharmacy) continue;
     // La "brand" del API a veces trae la farmacia o "No especificada": no es marca del producto
     const rawBrand = (product.brand ?? "").trim();
     const brandNorm = norm(rawBrand);
@@ -137,6 +136,9 @@ export async function searchMedications(q: string, limit = 30) {
       brandNorm === "no especificado" ||
       Object.values(API_PHARMACIES).some((p) => norm(p.name) === brandNorm || p.slug === brandNorm);
     const brand = isNoiseBrand ? "" : rawBrand;
+    // El nombre real del producto: si el API no lo trae, se deriva de la URL (nunca la farmacia/laboratorio)
+    const name = (product.name ?? "").trim() || nameFromUrl(product.url);
+    if (!name) continue;
     // Solo productos cuyo nombre/marca contenga lo consultado
     const haystack = norm(name);
     if (queryTokens.length && !queryTokens.every((t) => haystack.includes(t))) continue;
@@ -148,7 +150,7 @@ export async function searchMedications(q: string, limit = 30) {
         id: medId,
         slug: medId,
         name,
-        active_ingredient: (name.split(/\s+/)[0] || term).trim(),
+        active_ingredient: term.trim(),
         presentation: null,
         category: "Resultados",
         indication: null,
