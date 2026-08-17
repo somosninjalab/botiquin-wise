@@ -382,6 +382,7 @@ function Index() {
           updateSearch={updateSearch}
           bcvRate={bcvRate}
           scrapingIds={scrapingIds}
+          sourcesDone={sourcesDone}
         />
       ) : (
         <>
@@ -718,10 +719,11 @@ function SearchResults(props: {
   updateSearch: (p: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>) => void;
   bcvRate: number | null;
   scrapingIds: Set<string>;
+  sourcesDone: number;
 }) {
   const {
     q, pharm, med, cat, ind, brand, ai, loading, meds, allMeds, grouped, lowestByMed, prices,
-    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm,
+    pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm, sourcesDone,
   } = props;
 
   // Fuente para opciones de filtros: catálogo global cuando esté cargado;
