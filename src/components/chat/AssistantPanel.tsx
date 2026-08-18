@@ -119,8 +119,7 @@ export function AssistantPanel({ onClose, entryContext }: { onClose: () => void;
             } else if (data.type === "tool" && data.name === "search_medications") {
               try {
                 const parsed = JSON.parse(data.result || "{}");
-                const first = Array.isArray(parsed.results) ? parsed.results[0] : null;
-                if (first?.name) pendingSearchQuery = String(first.name);
+                if (parsed.query) pendingSearchQuery = String(parsed.query);
               } catch {}
             } else if (data.type === "error") {
               acc = data.message || "Error";
