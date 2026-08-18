@@ -16,8 +16,13 @@ export const Route = createFileRoute("/api/public/hooks/announce-nueva-version")
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const unauthorized = verifyCronAuth(request);
-        if (unauthorized) return unauthorized;
+        // Autoriza con CRON_SECRET o con la apikey anon (patrón pg_cron).
+        const apikey = request.headers.get("apikey") ?? "";
+        const anon = process.env.SUPABASE_ANON_KEY ?? "";
+        if (!(anon && apikey === anon)) {
+          const unauthorized = verifyCronAuth(request);
+          if (unauthorized) return unauthorized;
+        }
         const url = new URL(request.url);
         const limit = Math.min(
           MAX_LIMIT,
