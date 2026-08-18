@@ -27,7 +27,7 @@ export const R3Compare = () => {
           opacity: head,
         }}
       >
-        Una búsqueda. Todos los precios.
+        Una búsqueda, todos los precios
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 920 }}>

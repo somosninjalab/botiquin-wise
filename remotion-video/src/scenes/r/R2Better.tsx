@@ -35,7 +35,7 @@ export const R2Better = () => {
           transform: `translateY(${interpolate(head, [0, 1], [40, 0])}px)`,
         }}
       >
-        Conseguí tus medicinas
+        Consigue tus medicinas
         <br />
         <span style={{ color: COLORS.primary }}>al mejor precio</span>
       </div>
