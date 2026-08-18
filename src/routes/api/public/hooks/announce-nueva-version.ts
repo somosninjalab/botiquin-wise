@@ -4,10 +4,13 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { enqueueTransactionalEmail } from "@/lib/email/enqueue.server";
 
 // Anuncio único: nueva versión funcionando al 100%.
-// Soporta chunking `?chunk=N&of=M` para repartir el envío en varias corridas.
-// Idempotente: cada usuario recibe el anuncio una sola vez.
+// Envío por tandas: `?limit=N` (default 150) por corrida, con pausa entre encolados.
+// Idempotente: nunca reenvía a quien ya recibió el anuncio (email_idempotency_keys).
 
 const CAMPAIGN = "nueva-version-2026-08";
+const DEFAULT_LIMIT = 150;
+const MAX_LIMIT = 400;
+const DELAY_MS = 120;
 
 export const Route = createFileRoute("/api/public/hooks/announce-nueva-version")({
   server: {
@@ -16,9 +19,10 @@ export const Route = createFileRoute("/api/public/hooks/announce-nueva-version")
         const unauthorized = verifyCronAuth(request);
         if (unauthorized) return unauthorized;
         const url = new URL(request.url);
-        const chunk = Math.max(0, parseInt(url.searchParams.get("chunk") ?? "0", 10) || 0);
-        const of = Math.max(1, parseInt(url.searchParams.get("of") ?? "1", 10) || 1);
-        const safeChunk = chunk >= of ? 0 : chunk;
+        const limit = Math.min(
+          MAX_LIMIT,
+          Math.max(1, parseInt(url.searchParams.get("limit") ?? "", 10) || DEFAULT_LIMIT),
+        );
 
         const { data: profiles, error } = await supabaseAdmin
           .from("profiles")
@@ -26,22 +30,27 @@ export const Route = createFileRoute("/api/public/hooks/announce-nueva-version")
           .not("email", "is", null);
         if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
 
-        const bucketOf = (s: string): number => {
-          let h = 0x811c9dc5;
-          for (let i = 0; i < s.length; i++) {
-            h ^= s.charCodeAt(i);
-            h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
-          }
-          return h % of;
-        };
+        const all = ((profiles ?? []) as any[]).filter((p) => !!p.email);
 
-        const all = (profiles ?? []) as any[];
-        const mine = of === 1 ? all : all.filter((p) => bucketOf(String(p.user_id)) === safeChunk);
+        // Ya enviados: claves de idempotencia de esta campaña.
+        const done = new Set<string>();
+        const PAGE = 1000;
+        for (let from = 0; ; from += PAGE) {
+          const { data: keys } = await supabaseAdmin
+            .from("email_idempotency_keys")
+            .select("key")
+            .like("key", `${CAMPAIGN}-%`)
+            .range(from, from + PAGE - 1);
+          for (const k of keys ?? []) done.add((k as any).key);
+          if (!keys || keys.length < PAGE) break;
+        }
+
+        const pending = all.filter((p) => !done.has(`${CAMPAIGN}-${p.user_id}`));
+        const batch = pending.slice(0, limit);
 
         let queued = 0;
         let skipped = 0;
-        for (const p of mine) {
-          if (!p.email) { skipped++; continue; }
+        for (const p of batch) {
           const r = await enqueueTransactionalEmail({
             supabase: supabaseAdmin,
             templateName: "nueva-version",
@@ -50,17 +59,18 @@ export const Route = createFileRoute("/api/public/hooks/announce-nueva-version")
             templateData: { name: p.full_name?.split(" ")[0] },
           });
           if (r.success) queued++; else skipped++;
+          if (DELAY_MS) await new Promise((res) => setTimeout(res, DELAY_MS));
         }
 
         return Response.json({
           ok: true,
           campaign: CAMPAIGN,
-          chunk: safeChunk,
-          of,
           candidates: all.length,
-          processed: mine.length,
+          alreadySent: done.size,
+          processed: batch.length,
           queued,
           skipped,
+          remaining: Math.max(0, pending.length - batch.length),
         });
       },
     },
