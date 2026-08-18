@@ -43,6 +43,7 @@ import { Route as ApiPublicHooksInsightsSnapshotRouteImport } from './routes/api
 import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
 import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
 import { Route as ApiPublicHooksBackfillEmbeddingsRouteImport } from './routes/api/public/hooks/backfill-embeddings'
+import { Route as ApiPublicHooksAnnounceNuevaVersionRouteImport } from './routes/api/public/hooks/announce-nueva-version'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -226,6 +227,12 @@ const ApiPublicHooksBackfillEmbeddingsRoute =
     path: '/api/public/hooks/backfill-embeddings',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksAnnounceNuevaVersionRoute =
+  ApiPublicHooksAnnounceNuevaVersionRouteImport.update({
+    id: '/api/public/hooks/announce-nueva-version',
+    path: '/api/public/hooks/announce-nueva-version',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -283,6 +291,7 @@ export interface FileRoutesByTo {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -320,6 +329,7 @@ export interface FileRoutesById {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
   '/api/public/hooks/enrich-meds': typeof ApiPublicHooksEnrichMedsRoute
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/api/public/search-prices'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -394,6 +405,7 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/api/public/search-prices'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -430,6 +442,7 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/api/public/search-prices'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
     | '/api/public/hooks/enrich-meds'
@@ -465,6 +478,7 @@ export interface RootRouteChildren {
   ApiPublicChatRoute: typeof ApiPublicChatRoute
   ApiPublicSearchPricesRoute: typeof ApiPublicSearchPricesRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksAnnounceNuevaVersionRoute: typeof ApiPublicHooksAnnounceNuevaVersionRoute
   ApiPublicHooksBackfillEmbeddingsRoute: typeof ApiPublicHooksBackfillEmbeddingsRoute
   ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
   ApiPublicHooksEnrichMedsRoute: typeof ApiPublicHooksEnrichMedsRoute
@@ -722,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksBackfillEmbeddingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/announce-nueva-version': {
+      id: '/api/public/hooks/announce-nueva-version'
+      path: '/api/public/hooks/announce-nueva-version'
+      fullPath: '/api/public/hooks/announce-nueva-version'
+      preLoaderRoute: typeof ApiPublicHooksAnnounceNuevaVersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -755,6 +776,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicChatRoute: ApiPublicChatRoute,
   ApiPublicSearchPricesRoute: ApiPublicSearchPricesRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksAnnounceNuevaVersionRoute:
+    ApiPublicHooksAnnounceNuevaVersionRoute,
   ApiPublicHooksBackfillEmbeddingsRoute: ApiPublicHooksBackfillEmbeddingsRoute,
   ApiPublicHooksDiscoverOnDemandRoute: ApiPublicHooksDiscoverOnDemandRoute,
   ApiPublicHooksEnrichMedsRoute: ApiPublicHooksEnrichMedsRoute,
