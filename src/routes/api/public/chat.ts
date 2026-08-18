@@ -102,30 +102,44 @@ async function runTool(name: string, args: any, ctx: { userId: string | null; co
     if (name === "search_medications") {
       const q = String(args?.query ?? "").trim();
       if (!q) return JSON.stringify({ results: [] });
-      const { data } = await supabaseAdmin.rpc("search_medications_fuzzy", { q, lim: 5 });
-      const meds = (data ?? []) as Array<{ id: string; name: string; slug: string; active_ingredient: string; presentation: string | null }>;
-      // Pull cheapest current price per medication.
-      const enriched = await Promise.all(
-        meds.map(async (m) => {
-          const { data: prices } = await supabaseAdmin
-            .from("medication_prices")
-            .select("price, currency, pharmacy_id, in_stock")
-            .eq("medication_id", m.id)
-            .eq("in_stock", true)
-            .order("price", { ascending: true })
-            .limit(1);
-          const best = prices?.[0];
-          return {
-            id: m.id,
-            name: m.name,
-            slug: m.slug,
-            active_ingredient: m.active_ingredient,
-            presentation: m.presentation,
-            best_price: best ? `${best.currency} ${best.price}` : null,
-          };
-        }),
-      );
-      return JSON.stringify({ results: enriched });
+      // Fuente única de datos: el API del comparador (el catálogo local ya no se usa).
+      const token = process.env.PRICE_SCRAPER_API_TOKEN;
+      if (!token) return JSON.stringify({ query: q, results: [], error: "search unavailable" });
+      try {
+        const url = new URL("https://admin.clubestarbien.com/api/scraper/search");
+        url.searchParams.set("product", q);
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 45_000);
+        let res: Response;
+        try {
+          res = await fetch(url.toString(), {
+            headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+            signal: ctrl.signal,
+          });
+        } finally {
+          clearTimeout(tid);
+        }
+        if (!res.ok) return JSON.stringify({ query: q, results: [], error: "search unavailable" });
+        const json: any = await res.json();
+        const needle = q.toLowerCase();
+        const raw: any[] = Array.isArray(json?.products) ? json.products : [];
+        const results = raw
+          .filter((p) => p?.name && p.name !== "No encontrado" && p.name !== "Error en consulta")
+          .filter((p) => String(p.name).toLowerCase().includes(needle))
+          .filter((p) => Number(p.priceUSD ?? p.price) > 0)
+          .sort((a, b) => Number(a.priceUSD ?? a.price) - Number(b.priceUSD ?? b.price))
+          .slice(0, 5)
+          .map((p) => ({
+            name: String(p.name),
+            pharmacy: String(p.source ?? ""),
+            price_usd: p.priceUSD ? `$${p.priceUSD}` : null,
+            price_bs: p.price ? `Bs ${p.price}` : null,
+            status: p.status ?? null,
+          }));
+        return JSON.stringify({ query: q, results });
+      } catch {
+        return JSON.stringify({ query: q, results: [], error: "search unavailable" });
+      }
     }
 
     if (name === "record_signal") {
