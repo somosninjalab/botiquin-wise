@@ -662,6 +662,7 @@ export type Database = {
           query: string | null
           region: string | null
           result_count: number | null
+          savings_usd: number
           user_id: string | null
         }
         Insert: {
@@ -674,6 +675,7 @@ export type Database = {
           query?: string | null
           region?: string | null
           result_count?: number | null
+          savings_usd?: number
           user_id?: string | null
         }
         Update: {
@@ -686,6 +688,7 @@ export type Database = {
           query?: string | null
           region?: string | null
           result_count?: number | null
+          savings_usd?: number
           user_id?: string | null
         }
         Relationships: [
@@ -1016,6 +1019,7 @@ export type Database = {
           source: string
         }[]
       }
+      total_search_savings: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
