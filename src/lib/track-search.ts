@@ -6,6 +6,7 @@ type TrackArgs = {
   medication_id?: string;
   category?: string | null;
   result_count?: number;
+  savings_usd?: number;
 };
 
 // Caché por sesión para no repetir el SELECT del perfil en cada búsqueda.
@@ -49,6 +50,7 @@ export async function trackSearch(args: TrackArgs) {
         medication_id: args.medication_id ?? null,
         category: args.category ?? null,
         result_count: args.result_count ?? null,
+        savings_usd: args.savings_usd ?? 0,
       },
     });
   } catch {

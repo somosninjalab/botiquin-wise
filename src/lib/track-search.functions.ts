@@ -9,6 +9,7 @@ const InputSchema = z.object({
   medication_id: z.string().uuid().optional().nullable(),
   category: z.string().max(100).optional().nullable(),
   result_count: z.number().int().min(0).max(100000).optional().nullable(),
+  savings_usd: z.number().min(0).max(1000000).optional().nullable(),
 })
 
 // In-memory cache per worker instance to avoid hitting ipapi.co on every search.
@@ -97,6 +98,7 @@ export const trackSearchServer = createServerFn({ method: 'POST' })
         medication_id: data.medication_id ?? null,
         category: data.category ?? null,
         result_count: data.result_count ?? null,
+        savings_usd: data.savings_usd ?? 0,
         user_id: resolvedUserId,
         city: geo.city,
         region: geo.region,
