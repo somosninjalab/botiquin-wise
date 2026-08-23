@@ -1,0 +1,1 @@
+revoke execute on function public.total_search_savings() from anon, authenticated;
