@@ -62,6 +62,8 @@ import { PartnerLeadSection } from "@/components/PartnerLeadSection";
 import { ShoppingCart } from "lucide-react";
 import {
   priceToVes,
+  toUSD,
+  formatUSD,
   displayPrice,
   getLatestPricesForMedications,
   lowestCurrent,
@@ -125,7 +127,7 @@ function Index() {
     ai !== "all";
   const bcvRate = useBcvRate();
   const fetchTotal = useServerFn(getTotalSearches);
-  const [stats, setStats] = useState<{ total: number } | null>(null);
+  const [stats, setStats] = useState<{ total: number; savingsUsd: number } | null>(null);
   const refetchStats = useCallback(async () => {
     try {
       const res = await fetchTotal();
@@ -179,6 +181,7 @@ function Index() {
     setSourcesDone(0);
     (async () => {
       let total = 0;
+      const collected: PriceRow[] = [];
       // Una consulta por farmacia: los resultados se muestran a medida que llegan.
       await Promise.allSettled(
         API_SOURCE_IDS.map(async (source) => {
@@ -191,6 +194,7 @@ function Index() {
                 const seen = new Set(prev.map((x) => x.id));
                 return [...prev, ...m.filter((x) => !seen.has(x.id))];
               });
+              collected.push(...p);
               setPrices((prev) => [...prev, ...p]);
               setLoading(false);
             }
@@ -203,12 +207,33 @@ function Index() {
       );
       if (cancelled) return;
       setLoading(false);
-      await trackSearch({ query: q, result_count: total });
+      // Ahorro potencial de esta búsqueda: diferencia en USD entre el
+      // resultado más económico y el más caro de cada medicina encontrada.
+      let savings = 0;
+      const byMed = new Map<string, number[]>();
+      for (const p of collected) {
+        if (!p.in_stock) continue;
+        const usd = toUSD(Number(p.price), p.currency, bcvRate);
+        if (usd == null || !Number.isFinite(usd) || usd <= 0) continue;
+        const arr = byMed.get(p.medication_id) ?? [];
+        arr.push(usd);
+        byMed.set(p.medication_id, arr);
+      }
+      for (const arr of byMed.values()) {
+        if (arr.length < 2) continue;
+        savings += Math.max(...arr) - Math.min(...arr);
+      }
+      await trackSearch({
+        query: q,
+        result_count: total,
+        savings_usd: Math.round(savings * 100) / 100,
+      });
+      refetchStats();
     })();
     return () => {
       cancelled = true;
     };
-  }, [q]);
+  }, [q, bcvRate, refetchStats]);
 
   const updateSearch = (
     patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
@@ -292,6 +317,12 @@ function Index() {
             {stats?.total && (
               <p className="mt-1.5 text-[11px] text-muted-foreground text-center">
                 Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
+                {stats.savingsUsd > 0 && (
+                  <>
+                    <br />
+                    Más de <strong className="text-primary">{formatUSD(stats.savingsUsd)}</strong> ahorrados en medicinas buscadas
+                  </>
+                )}
               </p>
             )}
           </div>
@@ -326,6 +357,12 @@ function Index() {
                 {stats?.total && (
                   <p className="mt-1 text-[11px] text-muted-foreground text-center sm:text-left">
                     Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
+                    {stats.savingsUsd > 0 && (
+                      <>
+                        <br />
+                        Más de <strong className="text-primary">{formatUSD(stats.savingsUsd)}</strong> ahorrados en medicinas buscadas
+                      </>
+                    )}
                   </p>
                 )}
               </div>
