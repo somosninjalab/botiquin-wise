@@ -317,12 +317,8 @@ function Index() {
             {stats?.total && (
               <p className="mt-1.5 text-[11px] text-muted-foreground text-center">
                 Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
-                {stats.savingsUsd > 0 && (
-                  <>
-                    <br />
-                    Más de <strong className="text-primary">{formatUSD(stats.savingsUsd)}</strong> ahorrados en medicinas buscadas
-                  </>
-                )}
+                <br />
+                Más de <strong className="text-primary">{formatUSD(stats.savingsUsd ?? 0)}</strong> ahorrados en medicinas buscadas
               </p>
             )}
           </div>
@@ -357,12 +353,8 @@ function Index() {
                 {stats?.total && (
                   <p className="mt-1 text-[11px] text-muted-foreground text-center sm:text-left">
                     Más de {stats.total.toLocaleString("es-VE")} medicinas buscadas
-                    {stats.savingsUsd > 0 && (
-                      <>
-                        <br />
-                        Más de <strong className="text-primary">{formatUSD(stats.savingsUsd)}</strong> ahorrados en medicinas buscadas
-                      </>
-                    )}
+                    <br />
+                    Más de <strong className="text-primary">{formatUSD(stats.savingsUsd ?? 0)}</strong> ahorrados en medicinas buscadas
                   </p>
                 )}
               </div>
