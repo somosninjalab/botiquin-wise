@@ -6,7 +6,8 @@ export const getTotalSearches = createServerFn({ method: "GET" }).handler(async 
     .from("search_events")
     .select("*", { count: "exact", head: true });
   if (error) throw error;
-  return { total: count ?? 0 };
+  const { data: savings } = await supabaseAdmin.rpc("total_search_savings");
+  return { total: count ?? 0, savingsUsd: Number(savings ?? 0) };
 });
 
 export const getPopularQueries = createServerFn({ method: "GET" }).handler(async () => {
