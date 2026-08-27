@@ -99,7 +99,7 @@ export function SearchBar({
           onClick={() => setScanOpen(true)}
           aria-label="Escanear código de barras"
           title="Escanear código de barras"
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-accent bg-accent/10 hover:bg-accent hover:text-accent-foreground shadow-sm"
         >
           <ScanBarcode className={size === "lg" ? "h-5 w-5" : "h-4 w-4"} />
         </button>
