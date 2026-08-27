@@ -94,21 +94,24 @@ export function SearchBar({
           spellCheck={false}
           aria-label="Buscar medicamento"
         />
-        <button
-          type="button"
-          onClick={() => setScanOpen(true)}
-          aria-label="Escanear código de barras"
-          title="Escanear código de barras"
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-accent bg-accent/10 hover:bg-accent hover:text-accent-foreground shadow-sm"
-        >
-          <ScanBarcode className={size === "lg" ? "h-5 w-5" : "h-4 w-4"} />
-        </button>
       </div>
       <BarcodeScannerDialog
         open={scanOpen}
         onOpenChange={setScanOpen}
         onDetected={(code) => { setQ(code); runSearch(code); }}
       />
+      <Button
+        type="button"
+        onClick={() => setScanOpen(true)}
+        aria-label="Escanear código de barras"
+        title="Escanear código de barras"
+        className={`bg-accent text-accent-foreground hover:bg-accent/90 shrink-0 ${
+          size === "lg" ? "h-14 px-3 sm:px-4 text-base" : "h-11 px-3 text-sm"
+        }`}
+      >
+        <ScanBarcode className={size === "lg" ? "h-5 w-5" : "h-4 w-4"} />
+        <span className="hidden sm:inline ml-2">Escanear</span>
+      </Button>
       <Button
         type="submit"
         aria-label="Buscar"
