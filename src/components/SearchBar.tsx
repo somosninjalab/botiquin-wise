@@ -83,7 +83,7 @@ export function SearchBar({
             if (liveUpdate && onSearch) onSearch(v);
           }}
           onFocus={() => setFocused(true)}
-          placeholder="Busca tu medicina (ej. ibuprofeno)"
+          placeholder="Atamel, Losartán, Glucophage… o escanea el código de barras"
           className={`pl-10 bg-card ${size === "lg" ? "h-14 text-base" : "h-11 text-base"}`}
           maxLength={200}
           type="search"
