@@ -40,6 +40,7 @@ export function SearchBar({
   const [q, setQ] = useState(initial);
   const [focused, setFocused] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
+  const [scanOpen, setScanOpen] = useState(false);
   const wrapRef = useRef<HTMLFormElement | null>(null);
   const navigate = useNavigate();
   useEffect(() => { setQ(initial); }, [initial]);
