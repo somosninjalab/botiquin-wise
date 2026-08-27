@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Clock, X } from "lucide-react";
+import { Search, Clock, X, ScanBarcode } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
 
 const RECENT_KEY = "am.recent_searches";
 const MAX_RECENT = 5;
