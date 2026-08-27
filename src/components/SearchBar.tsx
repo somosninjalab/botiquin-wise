@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Clock, X } from "lucide-react";
+import { Search, Clock, X, ScanBarcode } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
 
 const RECENT_KEY = "am.recent_searches";
 const MAX_RECENT = 5;
@@ -39,6 +40,7 @@ export function SearchBar({
   const [q, setQ] = useState(initial);
   const [focused, setFocused] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
+  const [scanOpen, setScanOpen] = useState(false);
   const wrapRef = useRef<HTMLFormElement | null>(null);
   const navigate = useNavigate();
   useEffect(() => { setQ(initial); }, [initial]);
@@ -92,7 +94,21 @@ export function SearchBar({
           spellCheck={false}
           aria-label="Buscar medicamento"
         />
+        <button
+          type="button"
+          onClick={() => setScanOpen(true)}
+          aria-label="Escanear código de barras"
+          title="Escanear código de barras"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"
+        >
+          <ScanBarcode className={size === "lg" ? "h-5 w-5" : "h-4 w-4"} />
+        </button>
       </div>
+      <BarcodeScannerDialog
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        onDetected={(code) => { setQ(code); runSearch(code); }}
+      />
       <Button
         type="submit"
         aria-label="Buscar"

@@ -108,10 +108,17 @@ function parsePriceImpl(raw: unknown): number | null {
 /** Farmacias del comparador, en el orden en que se consultan. */
 export const API_SOURCE_IDS = Object.keys(API_PHARMACIES);
 
+/** Un código de barras (EAN/UPC): 8-14 dígitos. No se filtra por nombre. */
+export function isBarcode(term: string): boolean {
+  return /^[0-9]{8,14}$/.test(term.trim());
+}
+
 function mapProducts(term: string, products: ApiProduct[], limit: number) {
-  const queryTokens = norm(term)
-    .split("-")
-    .filter((t) => t.length >= 3);
+  const queryTokens = isBarcode(term)
+    ? []
+    : norm(term)
+        .split("-")
+        .filter((t) => t.length >= 3);
   const meds = new Map<string, MedicationRow>();
   const priceRows: PriceRow[] = [];
   const now = new Date().toISOString();
