@@ -16,13 +16,13 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 md:h-20 items-center justify-between px-4 gap-2">
-        <Link to="/" className="flex items-center gap-1.5 font-bold text-sm sm:text-base md:text-lg min-w-0 flex-1 md:flex-initial">
-          <img src={logoUrl} alt="" className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-xl shadow-[var(--shadow-soft)] shrink-0" />
+      <div className="container mx-auto flex h-20 md:h-24 items-center justify-between px-4 gap-2">
+        <Link to="/" className="flex items-center gap-2 font-bold text-base sm:text-lg md:text-xl min-w-0 flex-1 md:flex-initial">
+          <img src={logoUrl} alt="" className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 rounded-xl shadow-[var(--shadow-soft)] shrink-0" />
           <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent whitespace-nowrap">
             ¡Alerta: Medicina!
           </span>
-          <span className="shrink-0 ml-0.5 rounded-full bg-muted text-muted-foreground border border-border/60 px-1.5 py-0 text-[9px] font-medium uppercase tracking-wide">
+          <span className="shrink-0 ml-0.5 rounded-full bg-muted text-muted-foreground border border-border/60 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide">
             Beta
           </span>
         </Link>
