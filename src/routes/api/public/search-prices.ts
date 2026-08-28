@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
-const SEARCH_TIMEOUT_MS = 60_000;
+// Tiempo máximo por intento y tiempo total antes de responder al usuario.
+const SEARCH_TIMEOUT_MS = 18_000;
+const TOTAL_BUDGET_MS = 35_000;
 
 const SOURCES = new Set([
   "farmatodo",
@@ -64,29 +66,37 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: false, error: "unknown source" }, { status: 400 });
         }
 
-        // Igual que el comparador de precios: una llamada por farmacia
-        // (/api/scraper/{source}) para poder mostrar resultados a medida que llegan.
-        const upstreamUrl = new URL(`${API_ROOT}/${source || "search"}`);
+        // Una sola llamada agregada (/api/scraper/search) que devuelve todas
+        // las farmacias a la vez: es mucho más rápida y estable que pedir
+        // farmacia por farmacia (esas rutas suelen agotar el tiempo).
+        const upstreamUrl = new URL(`${API_ROOT}/search`);
         upstreamUrl.searchParams.set("product", q);
 
-        const cacheKey = `${source || "all"}::${q.toLowerCase()}`;
+        const cacheKey = `all::${q.toLowerCase()}`;
+        const bySource = (list: any[]) =>
+          (source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
+
         const hit = cache.get(cacheKey);
         if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-          const products = hit.products.slice(0, limit);
+          const products = bySource(hit.products as any[]);
           return Response.json({ ok: true, product: q, source: source || null, cached: true, count: products.length, products });
         }
 
         try {
           // El proveedor limita las peticiones simultáneas (429): las serializamos
           // en una cola y reintentamos con espera creciente hasta que nos atienda.
+          const deadline = Date.now() + TOTAL_BUDGET_MS;
           const res = await enqueue(async () => {
             let r: Response | null = null;
-            for (let attempt = 0; attempt < 8; attempt++) {
+            for (let attempt = 0; attempt < 4; attempt++) {
+              if (Date.now() > deadline) break;
+              const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
               // scraperFetch mantiene la sesión y la renueva ante 401/403.
-              r = await scraperFetch(upstreamUrl.toString(), {}, SEARCH_TIMEOUT_MS);
+              r = await scraperFetch(upstreamUrl.toString(), {}, left);
               if (!r) break;
               if (r.status !== 429 && r.status !== 503) break;
-              const wait = Math.min(600 * 2 ** attempt, 6000) + Math.floor(Math.random() * 400);
+              const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
+              if (Date.now() + wait > deadline) break;
               await new Promise((rs) => setTimeout(rs, wait));
             }
             return r;
@@ -97,7 +107,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
             console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
             // Si tenemos resultados previos (aunque vencidos), los servimos igual.
             if (hit) {
-              const stale = hit.products.slice(0, limit);
+              const stale = bySource(hit.products as any[]);
               return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
             }
             return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
@@ -105,17 +115,21 @@ export const Route = createFileRoute("/api/public/search-prices")({
 
           const json = await res.json();
           const raw = Array.isArray(json?.products) ? json.products : [];
-          const products = raw
-            .filter((p: any) => p?.name !== "No encontrado" && p?.name !== "Error en consulta")
-            .map((p: any) => (source ? { ...p, source } : p));
+          const products = raw.filter(
+            (p: any) => p?.name && p.name !== "No encontrado" && p.name !== "Error en consulta",
+          );
           cache.set(cacheKey, { at: Date.now(), products });
           if (cache.size > 500) {
             for (const [k, v] of cache) if (Date.now() - v.at > CACHE_TTL_MS) cache.delete(k);
           }
-          const out = products.slice(0, limit);
+          const out = bySource(products);
           return Response.json({ ok: true, product: q, source: source || null, count: out.length, products: out });
         } catch (err) {
           console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
+          if (hit) {
+            const stale = bySource(hit.products as any[]);
+            return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+          }
           return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
         }
       },
