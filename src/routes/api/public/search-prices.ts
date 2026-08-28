@@ -45,7 +45,8 @@ export const Route = createFileRoute("/api/public/search-prices")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const token = process.env.PRICE_SCRAPER_API_TOKEN;
+        // Sesión activa en el panel del proveedor (login usuario/clave).
+        const token = await getScraperToken();
 
         const incoming = new URL(request.url);
         const q = (incoming.searchParams.get("q") ?? incoming.searchParams.get("product") ?? "").trim();
