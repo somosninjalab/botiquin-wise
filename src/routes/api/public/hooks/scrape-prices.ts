@@ -226,7 +226,7 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
           // 1) Single API call per medication — trust the API's query.
           const q = buildQuery(med);
           if (!q) continue;
-          const products = await fetchApi(q, token, activeSources);
+          const products = await fetchApi(q, activeSources);
 
           // 2) Safety filter: keep only products that mention the medication
           //    (name, active ingredient, or one of its brands).
