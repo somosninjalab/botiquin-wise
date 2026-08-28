@@ -17,6 +17,8 @@ export function SupportChat() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<Sent[]>([]);
   const send = useServerFn(sendSupportMessage);
@@ -39,11 +41,15 @@ export function SupportChat() {
         data: {
           message: text,
           email: user?.email ?? email.trim(),
+          name: name.trim(),
+          phone: phone.trim(),
           path: location.pathname,
         },
       });
       setSent((p) => [...p, { text }]);
       setMessage("");
+      setName("");
+      setPhone("");
       toast.success("Mensaje enviado. Te responderemos pronto.");
     } catch (err) {
       console.error(err);
@@ -108,6 +114,20 @@ export function SupportChat() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-3 border-t space-y-2">
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Tu nombre (opcional)"
+                maxLength={200}
+              />
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Tu teléfono (opcional)"
+                maxLength={200}
+              />
               {!user && (
                 <Input
                   type="email"
