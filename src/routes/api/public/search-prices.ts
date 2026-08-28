@@ -66,15 +66,19 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: false, error: "unknown source" }, { status: 400 });
         }
 
-        // Igual que el comparador de precios: una llamada por farmacia
-        // (/api/scraper/{source}) para poder mostrar resultados a medida que llegan.
-        const upstreamUrl = new URL(`${API_ROOT}/${source || "search"}`);
+        // Una sola llamada agregada (/api/scraper/search) que devuelve todas
+        // las farmacias a la vez: es mucho más rápida y estable que pedir
+        // farmacia por farmacia (esas rutas suelen agotar el tiempo).
+        const upstreamUrl = new URL(`${API_ROOT}/search`);
         upstreamUrl.searchParams.set("product", q);
 
-        const cacheKey = `${source || "all"}::${q.toLowerCase()}`;
+        const cacheKey = `all::${q.toLowerCase()}`;
+        const bySource = (list: any[]) =>
+          (source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
+
         const hit = cache.get(cacheKey);
         if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-          const products = hit.products.slice(0, limit);
+          const products = bySource(hit.products as any[]);
           return Response.json({ ok: true, product: q, source: source || null, cached: true, count: products.length, products });
         }
 
