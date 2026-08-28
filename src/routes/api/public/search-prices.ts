@@ -100,6 +100,11 @@ export const Route = createFileRoute("/api/public/search-prices")({
           if (!res || !res.ok) {
             const body = res ? await res.text().catch(() => "") : "";
             console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
+            // Si tenemos resultados previos (aunque vencidos), los servimos igual.
+            if (hit) {
+              const stale = hit.products.slice(0, limit);
+              return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+            }
             return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
           }
 
