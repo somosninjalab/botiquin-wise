@@ -122,6 +122,10 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: true, product: q, source: source || null, count: out.length, products: out });
         } catch (err) {
           console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
+          if (hit) {
+            const stale = hit.products.slice(0, limit);
+            return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+          }
           return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
         }
       },
