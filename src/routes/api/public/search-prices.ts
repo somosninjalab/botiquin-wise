@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
-const SEARCH_TIMEOUT_MS = 60_000;
+// Tiempo máximo por intento y tiempo total antes de responder al usuario.
+const SEARCH_TIMEOUT_MS = 18_000;
+const TOTAL_BUDGET_MS = 35_000;
 
 const SOURCES = new Set([
   "farmatodo",
