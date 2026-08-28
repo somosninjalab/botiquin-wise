@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 /**
  * Scrape prices via external API (https://admin.clubestarbien.com/api/scraper/search).
@@ -129,23 +130,15 @@ function buildQuery(med: MedRow): string {
   return (firstBrand || med.name || med.active_ingredient || "").trim();
 }
 
-async function fetchApi(product: string, token: string, sources: string[]): Promise<ApiProduct[]> {
+async function fetchApi(product: string, sources: string[]): Promise<ApiProduct[]> {
   const url = new URL(API_BASE);
   url.searchParams.set("product", product);
   if (sources.length) url.searchParams.set("sources", sources.join(","));
   try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 45_000);
-    const res = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: ctrl.signal,
-    });
-    clearTimeout(tid);
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.warn(
-        `[scrape-api] ${url} → HTTP ${res.status} body=${body.slice(0, 200)} tokenLen=${token.length} tokenHead=${token.slice(0, 12)}`,
-      );
+    const res = await scraperFetch(url.toString(), {}, 45_000);
+    if (!res || !res.ok) {
+      const body = res ? await res.text().catch(() => "") : "";
+      console.warn(`[scrape-api] ${url} → HTTP ${res?.status} body=${body.slice(0, 200)}`);
       return [];
     }
     const j = (await res.json()) as ApiResponse;
@@ -165,10 +158,11 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         const unauthorized = verifyCronAuth(request);
         if (unauthorized) return unauthorized;
 
-        const token = process.env.PRICE_SCRAPER_API_TOKEN;
+        // Inicia sesión en el panel del proveedor antes de scrapear.
+        const token = await getScraperToken();
         if (!token) {
           return Response.json(
-            { ok: false, error: "PRICE_SCRAPER_API_TOKEN missing" },
+            { ok: false, error: "provider login failed (SCRAPER_LOGIN_USER/PASSWORD)" },
             { status: 500 },
           );
         }
@@ -232,7 +226,7 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
           // 1) Single API call per medication — trust the API's query.
           const q = buildQuery(med);
           if (!q) continue;
-          const products = await fetchApi(q, token, activeSources);
+          const products = await fetchApi(q, activeSources);
 
           // 2) Safety filter: keep only products that mention the medication
           //    (name, active ingredient, or one of its brands).

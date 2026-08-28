@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 const SEARCH_TIMEOUT_MS = 60_000;
@@ -44,7 +45,8 @@ export const Route = createFileRoute("/api/public/search-prices")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const token = process.env.PRICE_SCRAPER_API_TOKEN;
+        // Sesión activa en el panel del proveedor (login usuario/clave).
+        const token = await getScraperToken();
 
         const incoming = new URL(request.url);
         const q = (incoming.searchParams.get("q") ?? incoming.searchParams.get("product") ?? "").trim();
@@ -52,7 +54,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: false, error: "query length" }, { status: 400 });
         }
         if (!token) {
-          console.warn("[search-prices-api] missing PRICE_SCRAPER_API_TOKEN");
+          console.warn("[search-prices-api] no provider session (login failed)");
           return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
         }
 
@@ -80,16 +82,9 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const res = await enqueue(async () => {
             let r: Response | null = null;
             for (let attempt = 0; attempt < 8; attempt++) {
-              const ctrl = new AbortController();
-              const tid = setTimeout(() => ctrl.abort(), SEARCH_TIMEOUT_MS);
-              try {
-                r = await fetch(upstreamUrl.toString(), {
-                  headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-                  signal: ctrl.signal,
-                });
-              } finally {
-                clearTimeout(tid);
-              }
+              // scraperFetch mantiene la sesión y la renueva ante 401/403.
+              r = await scraperFetch(upstreamUrl.toString(), {}, SEARCH_TIMEOUT_MS);
+              if (!r) break;
               if (r.status !== 429 && r.status !== 503) break;
               const wait = Math.min(600 * 2 ** attempt, 6000) + Math.floor(Math.random() * 400);
               await new Promise((rs) => setTimeout(rs, wait));
