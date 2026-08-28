@@ -81,14 +81,18 @@ export const Route = createFileRoute("/api/public/search-prices")({
         try {
           // El proveedor limita las peticiones simultáneas (429): las serializamos
           // en una cola y reintentamos con espera creciente hasta que nos atienda.
+          const deadline = Date.now() + TOTAL_BUDGET_MS;
           const res = await enqueue(async () => {
             let r: Response | null = null;
-            for (let attempt = 0; attempt < 8; attempt++) {
+            for (let attempt = 0; attempt < 4; attempt++) {
+              if (Date.now() > deadline) break;
+              const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
               // scraperFetch mantiene la sesión y la renueva ante 401/403.
-              r = await scraperFetch(upstreamUrl.toString(), {}, SEARCH_TIMEOUT_MS);
+              r = await scraperFetch(upstreamUrl.toString(), {}, left);
               if (!r) break;
               if (r.status !== 429 && r.status !== 503) break;
-              const wait = Math.min(600 * 2 ** attempt, 6000) + Math.floor(Math.random() * 400);
+              const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
+              if (Date.now() + wait > deadline) break;
               await new Promise((rs) => setTimeout(rs, wait));
             }
             return r;
