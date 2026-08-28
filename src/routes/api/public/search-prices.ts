@@ -107,7 +107,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
             console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
             // Si tenemos resultados previos (aunque vencidos), los servimos igual.
             if (hit) {
-              const stale = hit.products.slice(0, limit);
+              const stale = bySource(hit.products as any[]);
               return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
             }
             return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
@@ -115,19 +115,19 @@ export const Route = createFileRoute("/api/public/search-prices")({
 
           const json = await res.json();
           const raw = Array.isArray(json?.products) ? json.products : [];
-          const products = raw
-            .filter((p: any) => p?.name !== "No encontrado" && p?.name !== "Error en consulta")
-            .map((p: any) => (source ? { ...p, source } : p));
+          const products = raw.filter(
+            (p: any) => p?.name && p.name !== "No encontrado" && p.name !== "Error en consulta",
+          );
           cache.set(cacheKey, { at: Date.now(), products });
           if (cache.size > 500) {
             for (const [k, v] of cache) if (Date.now() - v.at > CACHE_TTL_MS) cache.delete(k);
           }
-          const out = products.slice(0, limit);
+          const out = bySource(products);
           return Response.json({ ok: true, product: q, source: source || null, count: out.length, products: out });
         } catch (err) {
           console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
           if (hit) {
-            const stale = hit.products.slice(0, limit);
+            const stale = bySource(hit.products as any[]);
             return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
           }
           return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
