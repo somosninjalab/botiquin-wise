@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 const SEARCH_TIMEOUT_MS = 60_000;
