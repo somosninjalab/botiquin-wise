@@ -54,7 +54,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: false, error: "query length" }, { status: 400 });
         }
         if (!token) {
-          console.warn("[search-prices-api] missing PRICE_SCRAPER_API_TOKEN");
+          console.warn("[search-prices-api] no provider session (login failed)");
           return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
         }
 
