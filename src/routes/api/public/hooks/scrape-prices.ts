@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { verifyCronAuth } from "@/lib/cron-auth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 /**
  * Scrape prices via external API (https://admin.clubestarbien.com/api/scraper/search).
