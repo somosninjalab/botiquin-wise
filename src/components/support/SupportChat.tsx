@@ -85,10 +85,10 @@ export function SupportChat() {
             onClick={() => setOpen(false)}
           />
           <div className="relative pointer-events-auto flex flex-col w-full md:w-[380px] h-[100dvh] md:h-auto md:max-h-[70vh] bg-card border border-border md:rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary/10 to-accent/10">
+            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-destructive/10 to-accent/10">
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center">
-                  <LifeBuoy className="h-4 w-4 text-primary" />
+                <div className="h-9 w-9 rounded-full bg-destructive/15 flex items-center justify-center">
+                  <Siren className="h-4 w-4 text-destructive" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Soporte</p>
