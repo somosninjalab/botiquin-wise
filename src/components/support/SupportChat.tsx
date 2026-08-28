@@ -114,6 +114,20 @@ export function SupportChat() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-3 border-t space-y-2">
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Tu nombre (opcional)"
+                maxLength={200}
+              />
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Tu teléfono (opcional)"
+                maxLength={200}
+              />
               {!user && (
                 <Input
                   type="email"
