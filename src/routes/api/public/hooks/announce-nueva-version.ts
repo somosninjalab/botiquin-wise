@@ -29,13 +29,20 @@ export const Route = createFileRoute("/api/public/hooks/announce-nueva-version")
           Math.max(1, parseInt(url.searchParams.get("limit") ?? "", 10) || DEFAULT_LIMIT),
         );
 
-        const { data: profiles, error } = await supabaseAdmin
-          .from("profiles")
-          .select("user_id, email, full_name")
-          .not("email", "is", null);
-        if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
-
-        const all = ((profiles ?? []) as any[]).filter((p) => !!p.email);
+        // Paginado: Supabase limita a 1000 filas por consulta.
+        const all: any[] = [];
+        const PROFILE_PAGE = 1000;
+        for (let from = 0; ; from += PROFILE_PAGE) {
+          const { data: profiles, error } = await supabaseAdmin
+            .from("profiles")
+            .select("user_id, email, full_name")
+            .not("email", "is", null)
+            .order("created_at", { ascending: true })
+            .range(from, from + PROFILE_PAGE - 1);
+          if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
+          for (const p of profiles ?? []) if ((p as any).email) all.push(p);
+          if (!profiles || profiles.length < PROFILE_PAGE) break;
+        }
 
         // Ya enviados: claves de idempotencia de esta campaña.
         const done = new Set<string>();
