@@ -43,21 +43,28 @@ export const Route = createFileRoute("/api/public/search-prices")({
         upstreamUrl.searchParams.set("product", q);
 
         try {
-          const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), SEARCH_TIMEOUT_MS);
-          let res: Response;
-          try {
-            res = await fetch(upstreamUrl.toString(), {
-              headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-              signal: ctrl.signal,
-            });
-          } finally {
-            clearTimeout(tid);
+          // El API upstream limita las peticiones simultáneas (429): reintentamos
+          // con espera creciente hasta que nos atienda.
+          let res: Response | null = null;
+          for (let attempt = 0; attempt < 5; attempt++) {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), SEARCH_TIMEOUT_MS);
+            try {
+              res = await fetch(upstreamUrl.toString(), {
+                headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+                signal: ctrl.signal,
+              });
+            } finally {
+              clearTimeout(tid);
+            }
+            if (res.status !== 429 && res.status !== 503) break;
+            const wait = 700 * (attempt + 1) + Math.floor(Math.random() * 400);
+            await new Promise((r) => setTimeout(r, wait));
           }
 
-          if (!res.ok) {
-            const body = await res.text().catch(() => "");
-            console.warn(`[search-prices-api] HTTP ${res.status} body=${body.slice(0, 200)}`);
+          if (!res || !res.ok) {
+            const body = res ? await res.text().catch(() => "") : "";
+            console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
             return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
           }
 
