@@ -3,13 +3,15 @@ import { createServerFn } from "@tanstack/react-start";
 const CHAT_ID = "874396555";
 
 export const sendSupportMessage = createServerFn({ method: "POST" })
-  .inputValidator((input: { message: string; email?: string; path?: string }) => {
+  .inputValidator((input: { message: string; email?: string; name?: string; phone?: string; path?: string }) => {
     const message = String(input?.message ?? "").trim();
     if (message.length < 2) throw new Error("Mensaje muy corto");
     if (message.length > 2000) throw new Error("Mensaje muy largo");
     return {
       message,
       email: String(input?.email ?? "").trim().slice(0, 200),
+      name: String(input?.name ?? "").trim().slice(0, 200),
+      phone: String(input?.phone ?? "").trim().slice(0, 200),
       path: String(input?.path ?? "").slice(0, 200),
     };
   })
@@ -19,6 +21,8 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
 
     const text = [
       "🆘 <b>Nuevo mensaje de soporte</b>",
+      data.name ? `👤 ${escapeHtml(data.name)}` : "👤 (sin nombre)",
+      data.phone ? `📞 ${escapeHtml(data.phone)}` : "📞 (sin teléfono)",
       data.email ? `✉️ ${escapeHtml(data.email)}` : "✉️ (sin correo)",
       data.path ? `🔗 ${escapeHtml(data.path)}` : "",
       "",

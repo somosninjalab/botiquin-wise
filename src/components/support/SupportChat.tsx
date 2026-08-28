@@ -17,6 +17,8 @@ export function SupportChat() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<Sent[]>([]);
   const send = useServerFn(sendSupportMessage);
@@ -39,11 +41,15 @@ export function SupportChat() {
         data: {
           message: text,
           email: user?.email ?? email.trim(),
+          name: name.trim(),
+          phone: phone.trim(),
           path: location.pathname,
         },
       });
       setSent((p) => [...p, { text }]);
       setMessage("");
+      setName("");
+      setPhone("");
       toast.success("Mensaje enviado. Te responderemos pronto.");
     } catch (err) {
       console.error(err);
