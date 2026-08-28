@@ -20,10 +20,22 @@ const SOURCES = new Set([
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const cache = new Map<string, { at: number; products: unknown[] }>();
 
-// Cola global: solo una petición al proveedor a la vez por instancia.
+// Cola global: solo una petición al proveedor a la vez por instancia,
+// con un espacio mínimo entre llamadas para no disparar su límite.
+const MIN_GAP_MS = 1200;
+let lastCallAt = 0;
 let chain: Promise<unknown> = Promise.resolve();
 function enqueue<T>(fn: () => Promise<T>): Promise<T> {
-  const run = chain.then(fn, fn);
+  const step = async () => {
+    const wait = MIN_GAP_MS - (Date.now() - lastCallAt);
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    try {
+      return await fn();
+    } finally {
+      lastCallAt = Date.now();
+    }
+  };
+  const run = chain.then(step, step);
   chain = run.catch(() => undefined);
   return run;
 }
