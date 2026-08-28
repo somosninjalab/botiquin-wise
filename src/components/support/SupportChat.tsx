@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { LifeBuoy, Send, X } from "lucide-react";
+import { Siren, Send, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
