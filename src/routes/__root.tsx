@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { AssistantBubble } from "@/components/chat/AssistantBubble";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { SupportChat } from "@/components/support/SupportChat";
 
 function NotFoundComponent() {
   return (
@@ -120,6 +121,7 @@ function RootComponent() {
       </div>
       <MobileBottomNav />
       <AssistantBubble />
+      <SupportChat />
       <Toaster richColors position="top-right" />
     </AuthProvider>
   );
