@@ -158,10 +158,11 @@ export const Route = createFileRoute("/api/public/hooks/scrape-prices")({
         const unauthorized = verifyCronAuth(request);
         if (unauthorized) return unauthorized;
 
-        const token = process.env.PRICE_SCRAPER_API_TOKEN;
+        // Inicia sesión en el panel del proveedor antes de scrapear.
+        const token = await getScraperToken();
         if (!token) {
           return Response.json(
-            { ok: false, error: "PRICE_SCRAPER_API_TOKEN missing" },
+            { ok: false, error: "provider login failed (SCRAPER_LOGIN_USER/PASSWORD)" },
             { status: 500 },
           );
         }
