@@ -213,7 +213,7 @@ function Index() {
           await runOne(source);
         }
       };
-      await Promise.allSettled([worker(), worker(), worker()]);
+      await Promise.allSettled([worker(), worker()]);
       if (cancelled) return;
       setLoading(false);
       // Ahorro potencial de esta búsqueda: diferencia en USD entre el
