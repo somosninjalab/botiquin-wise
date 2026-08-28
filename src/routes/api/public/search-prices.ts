@@ -82,16 +82,9 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const res = await enqueue(async () => {
             let r: Response | null = null;
             for (let attempt = 0; attempt < 8; attempt++) {
-              const ctrl = new AbortController();
-              const tid = setTimeout(() => ctrl.abort(), SEARCH_TIMEOUT_MS);
-              try {
-                r = await fetch(upstreamUrl.toString(), {
-                  headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-                  signal: ctrl.signal,
-                });
-              } finally {
-                clearTimeout(tid);
-              }
+              // scraperFetch mantiene la sesión y la renueva ante 401/403.
+              r = await scraperFetch(upstreamUrl.toString(), {}, SEARCH_TIMEOUT_MS);
+              if (!r) break;
               if (r.status !== 429 && r.status !== 503) break;
               const wait = Math.min(600 * 2 ** attempt, 6000) + Math.floor(Math.random() * 400);
               await new Promise((rs) => setTimeout(rs, wait));
