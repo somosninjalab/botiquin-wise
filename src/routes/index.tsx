@@ -205,8 +205,15 @@ function Index() {
               setSourcesDone((n) => n + 1);
             }
           }
-        }),
-      );
+        };
+      const worker = async () => {
+        while (!cancelled) {
+          const source = queue.shift();
+          if (!source) return;
+          await runOne(source);
+        }
+      };
+      await Promise.allSettled([worker(), worker(), worker()]);
       if (cancelled) return;
       setLoading(false);
       // Ahorro potencial de esta búsqueda: diferencia en USD entre el
