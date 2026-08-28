@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-const CHAT_ID = "8767846626";
+const CHAT_ID = "874396555";
 
 export const sendSupportMessage = createServerFn({ method: "POST" })
   .inputValidator((input: { message: string; email?: string; path?: string }) => {
