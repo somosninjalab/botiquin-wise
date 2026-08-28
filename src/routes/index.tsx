@@ -183,8 +183,10 @@ function Index() {
       let total = 0;
       const collected: PriceRow[] = [];
       // Una consulta por farmacia: los resultados se muestran a medida que llegan.
-      await Promise.allSettled(
-        API_SOURCE_IDS.map(async (source) => {
+      // El API externo rechaza demasiadas peticiones simultáneas (429), así que
+      // usamos una cola con concurrencia limitada.
+      const queue = [...API_SOURCE_IDS];
+      const runOne = async (source: string) => {
           try {
             const { meds: m, prices: p } = await searchMedicationsBySource(q, source, 40);
             if (cancelled) return;
