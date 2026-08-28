@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { LifeBuoy, Send, X } from "lucide-react";
+import { Siren, Send, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -65,11 +65,16 @@ export function SupportChat() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Abrir chat de soporte"
-          className="fixed left-3 md:left-6 z-40 h-12 w-12 md:h-14 md:w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+          aria-label="SOS - Abrir chat de soporte"
+          title="SOS - ¿Necesitas ayuda?"
+          className="fixed left-3 md:left-6 z-40 h-14 w-14 md:h-16 md:w-16 rounded-full bg-destructive text-destructive-foreground shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform animate-bounce"
           style={{ bottom: `calc(72px + env(safe-area-inset-bottom))` }}
         >
-          <LifeBuoy className="h-5 w-5 md:h-6 md:w-6" />
+          <span className="absolute inset-0 rounded-full bg-destructive opacity-75 animate-ping" />
+          <span className="relative flex flex-col items-center justify-center leading-none">
+            <Siren className="h-5 w-5 md:h-6 md:w-6" />
+            <span className="text-[9px] md:text-[10px] font-black tracking-wider mt-0.5">SOS</span>
+          </span>
         </button>
       )}
 
@@ -80,10 +85,10 @@ export function SupportChat() {
             onClick={() => setOpen(false)}
           />
           <div className="relative pointer-events-auto flex flex-col w-full md:w-[380px] h-[100dvh] md:h-auto md:max-h-[70vh] bg-card border border-border md:rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary/10 to-accent/10">
+            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-destructive/10 to-accent/10">
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center">
-                  <LifeBuoy className="h-4 w-4 text-primary" />
+                <div className="h-9 w-9 rounded-full bg-destructive/15 flex items-center justify-center">
+                  <Siren className="h-4 w-4 text-destructive" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Soporte</p>
