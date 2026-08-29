@@ -143,8 +143,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
         // Una sola llamada agregada (/api/scraper/search) que devuelve todas
         // las farmacias a la vez: es mucho más rápida y estable que pedir
         // farmacia por farmacia (esas rutas suelen agotar el tiempo).
-        const upstreamUrl = new URL(`${API_ROOT}/search`);
-        upstreamUrl.searchParams.set("product", term);
+
 
         const cacheKey = `all::${term.toLowerCase()}`;
 
