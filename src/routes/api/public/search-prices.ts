@@ -51,6 +51,55 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 
+// Traduce un código de barras (EAN/UPC) al nombre del producto usando
+// bases públicas. El proveedor solo busca por nombre.
+type BarcodeInfo = { query: string; keywords: string[] } | null;
+const barcodeCache = new Map<string, BarcodeInfo>();
+
+const STOPWORDS = new Set(["de", "la", "el", "con", "para", "und", "unidad", "plaza", "lata", "x"]);
+
+export function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function resolveBarcode(code: string): Promise<BarcodeInfo> {
+  if (barcodeCache.has(code)) return barcodeCache.get(code) ?? null;
+  const clean = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  let info: BarcodeInfo = null;
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 8_000);
+    const res = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,product_name_es,generic_name,brands`,
+      { headers: { Accept: "application/json", "User-Agent": "AlertaMedicina/1.0" }, signal: ctrl.signal },
+    );
+    clearTimeout(tid);
+    if (res.ok) {
+      const j: any = await res.json();
+      const p = j?.product ?? {};
+      const brand = clean(p.brands).split(",")[0]?.trim() ?? "";
+      const name = clean(p.product_name_es) || clean(p.product_name) || clean(p.generic_name);
+      const tokens = normalizeText(`${brand} ${name}`)
+        .split(" ")
+        .filter((t) => t.length >= 3 && !STOPWORDS.has(t) && !/^\d+$/.test(t));
+      // Consulta corta y distintiva: marca primero, luego palabras clave.
+      const query = (normalizeText(brand) || tokens.slice(0, 2).join(" ")).trim();
+      if (query) info = { query, keywords: tokens.slice(0, 4) };
+    }
+  } catch (err) {
+    console.warn(`[search-prices-api] barcode lookup failed for ${code}:`, err);
+  }
+  barcodeCache.set(code, info);
+  return info;
+}
+
+
 export const Route = createFileRoute("/api/public/search-prices")({
   server: {
     handlers: {
@@ -74,15 +123,49 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: false, error: "unknown source" }, { status: 400 });
         }
 
+        // Códigos de barras: el proveedor no los indexa, así que primero
+        // traducimos el código a un nombre de producto y buscamos por nombre.
+        let term = q;
+        let resolvedFrom: string | null = null;
+        let keywords: string[] = [];
+        if (/^\d{8,14}$/.test(q)) {
+          const info = await resolveBarcode(q);
+          if (info) {
+            term = info.query;
+            keywords = info.keywords;
+            resolvedFrom = q;
+          }
+          // Si no se reconoce, igual intentamos con el código: algunas
+          // farmacias lo tienen indexado.
+        }
+
+
         // Una sola llamada agregada (/api/scraper/search) que devuelve todas
         // las farmacias a la vez: es mucho más rápida y estable que pedir
         // farmacia por farmacia (esas rutas suelen agotar el tiempo).
         const upstreamUrl = new URL(`${API_ROOT}/search`);
-        upstreamUrl.searchParams.set("product", q);
+        upstreamUrl.searchParams.set("product", term);
 
-        const cacheKey = `all::${q.toLowerCase()}`;
+        const cacheKey = `all::${term.toLowerCase()}`;
+
+        // En búsquedas por código de barras: primero coincidencia exacta por
+        // código/SKU; si no hay, exigimos alguna palabra clave del producto.
+        const relevant = (list: any[]) => {
+          if (!resolvedFrom) return list;
+          const exact = list.filter(
+            (p: any) => String(p?.code ?? "") === resolvedFrom || String(p?.sku ?? "") === resolvedFrom,
+          );
+          if (exact.length) return exact;
+          if (!keywords.length) return list;
+          const byKeyword = list.filter((p: any) => {
+            const text = normalizeText(`${p?.name ?? ""} ${p?.brand ?? ""}`);
+            return keywords.some((k) => text.includes(k));
+          });
+          return byKeyword.length ? byKeyword : list;
+        };
+
         const bySource = (list: any[]) =>
-          (source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
+          relevant(source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
 
         // Consulta al proveedor, compartida entre peticiones simultáneas
         // del mismo término (una sola llamada aunque busquen 50 personas).
@@ -139,26 +222,26 @@ export const Route = createFileRoute("/api/public/search-prices")({
         // Caché fresco → respuesta inmediata.
         if (hit && age < CACHE_TTL_MS) {
           const products = bySource(hit.products as any[]);
-          return Response.json({ ok: true, product: q, source: source || null, cached: true, count: products.length, products });
+          return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, count: products.length, products });
         }
 
         // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás.
         if (hit && age < STALE_TTL_MS) {
           void fetchUpstream();
           const stale = bySource(hit.products as any[]);
-          return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+          return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
         }
 
         const products = await fetchUpstream();
         if (!products) {
           if (hit) {
             const stale = bySource(hit.products as any[]);
-            return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+            return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
           }
-          return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
+          return Response.json({ ok: false, product: term, barcode: resolvedFrom, count: 0, products: [], error: "search temporarily unavailable" });
         }
         const out = bySource(products as any[]);
-        return Response.json({ ok: true, product: q, source: source || null, count: out.length, products: out });
+        return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, count: out.length, products: out });
 
       },
     },
