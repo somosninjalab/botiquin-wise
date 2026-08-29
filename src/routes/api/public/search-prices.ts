@@ -113,19 +113,14 @@ export const Route = createFileRoute("/api/public/search-prices")({
         let resolvedFrom: string | null = null;
         if (/^\d{8,14}$/.test(q)) {
           const name = await resolveBarcode(q);
-          if (!name) {
-            return Response.json({
-              ok: true,
-              product: q,
-              barcode: q,
-              count: 0,
-              products: [],
-              error: "barcode not recognized",
-            });
+          if (name) {
+            term = name;
+            resolvedFrom = q;
           }
-          term = name;
-          resolvedFrom = q;
+          // Si no se reconoce, igual intentamos con el código: algunas
+          // farmacias lo tienen indexado.
         }
+
 
         // Una sola llamada agregada (/api/scraper/search) que devuelve todas
         // las farmacias a la vez: es mucho más rápida y estable que pedir
