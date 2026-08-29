@@ -300,21 +300,29 @@ function Index() {
   const exactMatchGroup = useMemo(() => {
     if (!q.trim()) return null;
     const queryNorm = normalizeText(q);
+    if (!queryNorm) return null;
     const queryTokens = queryNorm.split(" ").filter((t) => t.length >= 2);
-    const exact: MedicationRow[] = [];
-    const rest: MedicationRow[] = [];
-    for (const m of filteredMeds) {
-      const nameNorm = normalizeText(m.name);
-      const isExact =
-        nameNorm === queryNorm ||
-        nameNorm.startsWith(queryNorm + " ") ||
-        (queryTokens.length > 0 && queryTokens.every((t) => nameNorm.includes(t)));
-      if (isExact) exact.push(m);
-      else rest.push(m);
-    }
-    if (!exact.length) return null;
-    return { exact, rest };
+    // Nivel 1 (estricto): el nombre es la consulta o empieza por ella.
+    const strict = (nameNorm: string) =>
+      nameNorm === queryNorm || nameNorm.startsWith(queryNorm + " ");
+    // Nivel 2 (respaldo): todas las palabras de la consulta como palabras completas.
+    const loose = (nameNorm: string) => {
+      if (!queryTokens.length) return false;
+      const words = new Set(nameNorm.split(" "));
+      return queryTokens.every((t) => words.has(t));
+    };
+    const pick = (fn: (n: string) => boolean) => {
+      const exact: MedicationRow[] = [];
+      const rest: MedicationRow[] = [];
+      for (const m of filteredMeds) {
+        if (fn(normalizeText(m.name))) exact.push(m);
+        else rest.push(m);
+      }
+      return exact.length ? { exact, rest } : null;
+    };
+    return pick(strict) ?? pick(loose);
   }, [filteredMeds, q]);
+
 
   const grouped = useMemo(() => {
     const groups = new Map<string, MedicationRow[]>();
