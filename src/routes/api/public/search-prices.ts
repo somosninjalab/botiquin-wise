@@ -143,8 +143,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
         // Una sola llamada agregada (/api/scraper/search) que devuelve todas
         // las farmacias a la vez: es mucho más rápida y estable que pedir
         // farmacia por farmacia (esas rutas suelen agotar el tiempo).
-        const upstreamUrl = new URL(`${API_ROOT}/search`);
-        upstreamUrl.searchParams.set("product", term);
+
 
         const cacheKey = `all::${term.toLowerCase()}`;
 
@@ -167,6 +166,41 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const bySource = (list: any[]) =>
           relevant(source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
 
+        // Una sola llamada al proveedor (con reintentos ante saturación).
+        const callUpstream = async (
+          searchTerm: string,
+        ): Promise<{ products: any[]; cached: boolean } | null> => {
+          const u = new URL(`${API_ROOT}/search`);
+          u.searchParams.set("product", searchTerm);
+          const deadline = Date.now() + TOTAL_BUDGET_MS;
+          const res = await enqueue(async () => {
+            let r: Response | null = null;
+            for (let attempt = 0; attempt < 4; attempt++) {
+              if (Date.now() > deadline) break;
+              const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
+              // scraperFetch mantiene la sesión y la renueva ante 401/403.
+              r = await scraperFetch(u.toString(), {}, left);
+              if (!r) break;
+              if (r.status !== 429 && r.status !== 503) break;
+              const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
+              if (Date.now() + wait > deadline) break;
+              await new Promise((rs) => setTimeout(rs, wait));
+            }
+            return r;
+          });
+          if (!res || !res.ok) {
+            const body = res ? await res.text().catch(() => "") : "";
+            console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
+            return null;
+          }
+          const json: any = await res.json();
+          const raw = Array.isArray(json?.products) ? json.products : [];
+          const products = raw.filter(
+            (p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta",
+          );
+          return { products, cached: Boolean(json?.cached) };
+        };
+
         // Consulta al proveedor, compartida entre peticiones simultáneas
         // del mismo término (una sola llamada aunque busquen 50 personas).
         const fetchUpstream = (): Promise<unknown[] | null> => {
@@ -174,35 +208,30 @@ export const Route = createFileRoute("/api/public/search-prices")({
           if (existing) return existing;
           const p = (async () => {
             try {
-              const deadline = Date.now() + TOTAL_BUDGET_MS;
-              const res = await enqueue(async () => {
-                let r: Response | null = null;
-                for (let attempt = 0; attempt < 4; attempt++) {
-                  if (Date.now() > deadline) break;
-                  const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
-                  // scraperFetch mantiene la sesión y la renueva ante 401/403.
-                  r = await scraperFetch(upstreamUrl.toString(), {}, left);
-                  if (!r) break;
-                  if (r.status !== 429 && r.status !== 503) break;
-                  const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
-                  if (Date.now() + wait > deadline) break;
-                  await new Promise((rs) => setTimeout(rs, wait));
+              let out = await callUpstream(term);
+              // El proveedor guarda en caché búsquedas que se le agotaron por
+              // tiempo y devuelve 0 resultados para siempre (ej. "valsartan").
+              // Si vemos una respuesta vacía servida desde su caché, pedimos
+              // una variante del término para forzar una búsqueda nueva.
+              if (out && out.products.length === 0 && out.cached) {
+                for (const variant of [`${term} tabletas`, `${term} mg`]) {
+                  const retry = await callUpstream(variant);
+                  if (retry && retry.products.length) {
+                    console.log(`[search-prices-api] "${term}" vacío en caché → variante "${variant}" (${retry.products.length})`);
+                    out = retry;
+                    break;
+                  }
+                  if (retry && !retry.cached) break; // búsqueda fresca y sin resultados reales
                 }
-                return r;
-              });
-              if (!res || !res.ok) {
-                const body = res ? await res.text().catch(() => "") : "";
-                console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
-                return null;
               }
-              const json = await res.json();
-              const raw = Array.isArray(json?.products) ? json.products : [];
-              const products = raw.filter(
-                (p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta",
-              );
-              cache.set(cacheKey, { at: Date.now(), products });
-              if (cache.size > 500) {
-                for (const [k, v] of cache) if (Date.now() - v.at > STALE_TTL_MS) cache.delete(k);
+              if (!out) return null;
+              const products = out.products;
+              // No guardamos respuestas vacías: así reintentamos más tarde.
+              if (products.length) {
+                cache.set(cacheKey, { at: Date.now(), products });
+                if (cache.size > 500) {
+                  for (const [k, v] of cache) if (Date.now() - v.at > STALE_TTL_MS) cache.delete(k);
+                }
               }
               return products;
             } catch (err) {
@@ -215,6 +244,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
           inflight.set(cacheKey, p);
           return p;
         };
+
 
         const hit = cache.get(cacheKey);
         const age = hit ? Date.now() - hit.at : Infinity;
