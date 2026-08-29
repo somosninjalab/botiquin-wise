@@ -87,6 +87,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { sendSearchResultsEmail } from "@/lib/email/send-search-results.functions";
 import { toast } from "sonner";
 
+function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const API_PHARMACY_NAMES: Record<string, string> = {
   farmatodo: "Farmatodo",
   fundafarmacia: "Fundafarmacia",
