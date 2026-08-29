@@ -53,12 +53,25 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
 
 // Traduce un código de barras (EAN/UPC) al nombre del producto usando
 // bases públicas. El proveedor solo busca por nombre.
-const barcodeCache = new Map<string, string | null>();
+type BarcodeInfo = { query: string; keywords: string[] } | null;
+const barcodeCache = new Map<string, BarcodeInfo>();
 
-async function resolveBarcode(code: string): Promise<string | null> {
+const STOPWORDS = new Set(["de", "la", "el", "con", "para", "und", "unidad", "plaza", "lata", "x"]);
+
+export function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function resolveBarcode(code: string): Promise<BarcodeInfo> {
   if (barcodeCache.has(code)) return barcodeCache.get(code) ?? null;
   const clean = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-  let name: string | null = null;
+  let info: BarcodeInfo = null;
   try {
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), 8_000);
@@ -70,19 +83,22 @@ async function resolveBarcode(code: string): Promise<string | null> {
     if (res.ok) {
       const j: any = await res.json();
       const p = j?.product ?? {};
-      name =
-        clean(p.product_name_es) ||
-        clean(p.product_name) ||
-        clean(p.generic_name) ||
-        clean(p.brands).split(",")[0]?.trim() ||
-        null;
+      const brand = clean(p.brands).split(",")[0]?.trim() ?? "";
+      const name = clean(p.product_name_es) || clean(p.product_name) || clean(p.generic_name);
+      const tokens = normalizeText(`${brand} ${name}`)
+        .split(" ")
+        .filter((t) => t.length >= 3 && !STOPWORDS.has(t) && !/^\d+$/.test(t));
+      // Consulta corta y distintiva: marca primero, luego palabras clave.
+      const query = (normalizeText(brand) || tokens.slice(0, 2).join(" ")).trim();
+      if (query) info = { query, keywords: tokens.slice(0, 4) };
     }
   } catch (err) {
     console.warn(`[search-prices-api] barcode lookup failed for ${code}:`, err);
   }
-  barcodeCache.set(code, name);
-  return name;
+  barcodeCache.set(code, info);
+  return info;
 }
+
 
 export const Route = createFileRoute("/api/public/search-prices")({
   server: {
