@@ -87,6 +87,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { sendSearchResultsEmail } from "@/lib/email/send-search-results.functions";
 import { toast } from "sonner";
 
+function normalizeText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const API_PHARMACY_NAMES: Record<string, string> = {
   farmatodo: "Farmatodo",
   fundafarmacia: "Fundafarmacia",
@@ -284,9 +294,32 @@ function Index() {
     return list;
   }, [meds, med, cat, ind, ai, brand, pharm, lowestByMed]);
 
+  // Coincidencia exacta: productos cuyo nombre contiene las palabras de la
+  // consulta en el mismo orden y de forma consecutiva, o cuya normalización
+  // es muy cercana a la consulta. Siempre se muestran primero.
+  const exactMatchGroup = useMemo(() => {
+    if (!q.trim()) return null;
+    const queryNorm = normalizeText(q);
+    const queryTokens = queryNorm.split(" ").filter((t) => t.length >= 2);
+    const exact: MedicationRow[] = [];
+    const rest: MedicationRow[] = [];
+    for (const m of filteredMeds) {
+      const nameNorm = normalizeText(m.name);
+      const isExact =
+        nameNorm === queryNorm ||
+        nameNorm.startsWith(queryNorm + " ") ||
+        (queryTokens.length > 0 && queryTokens.every((t) => nameNorm.includes(t)));
+      if (isExact) exact.push(m);
+      else rest.push(m);
+    }
+    if (!exact.length) return null;
+    return { exact, rest };
+  }, [filteredMeds, q]);
+
   const grouped = useMemo(() => {
     const groups = new Map<string, MedicationRow[]>();
-    for (const m of filteredMeds) {
+    const sourceList = exactMatchGroup ? exactMatchGroup.rest : filteredMeds;
+    for (const m of sourceList) {
       const cat = m.category || "Otros";
       if (!groups.has(cat)) groups.set(cat, []);
       groups.get(cat)!.push(m);
@@ -300,8 +333,17 @@ function Index() {
         return pa - pb;
       });
     }
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredMeds, lowestByMed, bcvRate]);
+    const sorted = Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+    if (exactMatchGroup) {
+      const exactSorted = exactMatchGroup.exact.slice().sort((a, b) => {
+        const pa = vesOf(lowestByMed.get(a.id));
+        const pb = vesOf(lowestByMed.get(b.id));
+        return pa - pb;
+      });
+      sorted.unshift(["Coincidencia exacta", exactSorted]);
+    }
+    return sorted;
+  }, [filteredMeds, lowestByMed, bcvRate, exactMatchGroup]);
 
   const pharmacyOptions = Object.entries(q.trim() ? API_PHARMACY_NAMES : pharmaciesMap).sort(([, a], [, b]) =>
     a.localeCompare(b),
