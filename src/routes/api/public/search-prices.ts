@@ -18,10 +18,17 @@ const SOURCES = new Set([
   "farmabien",
 ]);
 
-// Caché corto en memoria: evita repetir consultas idénticas al proveedor,
+// Caché en memoria: evita repetir consultas idénticas al proveedor,
 // que limita fuertemente las peticiones simultáneas.
+// - "fresco": se responde tal cual.
+// - "vencido pero útil": se responde al instante y se refresca por detrás.
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const STALE_TTL_MS = 6 * 60 * 60 * 1000;
 const cache = new Map<string, { at: number; products: unknown[] }>();
+
+// Una sola petición al proveedor por término, aunque muchos usuarios
+// busquen lo mismo a la vez.
+const inflight = new Map<string, Promise<unknown[] | null>>();
 
 // Cola global: solo una petición al proveedor a la vez por instancia,
 // con un espacio mínimo entre llamadas para no disparar su límite.
@@ -42,6 +49,7 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   chain = run.catch(() => undefined);
   return run;
 }
+
 
 export const Route = createFileRoute("/api/public/search-prices")({
   server: {
