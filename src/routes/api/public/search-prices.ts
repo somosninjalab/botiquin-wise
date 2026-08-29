@@ -18,10 +18,17 @@ const SOURCES = new Set([
   "farmabien",
 ]);
 
-// Caché corto en memoria: evita repetir consultas idénticas al proveedor,
+// Caché en memoria: evita repetir consultas idénticas al proveedor,
 // que limita fuertemente las peticiones simultáneas.
+// - "fresco": se responde tal cual.
+// - "vencido pero útil": se responde al instante y se refresca por detrás.
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const STALE_TTL_MS = 6 * 60 * 60 * 1000;
 const cache = new Map<string, { at: number; products: unknown[] }>();
+
+// Una sola petición al proveedor por término, aunque muchos usuarios
+// busquen lo mismo a la vez.
+const inflight = new Map<string, Promise<unknown[] | null>>();
 
 // Cola global: solo una petición al proveedor a la vez por instancia,
 // con un espacio mínimo entre llamadas para no disparar su límite.
@@ -42,6 +49,7 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   chain = run.catch(() => undefined);
   return run;
 }
+
 
 export const Route = createFileRoute("/api/public/search-prices")({
   server: {
@@ -76,62 +84,82 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const bySource = (list: any[]) =>
           (source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
 
+        // Consulta al proveedor, compartida entre peticiones simultáneas
+        // del mismo término (una sola llamada aunque busquen 50 personas).
+        const fetchUpstream = (): Promise<unknown[] | null> => {
+          const existing = inflight.get(cacheKey);
+          if (existing) return existing;
+          const p = (async () => {
+            try {
+              const deadline = Date.now() + TOTAL_BUDGET_MS;
+              const res = await enqueue(async () => {
+                let r: Response | null = null;
+                for (let attempt = 0; attempt < 4; attempt++) {
+                  if (Date.now() > deadline) break;
+                  const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
+                  // scraperFetch mantiene la sesión y la renueva ante 401/403.
+                  r = await scraperFetch(upstreamUrl.toString(), {}, left);
+                  if (!r) break;
+                  if (r.status !== 429 && r.status !== 503) break;
+                  const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
+                  if (Date.now() + wait > deadline) break;
+                  await new Promise((rs) => setTimeout(rs, wait));
+                }
+                return r;
+              });
+              if (!res || !res.ok) {
+                const body = res ? await res.text().catch(() => "") : "";
+                console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
+                return null;
+              }
+              const json = await res.json();
+              const raw = Array.isArray(json?.products) ? json.products : [];
+              const products = raw.filter(
+                (p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta",
+              );
+              cache.set(cacheKey, { at: Date.now(), products });
+              if (cache.size > 500) {
+                for (const [k, v] of cache) if (Date.now() - v.at > STALE_TTL_MS) cache.delete(k);
+              }
+              return products;
+            } catch (err) {
+              console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
+              return null;
+            } finally {
+              inflight.delete(cacheKey);
+            }
+          })();
+          inflight.set(cacheKey, p);
+          return p;
+        };
+
         const hit = cache.get(cacheKey);
-        if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+        const age = hit ? Date.now() - hit.at : Infinity;
+
+        // Caché fresco → respuesta inmediata.
+        if (hit && age < CACHE_TTL_MS) {
           const products = bySource(hit.products as any[]);
           return Response.json({ ok: true, product: q, source: source || null, cached: true, count: products.length, products });
         }
 
-        try {
-          // El proveedor limita las peticiones simultáneas (429): las serializamos
-          // en una cola y reintentamos con espera creciente hasta que nos atienda.
-          const deadline = Date.now() + TOTAL_BUDGET_MS;
-          const res = await enqueue(async () => {
-            let r: Response | null = null;
-            for (let attempt = 0; attempt < 4; attempt++) {
-              if (Date.now() > deadline) break;
-              const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
-              // scraperFetch mantiene la sesión y la renueva ante 401/403.
-              r = await scraperFetch(upstreamUrl.toString(), {}, left);
-              if (!r) break;
-              if (r.status !== 429 && r.status !== 503) break;
-              const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
-              if (Date.now() + wait > deadline) break;
-              await new Promise((rs) => setTimeout(rs, wait));
-            }
-            return r;
-          });
+        // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás.
+        if (hit && age < STALE_TTL_MS) {
+          void fetchUpstream();
+          const stale = bySource(hit.products as any[]);
+          return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+        }
 
-          if (!res || !res.ok) {
-            const body = res ? await res.text().catch(() => "") : "";
-            console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
-            // Si tenemos resultados previos (aunque vencidos), los servimos igual.
-            if (hit) {
-              const stale = bySource(hit.products as any[]);
-              return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
-            }
-            return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
-          }
-
-          const json = await res.json();
-          const raw = Array.isArray(json?.products) ? json.products : [];
-          const products = raw.filter(
-            (p: any) => p?.name && p.name !== "No encontrado" && p.name !== "Error en consulta",
-          );
-          cache.set(cacheKey, { at: Date.now(), products });
-          if (cache.size > 500) {
-            for (const [k, v] of cache) if (Date.now() - v.at > CACHE_TTL_MS) cache.delete(k);
-          }
-          const out = bySource(products);
-          return Response.json({ ok: true, product: q, source: source || null, count: out.length, products: out });
-        } catch (err) {
-          console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
+        const products = await fetchUpstream();
+        if (!products) {
           if (hit) {
             const stale = bySource(hit.products as any[]);
             return Response.json({ ok: true, product: q, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
           }
           return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
         }
+        const out = bySource(products as any[]);
+        return Response.json({ ok: true, product: q, source: source || null, count: out.length, products: out });
+
       },
     },
   },
