@@ -129,7 +129,7 @@ export async function exportSearchResultsPdf(opts: {
         if (r.url) {
           doc.setTextColor(BRAND.r, BRAND.g, BRAND.b);
           doc.setFont("helvetica", "bold");
-          doc.textWithLink("Comprar →", pageW - margin - 55, y, { url: r.url });
+          doc.textWithLink("Comprar »", pageW - margin - 55, y, { url: r.url });
           doc.setFont("helvetica", "normal");
         }
         y += 15;
