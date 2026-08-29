@@ -98,7 +98,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
         }
         if (!token) {
           console.warn("[search-prices-api] no provider session (login failed)");
-          return Response.json({ ok: false, product: term, barcode: resolvedFrom, count: 0, products: [], error: "search temporarily unavailable" });
+          return Response.json({ ok: false, product: q, count: 0, products: [], error: "search temporarily unavailable" });
         }
 
         const limit = Math.min(Number(incoming.searchParams.get("limit") ?? 80) || 80, 120);
