@@ -209,28 +209,30 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const p = (async () => {
             try {
               let out = await callUpstream(term);
-              // El proveedor guarda en caché búsquedas que se le agotaron por
-              // tiempo y devuelve 0 resultados para siempre (ej. "valsartan").
-              // Si vemos una respuesta vacía servida desde su caché, pedimos
-              // una variante del término para forzar una búsqueda nueva.
-              if (out && out.products.length === 0 && out.cached) {
-                for (const variant of [`${term} tabletas`, `${term} mg`]) {
+              // El proveedor a veces responde vacío (tiempo agotado o caché
+              // suya con 0 resultados). Reintentamos siempre con variantes
+              // del término para forzar una búsqueda nueva.
+              if (out && out.products.length === 0) {
+                for (const variant of [`${term} tabletas`, `${term} mg`, `${term} `]) {
                   const retry = await callUpstream(variant);
                   if (retry && retry.products.length) {
-                    console.log(`[search-prices-api] "${term}" vacío en caché → variante "${variant}" (${retry.products.length})`);
+                    console.log(`[search-prices-api] "${term}" vacío → variante "${variant}" (${retry.products.length})`);
                     out = retry;
                     break;
                   }
-                  if (retry && !retry.cached) break; // búsqueda fresca y sin resultados reales
                 }
               }
               if (!out) return null;
               const products = out.products;
-              // No guardamos respuestas vacías: así reintentamos más tarde.
+              // No guardamos respuestas vacías: así conservamos el último
+              // resultado bueno y reintentamos más tarde.
               if (products.length) {
                 cache.set(cacheKey, { at: Date.now(), products });
-                if (cache.size > 500) {
-                  for (const [k, v] of cache) if (Date.now() - v.at > STALE_TTL_MS) cache.delete(k);
+                if (cache.size > 800) {
+                  // Purga los más antiguos (nunca borramos por edad: el último
+                  // resultado bueno sirve de respaldo si el proveedor falla).
+                  const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, 200);
+                  for (const [k] of oldest) cache.delete(k);
                 }
               }
               return products;
@@ -263,15 +265,19 @@ export const Route = createFileRoute("/api/public/search-prices")({
         }
 
         const products = await fetchUpstream();
+        // Si el proveedor falla o devuelve vacío pero antes sí tuvimos
+        // resultados, servimos el último resultado bueno (sin importar su edad):
+        // nunca mostramos "sin resultados" cuando ya sabemos que existen.
+        if ((!products || products.length === 0) && hit && hit.products.length) {
+          const stale = bySource(hit.products as any[]);
+          return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+        }
         if (!products) {
-          if (hit) {
-            const stale = bySource(hit.products as any[]);
-            return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
-          }
           return Response.json({ ok: false, product: term, barcode: resolvedFrom, count: 0, products: [], error: "search temporarily unavailable" });
         }
         const out = bySource(products as any[]);
         return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, count: out.length, products: out });
+
 
       },
     },
