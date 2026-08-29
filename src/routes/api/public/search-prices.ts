@@ -127,10 +127,12 @@ export const Route = createFileRoute("/api/public/search-prices")({
         // traducimos el código a un nombre de producto y buscamos por nombre.
         let term = q;
         let resolvedFrom: string | null = null;
+        let keywords: string[] = [];
         if (/^\d{8,14}$/.test(q)) {
-          const name = await resolveBarcode(q);
-          if (name) {
-            term = name;
+          const info = await resolveBarcode(q);
+          if (info) {
+            term = info.query;
+            keywords = info.keywords;
             resolvedFrom = q;
           }
           // Si no se reconoce, igual intentamos con el código: algunas
