@@ -74,13 +74,34 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: false, error: "unknown source" }, { status: 400 });
         }
 
+        // Códigos de barras: el proveedor no los indexa, así que primero
+        // traducimos el código a un nombre de producto y buscamos por nombre.
+        let term = q;
+        let resolvedFrom: string | null = null;
+        if (/^\d{8,14}$/.test(q)) {
+          const name = await resolveBarcode(q);
+          if (!name) {
+            return Response.json({
+              ok: true,
+              product: q,
+              barcode: q,
+              count: 0,
+              products: [],
+              error: "barcode not recognized",
+            });
+          }
+          term = name;
+          resolvedFrom = q;
+        }
+
         // Una sola llamada agregada (/api/scraper/search) que devuelve todas
         // las farmacias a la vez: es mucho más rápida y estable que pedir
         // farmacia por farmacia (esas rutas suelen agotar el tiempo).
         const upstreamUrl = new URL(`${API_ROOT}/search`);
-        upstreamUrl.searchParams.set("product", q);
+        upstreamUrl.searchParams.set("product", term);
 
-        const cacheKey = `all::${q.toLowerCase()}`;
+        const cacheKey = `all::${term.toLowerCase()}`;
+
         const bySource = (list: any[]) =>
           (source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
 
