@@ -148,8 +148,18 @@ export const Route = createFileRoute("/api/public/search-prices")({
 
         const cacheKey = `all::${term.toLowerCase()}`;
 
+        // En búsquedas por código de barras exigimos que el resultado
+        // mencione alguna palabra clave del producto escaneado.
+        const relevant = (list: any[]) =>
+          keywords.length
+            ? list.filter((p: any) => {
+                const text = normalizeText(`${p?.name ?? ""} ${p?.brand ?? ""}`);
+                return keywords.some((k) => text.includes(k));
+              })
+            : list;
+
         const bySource = (list: any[]) =>
-          (source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
+          relevant(source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
 
         // Consulta al proveedor, compartida entre peticiones simultáneas
         // del mismo término (una sola llamada aunque busquen 50 personas).
