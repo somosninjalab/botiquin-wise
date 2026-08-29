@@ -852,6 +852,25 @@ function SearchResults(props: {
   const { user } = useAuth();
   const sendEmail = useServerFn(sendSearchResultsEmail);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      await exportSearchResultsPdf({
+        query: q,
+        grouped,
+        latestByMedPharm,
+        pharmaciesMap,
+        bcvRate,
+      });
+      toast.success("PDF descargado con los enlaces de compra.");
+    } catch {
+      toast.error("No hay resultados con precios para exportar.");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   const handleSendEmail = async () => {
     if (!user) {
@@ -924,6 +943,17 @@ function SearchResults(props: {
               {q && <span className="text-muted-foreground font-normal"> para "{q}"</span>}
             </h2>
             <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPdf}
+              disabled={exportingPdf || loading || totalResults === 0}
+              className="h-8 gap-1.5"
+              title="Descargar resultados en PDF con enlaces de compra"
+            >
+              <FileDown className="h-4 w-4" />
+              <span className="hidden sm:inline">{exportingPdf ? "Generando…" : "Exportar PDF"}</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
