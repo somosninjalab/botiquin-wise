@@ -166,17 +166,26 @@ export const Route = createFileRoute("/api/public/search-prices")({
           for (let attempt = 0; attempt < 2; attempt++) {
             if (Date.now() > deadline) break;
             const left = Math.max(5_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
-            try {
-              r = await scraperFetch(u.toString(), {}, left);
-            } catch (error) {
-              console.warn(`[search-prices-api] ${src} attempt ${attempt + 1} failed:`, error);
-              r = null;
+            // El regulador adaptativo decide cuándo puede salir esta llamada.
+            r = await scheduleUpstream(async () => {
+              try {
+                return await scraperFetch(u.toString(), {}, left);
+              } catch (error) {
+                console.warn(`[search-prices-api] ${src} attempt ${attempt + 1} failed:`, error);
+                reportFailure();
+                return null;
+              }
+            }, deadline);
+            if (r && r.status !== 429 && r.status !== 503 && r.status !== 403) {
+              reportSuccess();
+              break;
             }
-            if (r && r.status !== 429 && r.status !== 503) break;
+            if (r) reportThrottled();
             const wait = Math.min(800 * 2 ** attempt, 3000);
             if (Date.now() + wait > deadline) break;
             await new Promise((rs) => setTimeout(rs, wait));
           }
+
           if (!r || !r.ok) {
             const body = r ? await r.text().catch(() => "") : "";
             console.warn(`[search-prices-api] ${src} HTTP ${r?.status} body=${body.slice(0, 160)}`);
