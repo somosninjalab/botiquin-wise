@@ -114,11 +114,6 @@ export function isBarcode(term: string): boolean {
 }
 
 function mapProducts(term: string, products: ApiProduct[], limit: number) {
-  const queryTokens = isBarcode(term)
-    ? []
-    : norm(term)
-        .split("-")
-        .filter((t) => t.length >= 3);
   const meds = new Map<string, MedicationRow>();
   const priceRows: PriceRow[] = [];
   const now = new Date().toISOString();
@@ -136,12 +131,20 @@ function mapProducts(term: string, products: ApiProduct[], limit: number) {
       brandNorm === "no especificado" ||
       Object.values(API_PHARMACIES).some((p) => norm(p.name) === brandNorm || p.slug === brandNorm);
     const brand = isNoiseBrand ? "" : rawBrand;
-    // El nombre real del producto: si el API no lo trae, se deriva de la URL (nunca la farmacia/laboratorio)
-    const name = (product.name ?? "").trim() || nameFromUrl(product.url);
+    // Algunas fuentes (especialmente Farmacia SAAS) envían el laboratorio en
+    // `name`. En esos casos la URL conserva el nombre completo del producto.
+    const rawName = (product.name ?? "").trim();
+    const urlName = nameFromUrl(product.url);
+    const nameIsBrand = rawName && rawBrand && norm(rawName) === norm(rawBrand);
+    const nameIsPharmacy = Object.values(API_PHARMACIES).some(
+      (p) => norm(p.name) === norm(rawName) || p.slug === norm(rawName),
+    );
+    const name = ((nameIsBrand || nameIsPharmacy) && urlName ? urlName : rawName) || urlName;
     if (!name) continue;
-    // Solo productos cuyo nombre/marca contenga lo consultado
-    const haystack = norm(name);
-    if (queryTokens.length && !queryTokens.every((t) => haystack.includes(t))) continue;
+
+    // La ruta del proveedor ya devuelve los resultados de su comparador para
+    // este término. No volvemos a filtrarlos por nombre: hacerlo ocultaba
+    // productos válidos cuando una farmacia enviaba el laboratorio como label.
 
     const key = norm(name) || hashString(name);
     const medId = `api-${key}`;
