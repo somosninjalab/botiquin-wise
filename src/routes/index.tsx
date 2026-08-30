@@ -256,12 +256,11 @@ function Index() {
         result_count: total,
         savings_usd: Math.round(savings * 100) / 100,
       });
-      refetchStats();
     })();
     return () => {
       cancelled = true;
     };
-  }, [q, refetchStats]);
+  }, [q]);
 
   const updateSearch = (
     patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
