@@ -10,8 +10,22 @@
 const LOGIN_URL = "https://admin.clubestarbien.com/api/auth/login";
 const TOKEN_TTL_MS = 50 * 60 * 1000; // renovamos con margen
 
+/**
+ * El proveedor bloquea clientes sin cabeceras de navegador
+ * ("BOT_SCRAPING_BLOCKED"), así que replicamos las del comparador web.
+ */
+export const BROWSER_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+  Accept: "application/json, text/plain, */*",
+  "Accept-Language": "es-VE,es;q=0.9,en;q=0.8",
+  Referer: "https://admin.clubestarbien.com/price-comparator",
+  Origin: "https://admin.clubestarbien.com",
+};
+
 let cached: { token: string; at: number } | null = null;
 let inflight: Promise<string | null> | null = null;
+
 
 async function login(): Promise<string | null> {
   const username = process.env["SCRAPER_LOGIN_USER"];
@@ -22,7 +36,7 @@ async function login(): Promise<string | null> {
     const tid = setTimeout(() => ctrl.abort(), 30_000);
     const res = await fetch(LOGIN_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: { ...BROWSER_HEADERS, "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
       signal: ctrl.signal,
     });
@@ -70,7 +84,7 @@ export async function scraperFetch(
       const res = await fetch(url, {
         ...init,
         headers: {
-          Accept: "application/json",
+          ...BROWSER_HEADERS,
           ...(init.headers ?? {}),
           Authorization: `Bearer ${token}`,
         },

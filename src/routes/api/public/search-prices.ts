@@ -3,8 +3,8 @@ import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 // Tiempo máximo por intento y tiempo total antes de responder al usuario.
-const SEARCH_TIMEOUT_MS = 45_000;
-const TOTAL_BUDGET_MS = 95_000;
+const SEARCH_TIMEOUT_MS = 75_000;
+const TOTAL_BUDGET_MS = 160_000;
 
 const SOURCES = new Set([
   "farmatodo",
@@ -166,59 +166,71 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const bySource = (list: any[]) =>
           relevant(source ? list.filter((p: any) => (p?.source ?? "").toLowerCase() === source) : list).slice(0, limit);
 
-        // Una sola llamada al proveedor (con reintentos ante saturación).
+        // Consulta a UNA farmacia del proveedor (ruta por farmacia, que es la
+        // que usa su comparador web y la única que devuelve datos frescos).
+        const callSource = async (
+          searchTerm: string,
+          src: string,
+          deadline: number,
+        ): Promise<any[] | null> => {
+          const u = new URL(`${API_ROOT}/${src}`);
+          u.searchParams.set("product", searchTerm);
+          let r: Response | null = null;
+          for (let attempt = 0; attempt < 2; attempt++) {
+            if (Date.now() > deadline) break;
+            const left = Math.max(5_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
+            try {
+              r = await scraperFetch(u.toString(), {}, left);
+            } catch (error) {
+              console.warn(`[search-prices-api] ${src} attempt ${attempt + 1} failed:`, error);
+              r = null;
+            }
+            if (r && r.status !== 429 && r.status !== 503) break;
+            const wait = Math.min(800 * 2 ** attempt, 3000);
+            if (Date.now() + wait > deadline) break;
+            await new Promise((rs) => setTimeout(rs, wait));
+          }
+          if (!r || !r.ok) {
+            const body = r ? await r.text().catch(() => "") : "";
+            console.warn(`[search-prices-api] ${src} HTTP ${r?.status} body=${body.slice(0, 160)}`);
+            return null;
+          }
+          const json: any = await r.json().catch(() => null);
+          const raw = Array.isArray(json?.products) ? json.products : [];
+          return raw
+            .filter((p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta")
+            .map((p2: any) => ({ ...p2, source: p2.source || src }));
+        };
+
+        // Sin farmacia específica: consultamos todas en paralelo (de a 3, como
+        // el comparador original). La ruta agregada del proveedor devuelve una
+        // caché vacía y no sirve como fuente.
         const callUpstream = async (
           searchTerm: string,
         ): Promise<{ products: any[]; cached: boolean } | null> => {
-          // El comparador web consulta una ruta por farmacia y muestra cada
-          // respuesta al llegar. Usamos exactamente esas rutas cuando se pide
-          // una fuente; la ruta agregada queda disponible para otros clientes.
-          const u = new URL(`${API_ROOT}/${source || "search"}`);
-          u.searchParams.set("product", searchTerm);
           const deadline = Date.now() + TOTAL_BUDGET_MS;
-          const requestProvider = async () => {
-            let r: Response | null = null;
-            const attempts = source ? 2 : 3;
-            for (let attempt = 0; attempt < attempts; attempt++) {
-              if (Date.now() > deadline) break;
-              const perSourceTimeout = source ? 30_000 : SEARCH_TIMEOUT_MS;
-              const left = Math.max(3_000, Math.min(perSourceTimeout, deadline - Date.now()));
-              try {
-                // scraperFetch mantiene la sesión y la renueva ante 401/403.
-                r = await scraperFetch(u.toString(), {}, left);
-              } catch (error) {
-                console.warn(`[search-prices-api] attempt ${attempt + 1} failed for "${searchTerm}":`, error);
-                r = null;
-              }
-              if (!r) {
-                if (attempt < attempts - 1) await new Promise((rs) => setTimeout(rs, 800 * (attempt + 1)));
-                continue;
-              }
-              if (r.status !== 429 && r.status !== 503) break;
-              const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
-              if (Date.now() + wait > deadline) break;
-              await new Promise((rs) => setTimeout(rs, wait));
-            }
-            return r;
-          };
-          // La página original consulta sus farmacias en paralelo. El cliente
-          // limita esto a tres; no serializamos aquí porque multiplicaba la
-          // espera hasta agotar el tiempo de las solicitudes restantes.
-          const res = source ? await requestProvider() : await enqueue(requestProvider);
-          if (!res || !res.ok) {
-            const body = res ? await res.text().catch(() => "") : "";
-            console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
-            return null;
+          if (source) {
+            const products = await callSource(searchTerm, source, deadline);
+            return products ? { products, cached: false } : null;
           }
-          const json: any = await res.json();
-          const raw = Array.isArray(json?.products) ? json.products : [];
-          const products = raw
-            .filter(
-              (p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta",
-            )
-            .map((p2: any) => ({ ...p2, source: p2.source || source || undefined }));
-          return { products, cached: Boolean(json?.cached) };
+          const ids = [...SOURCES];
+          const all: any[] = [];
+          let anyOk = false;
+          let idx = 0;
+          const worker = async () => {
+            while (idx < ids.length && Date.now() < deadline) {
+              const src = ids[idx++]!;
+              const products = await callSource(searchTerm, src, deadline);
+              if (products) {
+                anyOk = true;
+                all.push(...products);
+              }
+            }
+          };
+          await Promise.all([worker(), worker(), worker()]);
+          return anyOk ? { products: all, cached: false } : null;
         };
+
 
         // Consulta al proveedor, compartida entre peticiones simultáneas
         // del mismo término (una sola llamada aunque busquen 50 personas).
@@ -230,7 +242,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
               let out = await callUpstream(term);
               // Si el origen responde vacío, repetimos exactamente la misma
               // consulta. Alterar el término podía mezclar productos ajenos.
-              if (out && out.products.length === 0) {
+              if (source && out && out.products.length === 0) {
                 const retry = await callUpstream(term);
                 if (retry?.products.length) out = retry;
               }
