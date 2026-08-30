@@ -1,5 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
+import {
+  reportFailure,
+  reportSuccess,
+  reportThrottled,
+  scheduleUpstream,
+} from "@/lib/scraper-throttle.server";
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 // Tiempo máximo por intento y tiempo total antes de responder al usuario.
@@ -30,25 +36,6 @@ const cache = new Map<string, { at: number; products: unknown[] }>();
 // busquen lo mismo a la vez.
 const inflight = new Map<string, Promise<unknown[] | null>>();
 
-// Cola global: solo una petición al proveedor a la vez por instancia,
-// con un espacio mínimo entre llamadas para no disparar su límite.
-const MIN_GAP_MS = 1200;
-let lastCallAt = 0;
-let chain: Promise<unknown> = Promise.resolve();
-function enqueue<T>(fn: () => Promise<T>): Promise<T> {
-  const step = async () => {
-    const wait = MIN_GAP_MS - (Date.now() - lastCallAt);
-    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-    try {
-      return await fn();
-    } finally {
-      lastCallAt = Date.now();
-    }
-  };
-  const run = chain.then(step, step);
-  chain = run.catch(() => undefined);
-  return run;
-}
 
 
 // Traduce un código de barras (EAN/UPC) al nombre del producto usando
@@ -179,17 +166,26 @@ export const Route = createFileRoute("/api/public/search-prices")({
           for (let attempt = 0; attempt < 2; attempt++) {
             if (Date.now() > deadline) break;
             const left = Math.max(5_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
-            try {
-              r = await scraperFetch(u.toString(), {}, left);
-            } catch (error) {
-              console.warn(`[search-prices-api] ${src} attempt ${attempt + 1} failed:`, error);
-              r = null;
+            // El regulador adaptativo decide cuándo puede salir esta llamada.
+            r = await scheduleUpstream(async () => {
+              try {
+                return await scraperFetch(u.toString(), {}, left);
+              } catch (error) {
+                console.warn(`[search-prices-api] ${src} attempt ${attempt + 1} failed:`, error);
+                reportFailure();
+                return null;
+              }
+            }, deadline);
+            if (r && r.status !== 429 && r.status !== 503 && r.status !== 403) {
+              reportSuccess();
+              break;
             }
-            if (r && r.status !== 429 && r.status !== 503) break;
+            if (r) reportThrottled();
             const wait = Math.min(800 * 2 ** attempt, 3000);
             if (Date.now() + wait > deadline) break;
             await new Promise((rs) => setTimeout(rs, wait));
           }
+
           if (!r || !r.ok) {
             const body = r ? await r.text().catch(() => "") : "";
             console.warn(`[search-prices-api] ${src} HTTP ${r?.status} body=${body.slice(0, 160)}`);
