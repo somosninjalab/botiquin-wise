@@ -197,7 +197,8 @@ function Index() {
       const collected: PriceRow[] = [];
       let failed = 0;
       // Replica el comparador de origen: una ruta por farmacia y resultados
-      // visibles a medida que llegan. Tres simultáneas evitan sobrecargarlo.
+      // visibles a medida que llegan. Dos simultáneas reducen los timeouts del
+      // navegador remoto sin convertir la búsqueda en una cola lenta.
       const queue = [...API_SOURCE_IDS];
       const runOne = async (source: string) => {
         try {
@@ -228,7 +229,7 @@ function Index() {
           await runOne(source);
         }
       };
-      await Promise.all([worker(), worker(), worker()]);
+      await Promise.all([worker(), worker()]);
       if (cancelled) return;
       if (failed === API_SOURCE_IDS.length) {
         setSearchError("El comparador no respondió a tiempo");
@@ -255,12 +256,11 @@ function Index() {
         result_count: total,
         savings_usd: Math.round(savings * 100) / 100,
       });
-      refetchStats();
     })();
     return () => {
       cancelled = true;
     };
-  }, [q, refetchStats]);
+  }, [q]);
 
   const updateSearch = (
     patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
