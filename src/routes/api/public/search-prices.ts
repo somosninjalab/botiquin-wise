@@ -145,7 +145,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
         // farmacia por farmacia (esas rutas suelen agotar el tiempo).
 
 
-        const cacheKey = `all::${term.toLowerCase()}`;
+        const cacheKey = `${source || "all"}::${term.toLowerCase()}`;
 
         // En búsquedas por código de barras: primero coincidencia exacta por
         // código/SKU; si no hay, exigimos alguna palabra clave del producto.
@@ -170,7 +170,10 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const callUpstream = async (
           searchTerm: string,
         ): Promise<{ products: any[]; cached: boolean } | null> => {
-          const u = new URL(`${API_ROOT}/search`);
+          // El comparador web consulta una ruta por farmacia y muestra cada
+          // respuesta al llegar. Usamos exactamente esas rutas cuando se pide
+          // una fuente; la ruta agregada queda disponible para otros clientes.
+          const u = new URL(`${API_ROOT}/${source || "search"}`);
           u.searchParams.set("product", searchTerm);
           const deadline = Date.now() + TOTAL_BUDGET_MS;
           const res = await enqueue(async () => {

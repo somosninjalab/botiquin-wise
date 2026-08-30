@@ -69,7 +69,8 @@ import {
   lowestCurrent,
   priorPrice,
   searchMedications,
-  searchMedicationResults,
+  searchMedicationsBySource,
+  API_SOURCE_IDS,
   suggestMedications,
   type SuggestionRow,
   type MedicationRow,
@@ -193,23 +194,46 @@ function Index() {
     setSearchError(null);
     (async () => {
       let total = 0;
-      let collected: PriceRow[] = [];
-      try {
-        // El comparador ya consulta todas las farmacias en una sola operación.
-        // Evitamos nueve solicitudes duplicadas que saturaban el origen.
-        const result = await searchMedicationResults(q, 120);
-        if (cancelled) return;
-        total = result.meds.length;
-        collected = result.prices;
-        setMeds(result.meds);
-        setPrices(result.prices);
-        setSourcesDone(Object.keys(API_PHARMACY_NAMES).length);
-      } catch (error) {
-        if (cancelled) return;
-        setSearchError(error instanceof Error ? error.message : "No se pudo consultar el comparador");
-      } finally {
-        if (!cancelled) setLoading(false);
+      const collected: PriceRow[] = [];
+      let failed = 0;
+      // Replica el comparador de origen: una ruta por farmacia y resultados
+      // visibles a medida que llegan. Tres simultáneas evitan sobrecargarlo.
+      const queue = [...API_SOURCE_IDS];
+      const runOne = async (source: string) => {
+        try {
+          const result = await searchMedicationsBySource(q, source, 80);
+          if (cancelled) return;
+          total += result.meds.length;
+          collected.push(...result.prices);
+          setMeds((previous) => {
+            const byId = new Map(previous.map((item) => [item.id, item]));
+            for (const item of result.meds) byId.set(item.id, item);
+            return Array.from(byId.values());
+          });
+          setPrices((previous) => {
+            const byId = new Map(previous.map((item) => [item.id, item]));
+            for (const item of result.prices) byId.set(item.id, item);
+            return Array.from(byId.values());
+          });
+        } catch {
+          failed += 1;
+        } finally {
+          if (!cancelled) setSourcesDone((done) => done + 1);
+        }
+      };
+      const worker = async () => {
+        while (!cancelled) {
+          const source = queue.shift();
+          if (!source) return;
+          await runOne(source);
+        }
+      };
+      await Promise.all([worker(), worker(), worker()]);
+      if (cancelled) return;
+      if (failed === API_SOURCE_IDS.length) {
+        setSearchError("El comparador no respondió a tiempo");
       }
+      setLoading(false);
       // Ahorro potencial de esta búsqueda: diferencia en USD entre el
       // resultado más económico y el más caro de cada medicina encontrada.
       let savings = 0;
@@ -1174,10 +1198,10 @@ function SearchResults(props: {
         <NoResults query={q} updateSearch={updateSearch} />
       ) : (
         <div className="space-y-10">
-          {q.trim() && sourcesDone < Object.keys(API_PHARMACY_NAMES).length && (
+          {q.trim() && sourcesDone < API_SOURCE_IDS.length && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm text-primary flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              Buscando en más farmacias… ({sourcesDone}/{Object.keys(API_PHARMACY_NAMES).length})
+              Buscando en más farmacias… ({sourcesDone}/{API_SOURCE_IDS.length})
             </div>
           )}
           {grouped.map(([category, items]) => (

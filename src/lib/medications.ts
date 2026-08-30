@@ -221,8 +221,12 @@ export async function searchMedicationsBySource(q: string, source: string, limit
   const res = await fetch(
     `/api/public/search-prices?q=${encodeURIComponent(term)}&source=${encodeURIComponent(source)}&limit=${limit}`,
   );
-  if (!res.ok) return { meds: [] as MedicationRow[], prices: [] as PriceRow[] };
-  const json = (await res.json()) as { products?: ApiProduct[] };
+  const json = (await res.json().catch(() => null)) as
+    | { ok?: boolean; products?: ApiProduct[]; error?: string }
+    | null;
+  if (!res.ok || !json?.ok) {
+    throw new Error(json?.error || `No respondió ${API_PHARMACIES[source]?.name ?? source}`);
+  }
   return mapProducts(term, json.products ?? [], limit);
 }
 
