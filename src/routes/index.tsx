@@ -165,6 +165,7 @@ function Index() {
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [sourcesDone, setSourcesDone] = useState(0);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
   const [showAllFeatured, setShowAllFeatured] = useState(false);
@@ -190,33 +191,36 @@ function Index() {
     setMeds([]);
     setPrices([]);
     setSourcesDone(0);
+    setSearchError(null);
     (async () => {
       let total = 0;
       const collected: PriceRow[] = [];
-      // Una consulta por farmacia: los resultados se muestran a medida que llegan.
-      // El API externo rechaza demasiadas peticiones simultáneas (429), así que
-      // usamos una cola con concurrencia limitada.
+      let failed = 0;
+      // Replica el comparador de origen: una ruta por farmacia y resultados
+      // visibles a medida que llegan. Tres simultáneas evitan sobrecargarlo.
       const queue = [...API_SOURCE_IDS];
       const runOne = async (source: string) => {
-          try {
-            const { meds: m, prices: p } = await searchMedicationsBySource(q, source, 40);
-            if (cancelled) return;
-            if (m.length) {
-              total += m.length;
-              setMeds((prev) => {
-                const seen = new Set(prev.map((x) => x.id));
-                return [...prev, ...m.filter((x) => !seen.has(x.id))];
-              });
-              collected.push(...p);
-              setPrices((prev) => [...prev, ...p]);
-              setLoading(false);
-            }
-          } finally {
-            if (!cancelled) {
-              setSourcesDone((n) => n + 1);
-            }
-          }
-        };
+        try {
+          const result = await searchMedicationsBySource(q, source, 80);
+          if (cancelled) return;
+          total += result.meds.length;
+          collected.push(...result.prices);
+          setMeds((previous) => {
+            const byId = new Map(previous.map((item) => [item.id, item]));
+            for (const item of result.meds) byId.set(item.id, item);
+            return Array.from(byId.values());
+          });
+          setPrices((previous) => {
+            const byId = new Map(previous.map((item) => [item.id, item]));
+            for (const item of result.prices) byId.set(item.id, item);
+            return Array.from(byId.values());
+          });
+        } catch {
+          failed += 1;
+        } finally {
+          if (!cancelled) setSourcesDone((done) => done + 1);
+        }
+      };
       const worker = async () => {
         while (!cancelled) {
           const source = queue.shift();
@@ -224,8 +228,11 @@ function Index() {
           await runOne(source);
         }
       };
-      await Promise.allSettled([worker(), worker()]);
+      await Promise.all([worker(), worker(), worker()]);
       if (cancelled) return;
+      if (failed === API_SOURCE_IDS.length) {
+        setSearchError("El comparador no respondió a tiempo");
+      }
       setLoading(false);
       // Ahorro potencial de esta búsqueda: diferencia en USD entre el
       // resultado más económico y el más caro de cada medicina encontrada.
@@ -253,7 +260,7 @@ function Index() {
     return () => {
       cancelled = true;
     };
-  }, [q, bcvRate, refetchStats]);
+  }, [q, refetchStats]);
 
   const updateSearch = (
     patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
@@ -465,6 +472,7 @@ function Index() {
           lowestByMed={lowestByMed}
           latestByMedPharm={latestByMedPharm}
           prices={prices}
+          searchError={searchError}
           pharmaciesMap={pharmaciesMap}
           pharmacySlugMap={pharmacySlugMap}
           pharmacyOptions={pharmacyOptions}
@@ -802,6 +810,7 @@ function SearchResults(props: {
   lowestByMed: Map<string, PriceRow>;
   latestByMedPharm: Map<string, PriceRow>;
   prices: PriceRow[];
+  searchError: string | null;
   pharmaciesMap: Record<string, string>;
   pharmacySlugMap: Record<string, string>;
   pharmacyOptions: [string, string][];
@@ -811,7 +820,7 @@ function SearchResults(props: {
   sourcesDone: number;
 }) {
   const {
-    q, pharm, med, cat, ind, brand, ai, loading, meds, allMeds, grouped, lowestByMed, prices,
+    q, pharm, med, cat, ind, brand, ai, loading, meds, allMeds, grouped, lowestByMed, prices, searchError,
     pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm, sourcesDone,
   } = props;
 
@@ -933,6 +942,11 @@ function SearchResults(props: {
   return (
     <section id="resultados" className="container mx-auto px-4 pt-3 md:pt-4 pb-16 scroll-mt-20">
       <RegisterAlertCTA />
+      {searchError && !loading && (
+        <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+          El comparador tardó demasiado en responder. Intenta nuevamente; no mostraremos un resultado vacío como si no existiera.
+        </div>
+      )}
       {/* Sticky filter bar */}
       <div className="mb-4 -mx-4 px-4 md:mx-0 md:px-0">
         <Card className="p-3 md:p-4 bg-card/95 border-border/80">
@@ -1171,7 +1185,7 @@ function SearchResults(props: {
       </div>
 
       {/* Results */}
-      {loading ? (
+      {loading && totalResults === 0 ? (
         <div className="space-y-4">
           <SearchProgress />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1184,7 +1198,7 @@ function SearchResults(props: {
         <NoResults query={q} updateSearch={updateSearch} />
       ) : (
         <div className="space-y-10">
-          {q.trim() && sourcesDone < API_SOURCE_IDS.length && (
+          {q.trim() && loading && sourcesDone < API_SOURCE_IDS.length && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm text-primary flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               Buscando en más farmacias… ({sourcesDone}/{API_SOURCE_IDS.length})
