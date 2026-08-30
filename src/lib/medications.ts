@@ -198,6 +198,22 @@ function mapProducts(term: string, products: ApiProduct[], limit: number) {
   return { meds: medList, prices: priceRows.filter((p) => meds.has(p.medication_id)) };
 }
 
+/** Búsqueda agregada: una sola llamada devuelve todas las farmacias. */
+export async function searchMedicationResults(q: string, limit = 120) {
+  const term = q.replace(/[,()]/g, " ").trim();
+  if (!term) return { meds: [] as MedicationRow[], prices: [] as PriceRow[] };
+  const res = await fetch(
+    `/api/public/search-prices?q=${encodeURIComponent(term)}&limit=${limit}`,
+  );
+  const json = (await res.json().catch(() => null)) as
+    | { ok?: boolean; products?: ApiProduct[]; error?: string }
+    | null;
+  if (!res.ok || !json?.ok) {
+    throw new Error(json?.error || "No se pudo consultar el comparador");
+  }
+  return mapProducts(term, json.products ?? [], limit);
+}
+
 /** Búsqueda en UNA farmacia (streaming: se llama una vez por farmacia). */
 export async function searchMedicationsBySource(q: string, source: string, limit = 40) {
   const term = q.replace(/[,()]/g, " ").trim();

@@ -3,8 +3,8 @@ import { getScraperToken, scraperFetch } from "@/lib/scraper-session.server";
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 // Tiempo máximo por intento y tiempo total antes de responder al usuario.
-const SEARCH_TIMEOUT_MS = 18_000;
-const TOTAL_BUDGET_MS = 35_000;
+const SEARCH_TIMEOUT_MS = 45_000;
+const TOTAL_BUDGET_MS = 95_000;
 
 const SOURCES = new Set([
   "farmatodo",
@@ -175,11 +175,20 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const deadline = Date.now() + TOTAL_BUDGET_MS;
           const res = await enqueue(async () => {
             let r: Response | null = null;
-            for (let attempt = 0; attempt < 4; attempt++) {
+            for (let attempt = 0; attempt < 3; attempt++) {
               if (Date.now() > deadline) break;
               const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
-              // scraperFetch mantiene la sesión y la renueva ante 401/403.
-              r = await scraperFetch(u.toString(), {}, left);
+              try {
+                // scraperFetch mantiene la sesión y la renueva ante 401/403.
+                r = await scraperFetch(u.toString(), {}, left);
+              } catch (error) {
+                console.warn(`[search-prices-api] attempt ${attempt + 1} failed for "${searchTerm}":`, error);
+                r = null;
+              }
+              if (!r) {
+                if (attempt < 2) await new Promise((rs) => setTimeout(rs, 800 * (attempt + 1)));
+                continue;
+              }
               if (!r) break;
               if (r.status !== 429 && r.status !== 503) break;
               const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
@@ -209,18 +218,11 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const p = (async () => {
             try {
               let out = await callUpstream(term);
-              // El proveedor a veces responde vacío (tiempo agotado o caché
-              // suya con 0 resultados). Reintentamos siempre con variantes
-              // del término para forzar una búsqueda nueva.
+              // Si el origen responde vacío, repetimos exactamente la misma
+              // consulta. Alterar el término podía mezclar productos ajenos.
               if (out && out.products.length === 0) {
-                for (const variant of [`${term} tabletas`, `${term} mg`, `${term} `]) {
-                  const retry = await callUpstream(variant);
-                  if (retry && retry.products.length) {
-                    console.log(`[search-prices-api] "${term}" vacío → variante "${variant}" (${retry.products.length})`);
-                    out = retry;
-                    break;
-                  }
-                }
+                const retry = await callUpstream(term);
+                if (retry?.products.length) out = retry;
               }
               if (!out) return null;
               const products = out.products;

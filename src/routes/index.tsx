@@ -69,8 +69,7 @@ import {
   lowestCurrent,
   priorPrice,
   searchMedications,
-  searchMedicationsBySource,
-  API_SOURCE_IDS,
+  searchMedicationResults,
   suggestMedications,
   type SuggestionRow,
   type MedicationRow,
@@ -165,6 +164,7 @@ function Index() {
   const [pharmaciesMap, setPharmaciesMap] = useState<Record<string, string>>({});
   const [pharmacySlugMap, setPharmacySlugMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [sourcesDone, setSourcesDone] = useState(0);
   const [scrapingIds, setScrapingIds] = useState<Set<string>>(new Set());
   const [showAllFeatured, setShowAllFeatured] = useState(false);
@@ -190,43 +190,26 @@ function Index() {
     setMeds([]);
     setPrices([]);
     setSourcesDone(0);
+    setSearchError(null);
     (async () => {
       let total = 0;
-      const collected: PriceRow[] = [];
-      // Una consulta por farmacia: los resultados se muestran a medida que llegan.
-      // El API externo rechaza demasiadas peticiones simultáneas (429), así que
-      // usamos una cola con concurrencia limitada.
-      const queue = [...API_SOURCE_IDS];
-      const runOne = async (source: string) => {
-          try {
-            const { meds: m, prices: p } = await searchMedicationsBySource(q, source, 40);
-            if (cancelled) return;
-            if (m.length) {
-              total += m.length;
-              setMeds((prev) => {
-                const seen = new Set(prev.map((x) => x.id));
-                return [...prev, ...m.filter((x) => !seen.has(x.id))];
-              });
-              collected.push(...p);
-              setPrices((prev) => [...prev, ...p]);
-              setLoading(false);
-            }
-          } finally {
-            if (!cancelled) {
-              setSourcesDone((n) => n + 1);
-            }
-          }
-        };
-      const worker = async () => {
-        while (!cancelled) {
-          const source = queue.shift();
-          if (!source) return;
-          await runOne(source);
-        }
-      };
-      await Promise.allSettled([worker(), worker()]);
-      if (cancelled) return;
-      setLoading(false);
+      let collected: PriceRow[] = [];
+      try {
+        // El comparador ya consulta todas las farmacias en una sola operación.
+        // Evitamos nueve solicitudes duplicadas que saturaban el origen.
+        const result = await searchMedicationResults(q, 120);
+        if (cancelled) return;
+        total = result.meds.length;
+        collected = result.prices;
+        setMeds(result.meds);
+        setPrices(result.prices);
+        setSourcesDone(Object.keys(API_PHARMACY_NAMES).length);
+      } catch (error) {
+        if (cancelled) return;
+        setSearchError(error instanceof Error ? error.message : "No se pudo consultar el comparador");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
       // Ahorro potencial de esta búsqueda: diferencia en USD entre el
       // resultado más económico y el más caro de cada medicina encontrada.
       let savings = 0;
@@ -253,7 +236,7 @@ function Index() {
     return () => {
       cancelled = true;
     };
-  }, [q, bcvRate, refetchStats]);
+  }, [q, refetchStats]);
 
   const updateSearch = (
     patch: Partial<{ q: string; pharm: string; med: string; cat: string; ind: string; brand: string; ai: string }>,
@@ -465,6 +448,7 @@ function Index() {
           lowestByMed={lowestByMed}
           latestByMedPharm={latestByMedPharm}
           prices={prices}
+          searchError={searchError}
           pharmaciesMap={pharmaciesMap}
           pharmacySlugMap={pharmacySlugMap}
           pharmacyOptions={pharmacyOptions}
@@ -802,6 +786,7 @@ function SearchResults(props: {
   lowestByMed: Map<string, PriceRow>;
   latestByMedPharm: Map<string, PriceRow>;
   prices: PriceRow[];
+  searchError: string | null;
   pharmaciesMap: Record<string, string>;
   pharmacySlugMap: Record<string, string>;
   pharmacyOptions: [string, string][];
@@ -811,7 +796,7 @@ function SearchResults(props: {
   sourcesDone: number;
 }) {
   const {
-    q, pharm, med, cat, ind, brand, ai, loading, meds, allMeds, grouped, lowestByMed, prices,
+    q, pharm, med, cat, ind, brand, ai, loading, meds, allMeds, grouped, lowestByMed, prices, searchError,
     pharmaciesMap, pharmacySlugMap, pharmacyOptions, updateSearch, bcvRate, scrapingIds, latestByMedPharm, sourcesDone,
   } = props;
 
@@ -933,6 +918,11 @@ function SearchResults(props: {
   return (
     <section id="resultados" className="container mx-auto px-4 pt-3 md:pt-4 pb-16 scroll-mt-20">
       <RegisterAlertCTA />
+      {searchError && !loading && (
+        <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
+          El comparador tardó demasiado en responder. Intenta nuevamente; no mostraremos un resultado vacío como si no existiera.
+        </div>
+      )}
       {/* Sticky filter bar */}
       <div className="mb-4 -mx-4 px-4 md:mx-0 md:px-0">
         <Card className="p-3 md:p-4 bg-card/95 border-border/80">
