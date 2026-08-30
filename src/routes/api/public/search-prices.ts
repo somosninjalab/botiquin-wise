@@ -176,11 +176,13 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const u = new URL(`${API_ROOT}/${source || "search"}`);
           u.searchParams.set("product", searchTerm);
           const deadline = Date.now() + TOTAL_BUDGET_MS;
-          const res = await enqueue(async () => {
+          const requestProvider = async () => {
             let r: Response | null = null;
-            for (let attempt = 0; attempt < 3; attempt++) {
+            const attempts = source ? 2 : 3;
+            for (let attempt = 0; attempt < attempts; attempt++) {
               if (Date.now() > deadline) break;
-              const left = Math.max(3_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
+              const perSourceTimeout = source ? 30_000 : SEARCH_TIMEOUT_MS;
+              const left = Math.max(3_000, Math.min(perSourceTimeout, deadline - Date.now()));
               try {
                 // scraperFetch mantiene la sesión y la renueva ante 401/403.
                 r = await scraperFetch(u.toString(), {}, left);
@@ -189,17 +191,20 @@ export const Route = createFileRoute("/api/public/search-prices")({
                 r = null;
               }
               if (!r) {
-                if (attempt < 2) await new Promise((rs) => setTimeout(rs, 800 * (attempt + 1)));
+                if (attempt < attempts - 1) await new Promise((rs) => setTimeout(rs, 800 * (attempt + 1)));
                 continue;
               }
-              if (!r) break;
               if (r.status !== 429 && r.status !== 503) break;
               const wait = Math.min(800 * 2 ** attempt, 4000) + Math.floor(Math.random() * 300);
               if (Date.now() + wait > deadline) break;
               await new Promise((rs) => setTimeout(rs, wait));
             }
             return r;
-          });
+          };
+          // La página original consulta sus farmacias en paralelo. El cliente
+          // limita esto a tres; no serializamos aquí porque multiplicaba la
+          // espera hasta agotar el tiempo de las solicitudes restantes.
+          const res = source ? await requestProvider() : await enqueue(requestProvider);
           if (!res || !res.ok) {
             const body = res ? await res.text().catch(() => "") : "";
             console.warn(`[search-prices-api] HTTP ${res?.status} body=${body.slice(0, 200)}`);
@@ -207,9 +212,11 @@ export const Route = createFileRoute("/api/public/search-prices")({
           }
           const json: any = await res.json();
           const raw = Array.isArray(json?.products) ? json.products : [];
-          const products = raw.filter(
-            (p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta",
-          );
+          const products = raw
+            .filter(
+              (p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta",
+            )
+            .map((p2: any) => ({ ...p2, source: p2.source || source || undefined }));
           return { products, cached: Boolean(json?.cached) };
         };
 
