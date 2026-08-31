@@ -11,6 +11,19 @@ const schema = z.object({ token: fallback(z.string(), '').default('') })
 export const Route = createFileRoute('/unsubscribe')({
   validateSearch: zodValidator(schema),
   component: UnsubscribePage,
+  head: () => ({
+    meta: [
+      { title: "Gestionar suscripción — ¡Alerta: Medicina!" },
+      { name: "description", content: "Gestiona tus preferencias de correo de ¡Alerta: Medicina!. Confirma o cancela tu suscripción a nuestras alertas de precios." },
+      { property: "og:title", content: "Gestionar suscripción — ¡Alerta: Medicina!" },
+      { property: "og:description", content: "Gestiona tus preferencias de correo de ¡Alerta: Medicina!." },
+      { property: "og:url", content: "https://alertamedicina.com/unsubscribe" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Gestionar suscripción — ¡Alerta: Medicina!" },
+      { name: "twitter:description", content: "Gestiona tus preferencias de correo de ¡Alerta: Medicina!." },
+    ],
+    links: [{ rel: "canonical", href: "https://alertamedicina.com/unsubscribe" }],
+  }),
 })
 
 type State = 'checking' | 'valid' | 'already' | 'invalid' | 'submitting' | 'done' | 'error'

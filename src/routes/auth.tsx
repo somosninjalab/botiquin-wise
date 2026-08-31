@@ -11,7 +11,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable";
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+export const Route = createFileRoute("/auth")({
+  component: AuthPage,
+  head: () => ({
+    meta: [
+      { title: "Entrar a mi cuenta — ¡Alerta: Medicina!" },
+      { name: "description", content: "Accede a tu cuenta de ¡Alerta: Medicina! para guardar alertas de precios, comparar medicamentos y recibir notificaciones cuando bajen de precio." },
+      { property: "og:title", content: "Entrar a mi cuenta — ¡Alerta: Medicina!" },
+      { property: "og:description", content: "Accede a tu cuenta de ¡Alerta: Medicina! para guardar alertas de precios y comparar medicamentos." },
+      { property: "og:url", content: "https://alertamedicina.com/auth" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Entrar a mi cuenta — ¡Alerta: Medicina!" },
+      { name: "twitter:description", content: "Accede a tu cuenta de ¡Alerta: Medicina! para guardar alertas de precios y comparar medicamentos." },
+    ],
+    links: [{ rel: "canonical", href: "https://alertamedicina.com/auth" }],
+  }),
+});
 
 const signUpSchema = z.object({
   full_name: z.string().trim().min(2).max(100),
