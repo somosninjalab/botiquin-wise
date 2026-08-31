@@ -13,6 +13,7 @@ import { displayPrice, priceToVes, type MedicationRow, type PriceRow } from "@/l
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { addToOrder, useOrder } from "@/lib/order-store";
+import { getMedicationMeta } from "@/lib/medication-meta.functions";
 
 export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
