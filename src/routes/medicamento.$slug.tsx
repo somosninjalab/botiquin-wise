@@ -16,6 +16,55 @@ import { addToOrder, useOrder } from "@/lib/order-store";
 
 export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
+  loader: ({ params }) => getMedicationMeta({ data: { slug: params.slug } }),
+  head: ({ params, loaderData }) => {
+    const url = `https://alertamedicina.com/medicamento/${encodeURIComponent(params.slug)}`;
+    const m = loaderData ?? null;
+    const label = m
+      ? `${m.name}${m.presentation ? ` ${m.presentation}` : ""}`
+      : params.slug.replace(/-/g, " ");
+    const title = `${label} — precio y dónde comprar en Venezuela | ¡Alerta: Medicina!`;
+    const description = m
+      ? `Compara el precio de ${m.name}${m.presentation ? ` (${m.presentation})` : ""}, principio activo ${m.active_ingredient}${m.indication ? `, indicado para ${m.indication.toLowerCase()}` : ""}. Precios actualizados en farmacias de Venezuela.`
+      : `Compara precios de ${label} en las principales farmacias de Venezuela y encuentra dónde comprarlo más barato.`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description.slice(0, 300) },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description.slice(0, 300) },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description.slice(0, 300) },
+        ...(m?.image_url
+          ? [
+              { property: "og:image", content: m.image_url },
+              { name: "twitter:image", content: m.image_url },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: m
+        ? [
+            {
+              type: "application/ld+json",
+              children: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Product",
+                name: label,
+                description,
+                ...(m.image_url ? { image: m.image_url } : {}),
+                ...(m.manufacturer ? { brand: { "@type": "Brand", name: m.manufacturer } } : {}),
+                category: m.category ?? undefined,
+                url,
+              }),
+            },
+          ]
+        : undefined,
+    };
+  },
 });
 
 function MedicamentoSkeleton() {
