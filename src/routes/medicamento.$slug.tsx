@@ -242,6 +242,30 @@ function MedicamentoPage() {
         </p>
       )}
 
+      {/* ¿Para qué sirve? — contenido informativo */}
+      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+        <h2 className="text-lg md:text-xl font-semibold">¿Para qué sirve {med.name}?</h2>
+        <p className="mt-2 text-sm md:text-base text-muted-foreground">
+          {med.name} contiene <span className="font-medium text-foreground">{med.active_ingredient}</span>
+          {med.presentation ? ` y se presenta en ${med.presentation.toLowerCase()}` : ""}.
+          {med.indication_es || med.indication
+            ? ` Se utiliza principalmente para ${(med.indication_es || med.indication)!.toLowerCase()}.`
+            : " Consulta a tu médico o farmacéutico sobre su uso adecuado."}
+          {med.category ? ` Pertenece al grupo de ${med.category.toLowerCase()}.` : ""}
+        </p>
+        <p className="mt-3 text-sm md:text-base text-muted-foreground">
+          En esta página comparamos el precio de {med.name} en las principales farmacias de Venezuela
+          para que sepas dónde comprarlo más barato antes de salir de casa.
+          {med.brand_names && med.brand_names.length > 0
+            ? ` También puedes encontrarlo como ${med.brand_names.slice(0, 5).join(", ")}.`
+            : ""}
+        </p>
+        <p className="mt-3 text-xs text-muted-foreground/80">
+          Esta información es orientativa y no sustituye la indicación de un profesional de la salud.
+          No suspendas ni cambies un tratamiento sin consultar a tu médico.
+        </p>
+      </section>
+
       {/* Banner amarillo: mejor precio (GoodRx-style) */}
       {lowestRow && (() => {
         const d = displayPrice(Number(lowestRow.price), lowestRow.currency, bcvRate);
