@@ -10,13 +10,21 @@ export const Route = createFileRoute("/populares")({
   component: PopularesPage,
   head: () => ({
     meta: [
-      { title: "Lo más buscado — ¡Alerta: Medicina!" },
+      { title: "Medicamentos más buscados en Venezuela — ¡Alerta: Medicina!" },
       {
         name: "description",
         content:
-          "Los medicamentos más buscados por los usuarios de ¡Alerta: Medicina! con su mejor precio actual.",
+          "Los medicamentos más buscados por los usuarios de ¡Alerta: Medicina! con su mejor precio actual en farmacias de Venezuela.",
       },
+      { property: "og:title", content: "Medicamentos más buscados en Venezuela — ¡Alerta: Medicina!" },
+      {
+        property: "og:description",
+        content: "Ranking de los medicamentos más buscados y su mejor precio actual.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://alertamedicina.com/populares" },
     ],
+    links: [{ rel: "canonical", href: "https://alertamedicina.com/populares" }],
   }),
 });
 
