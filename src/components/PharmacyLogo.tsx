@@ -29,6 +29,7 @@ const BRAND: Record<string, { bg: string; fg: string; letter: string }> = {
   maraplus:  { bg: "#7C3AED", fg: "#FFFFFF", letter: "M" },
   cinecitta: { bg: "#0F172A", fg: "#FFFFFF", letter: "C" },
   gopharma:  { bg: "#0EA5E9", fg: "#FFFFFF", letter: "G" },
+  nuevosiglo: { bg: "#1D4ED8", fg: "#FFFFFF", letter: "N" },
 };
 
 export function PharmacyLogo({ slug, name, size = 36, className }: Props) {

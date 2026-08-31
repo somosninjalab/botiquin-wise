@@ -108,6 +108,7 @@ const API_PHARMACY_NAMES: Record<string, string> = {
   tufarmaciaactual: "Tu Farmacia Actual",
   gopharma: "GoPharma",
   farmabien: "Farmabien",
+  nuevosiglo: "Farmacias Nuevo Siglo",
 };
 
 const searchSchema = z.object({
