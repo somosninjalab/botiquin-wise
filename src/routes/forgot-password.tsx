@@ -9,6 +9,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordPage,
+  head: () => ({
+    meta: [
+      { title: "Recuperar contraseña — ¡Alerta: Medicina!" },
+      { name: "description", content: "Solicita un enlace para restablecer tu contraseña de ¡Alerta: Medicina! y recupera el acceso a tu cuenta." },
+      { property: "og:title", content: "Recuperar contraseña — ¡Alerta: Medicina!" },
+      { property: "og:description", content: "Solicita un enlace para restablecer tu contraseña de ¡Alerta: Medicina!." },
+      { property: "og:url", content: "https://alertamedicina.com/forgot-password" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Recuperar contraseña — ¡Alerta: Medicina!" },
+      { name: "twitter:description", content: "Solicita un enlace para restablecer tu contraseña de ¡Alerta: Medicina!." },
+    ],
+    links: [{ rel: "canonical", href: "https://alertamedicina.com/forgot-password" }],
+  }),
 });
 
 function ForgotPasswordPage() {

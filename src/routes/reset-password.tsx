@@ -9,6 +9,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
+  head: () => ({
+    meta: [
+      { title: "Nueva contraseña — ¡Alerta: Medicina!" },
+      { name: "description", content: "Crea una nueva contraseña segura para tu cuenta de ¡Alerta: Medicina!." },
+      { property: "og:title", content: "Nueva contraseña — ¡Alerta: Medicina!" },
+      { property: "og:description", content: "Crea una nueva contraseña segura para tu cuenta de ¡Alerta: Medicina!." },
+      { property: "og:url", content: "https://alertamedicina.com/reset-password" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Nueva contraseña — ¡Alerta: Medicina!" },
+      { name: "twitter:description", content: "Crea una nueva contraseña segura para tu cuenta de ¡Alerta: Medicina!." },
+    ],
+    links: [{ rel: "canonical", href: "https://alertamedicina.com/reset-password" }],
+  }),
 });
 
 function ResetPasswordPage() {
