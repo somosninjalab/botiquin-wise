@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /mis-alertas
+Disallow: /mi-orden
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /unsubscribe
+
+Sitemap: https://alertamedicina.com/sitemap.xml
