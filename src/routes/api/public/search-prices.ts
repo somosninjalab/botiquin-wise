@@ -196,7 +196,12 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const raw = Array.isArray(json?.products) ? json.products : [];
           return raw
             .filter((p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta")
-            .map((p2: any) => ({ ...p2, source: p2.source || src }));
+            // Algunas farmacias devuelven un nombre comercial en "source"
+            // (ej. "Farmacias Nuevo Siglo"): normalizamos al identificador.
+            .map((p2: any) => {
+              const raw = String(p2?.source ?? "").toLowerCase();
+              return { ...p2, source: SOURCES.has(raw) ? raw : src };
+            });
         };
 
         // Sin farmacia específica: consultamos todas en paralelo (de a 3, como
