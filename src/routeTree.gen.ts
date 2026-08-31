@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PopularesRouteImport } from './routes/populares'
 import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
@@ -48,6 +49,11 @@ import { Route as ApiPublicHooksAnnounceNuevaVersionRouteImport } from './routes
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
@@ -321,6 +329,7 @@ export interface FileRoutesById {
   '/mis-alertas': typeof MisAlertasRoute
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
@@ -360,6 +369,7 @@ export interface FileRouteTypes {
     | '/mis-alertas'
     | '/populares'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/insights'
     | '/admin/precios'
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/mis-alertas'
     | '/populares'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/insights'
     | '/admin/precios'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/mis-alertas'
     | '/populares'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/insights'
     | '/admin/precios'
@@ -472,6 +484,7 @@ export interface RootRouteChildren {
   MisAlertasRoute: typeof MisAlertasRoute
   PopularesRoute: typeof PopularesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
@@ -503,6 +516,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -770,6 +790,7 @@ const rootRouteChildren: RootRouteChildren = {
   MisAlertasRoute: MisAlertasRoute,
   PopularesRoute: PopularesRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,

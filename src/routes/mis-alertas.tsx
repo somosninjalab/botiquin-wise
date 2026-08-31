@@ -9,7 +9,23 @@ import { Bell, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-export const Route = createFileRoute("/mis-alertas")({ component: MisAlertasPage });
+export const Route = createFileRoute("/mis-alertas")({
+  component: MisAlertasPage,
+  head: () => ({
+    meta: [
+      { title: "Mis alertas de precio — ¡Alerta: Medicina!" },
+      {
+        name: "description",
+        content:
+          "Gestiona los medicamentos que sigues y las alertas por email que recibes cuando bajan de precio.",
+      },
+      { name: "robots", content: "noindex, follow" },
+      { property: "og:title", content: "Mis alertas de precio — ¡Alerta: Medicina!" },
+      { property: "og:description", content: "Gestiona tus alertas de precio de medicamentos." },
+      { property: "og:url", content: "https://alertamedicina.com/mis-alertas" },
+    ],
+  }),
+});
 
 function MisAlertasPage() {
   const { user, loading } = useAuth();

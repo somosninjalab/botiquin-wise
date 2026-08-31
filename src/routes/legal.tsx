@@ -10,7 +10,10 @@ export const Route = createFileRoute("/legal")({
       { name: "description", content: "Términos y Condiciones, Política de Privacidad, Aviso Legal y Política de Cookies de ¡Alerta: Medicina!, el comparador gratuito de precios de medicamentos en Venezuela." },
       { property: "og:title", content: "Información Legal — ¡Alerta: Medicina!" },
       { property: "og:description", content: "Términos, privacidad y cookies del comparador de precios de medicamentos." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://alertamedicina.com/legal" },
     ],
+    links: [{ rel: "canonical", href: "https://alertamedicina.com/legal" }],
   }),
   component: LegalPage,
 });

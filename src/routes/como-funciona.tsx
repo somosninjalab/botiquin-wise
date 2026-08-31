@@ -2,7 +2,28 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Search, Bell, TrendingDown, ShieldCheck } from "lucide-react";
 
-export const Route = createFileRoute("/como-funciona")({ component: Page });
+export const Route = createFileRoute("/como-funciona")({
+  component: Page,
+  head: () => {
+    const title = "Cómo funciona ¡Alerta: Medicina! — comparar precios en 4 pasos";
+    const description =
+      "Busca tu medicamento, compara los precios de las farmacias en Venezuela y activa alertas gratis cuando baje de precio. Así funciona ¡Alerta: Medicina!";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: "https://alertamedicina.com/como-funciona" },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: "https://alertamedicina.com/como-funciona" }],
+    };
+  },
+});
 
 function Page() {
   const steps = [

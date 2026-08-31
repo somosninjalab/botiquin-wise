@@ -19,7 +19,12 @@ export const Route = createFileRoute("/mi-orden")({
     meta: [
       { title: "Crea tu orden de medicinas — ahorra comparando farmacias" },
       { name: "description", content: "Arma tu lista de medicinas y descubre dónde comprar más barato. Compara el mix óptimo entre farmacias o el total por farmacia." },
+      { property: "og:title", content: "Crea tu orden de medicinas — ahorra comparando farmacias" },
+      { property: "og:description", content: "Arma tu lista de medicinas y descubre dónde comprar más barato." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://alertamedicina.com/mi-orden" },
     ],
+    links: [{ rel: "canonical", href: "https://alertamedicina.com/mi-orden" }],
   }),
 });
 
