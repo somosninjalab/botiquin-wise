@@ -123,6 +123,42 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/")({
   validateSearch: zodValidator(searchSchema),
   component: Index,
+  head: () => {
+    const title = "Compara precios de medicamentos en Venezuela — ¡Alerta: Medicina!";
+    const description =
+      "Busca tu medicina y compara precios en Farmatodo, Locatel, SAAS, Farmago y más farmacias de Venezuela. Gratis, en tiempo real y con alertas cuando baje de precio.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: "https://alertamedicina.com/" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: "https://alertamedicina.com/" }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "¡Alerta: Medicina!",
+            url: "https://alertamedicina.com/",
+            inLanguage: "es-VE",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://alertamedicina.com/?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          }),
+        },
+      ],
+    };
+  },
 });
 
 function Index() {
