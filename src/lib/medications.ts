@@ -21,6 +21,7 @@ const API_PHARMACIES: Record<string, { id: string; slug: string; name: string }>
   tufarmaciaactual: { id: "tufarmaciaactual", slug: "tufarmaciaactual", name: "Tu Farmacia Actual" },
   gopharma: { id: "gopharma", slug: "gopharma", name: "GoPharma" },
   farmabien: { id: "farmabien", slug: "farmabien", name: "Farmabien" },
+  nuevosiglo: { id: "nuevosiglo", slug: "nuevosiglo", name: "Farmacias Nuevo Siglo" },
 };
 
 const apiPriceCache = new Map<string, PriceRow[]>();
