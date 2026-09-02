@@ -1,17 +1,6 @@
-import * as React from 'react'
-import { render } from '@react-email/components'
+import { EmailAPIError } from '@lovable.dev/email-js'
 import { TEMPLATES } from '@/lib/email-templates/registry'
-
-const SITE_NAME = '¡Alerta: Medicina!'
-const SENDER_DOMAIN = 'notify.alertamedicina.com'
-const FROM_DOMAIN = 'alertamedicina.com'
-const FROM_LOCAL = 'tualerta'
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
+import { sendTemplateEmail } from '@/lib/email-templates/send-email'
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
@@ -32,6 +21,24 @@ export type EnqueueResult =
   | { success: true; queued: true; messageId: string }
   | { success: false; reason: string; status?: number; error?: string }
 
+async function logSend(
+  supabase: any,
+  row: {
+    template_name: string
+    recipient_email: string
+    status: string
+    error_message?: string
+  },
+) {
+  const { error } = await supabase.from('email_send_log').insert(row)
+  if (error) console.error('email_send_log insert failed', error)
+}
+
+/**
+ * Sends a registered transactional template through Lovable's managed email
+ * delivery. Keeps the app's own idempotency guard (`email_idempotency_keys`)
+ * and its `email_send_log` bookkeeping.
+ */
 export async function enqueueTransactionalEmail(p: EnqueueParams): Promise<EnqueueResult> {
   const { supabase, templateName, recipientEmail } = p
   const templateData = p.templateData ?? {}
@@ -39,14 +46,19 @@ export async function enqueueTransactionalEmail(p: EnqueueParams): Promise<Enque
   const idempotencyKey = p.idempotencyKey || messageId
 
   const template = TEMPLATES[templateName]
-  if (!template) return { success: false, reason: 'template_not_found', status: 404, error: `Template '${templateName}' not registered` }
+  if (!template) {
+    return {
+      success: false,
+      reason: 'template_not_found',
+      status: 404,
+      error: `Template '${templateName}' not registered`,
+    }
+  }
 
   const effectiveRecipient = template.to || recipientEmail
   if (!effectiveRecipient) return { success: false, reason: 'recipient_missing', status: 400 }
 
-  const normalizedEmail = effectiveRecipient.toLowerCase()
-
-  // Idempotency: si ya se encoló un email con esta clave, no lo volvemos a encolar.
+  // Idempotency: si ya se envió un email con esta clave, no lo volvemos a enviar.
   if (p.idempotencyKey) {
     const { error: idemErr } = await supabase
       .from('email_idempotency_keys')
@@ -57,75 +69,53 @@ export async function enqueueTransactionalEmail(p: EnqueueParams): Promise<Enque
     }
   }
 
-  // Suppression check
-  const { data: suppressed, error: supErr } = await supabase
-    .from('suppressed_emails').select('id').eq('email', normalizedEmail).maybeSingle()
-  if (supErr) {
-    console.error('Suppression check failed', supErr)
-    return { success: false, reason: 'suppression_check_failed', status: 500 }
-  }
-  if (suppressed) {
-    await supabase.from('email_send_log').insert({
-      message_id: messageId, template_name: templateName, recipient_email: effectiveRecipient, status: 'suppressed',
+  try {
+    let result
+    try {
+      result = await sendTemplateEmail(templateName, effectiveRecipient, {
+        templateData,
+        idempotencyKey,
+      })
+    } catch (error) {
+      // 429: esperamos lo indicado por el servicio y reintentamos una vez.
+      if (error instanceof EmailAPIError && error.status === 429) {
+        const waitSecs = Math.min(error.retryAfterSeconds ?? 5, 30)
+        await new Promise((r) => setTimeout(r, waitSecs * 1000))
+        result = await sendTemplateEmail(templateName, effectiveRecipient, {
+          templateData,
+          idempotencyKey,
+        })
+      } else {
+        throw error
+      }
+    }
+
+
+    if (!result.sent) {
+      await logSend(supabase, {
+        template_name: templateName,
+        recipient_email: effectiveRecipient,
+        status: 'suppressed',
+      })
+      return { success: false, reason: 'email_suppressed' }
+    }
+
+    await logSend(supabase, {
+      template_name: templateName,
+      recipient_email: effectiveRecipient,
+      status: 'sent',
     })
-    return { success: false, reason: 'email_suppressed' }
-  }
-
-  // Get-or-create unsubscribe token
-  let unsubscribeToken: string
-  const { data: existing } = await supabase
-    .from('email_unsubscribe_tokens').select('token, used_at').eq('email', normalizedEmail).maybeSingle()
-  if (existing && !existing.used_at) {
-    unsubscribeToken = existing.token
-  } else if (!existing) {
-    unsubscribeToken = generateToken()
-    await supabase.from('email_unsubscribe_tokens').upsert(
-      { token: unsubscribeToken, email: normalizedEmail },
-      { onConflict: 'email', ignoreDuplicates: true },
-    )
-    const { data: stored } = await supabase
-      .from('email_unsubscribe_tokens').select('token').eq('email', normalizedEmail).maybeSingle()
-    if (stored?.token) unsubscribeToken = stored.token
-  } else {
-    return { success: false, reason: 'email_suppressed' }
-  }
-
-  // Render
-  const element = React.createElement(template.component, templateData)
-  const html = await render(element)
-  const text = await render(element, { plainText: true })
-  const subject = typeof template.subject === 'function' ? template.subject(templateData) : template.subject
-
-  await supabase.from('email_send_log').insert({
-    message_id: messageId, template_name: templateName, recipient_email: effectiveRecipient, status: 'pending',
-  })
-
-  const { error: enqErr } = await supabase.rpc('enqueue_email', {
-    queue_name: 'transactional_emails',
-    payload: {
-      message_id: messageId,
-      to: effectiveRecipient,
-      from: `"${SITE_NAME}" <${FROM_LOCAL}@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text,
-      purpose: 'transactional',
-      label: templateName,
-      idempotency_key: idempotencyKey,
-      unsubscribe_token: unsubscribeToken,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqErr) {
-    console.error('Enqueue failed', enqErr, redactEmail(effectiveRecipient))
-    await supabase.from('email_send_log').insert({
-      message_id: messageId, template_name: templateName, recipient_email: effectiveRecipient,
-      status: 'failed', error_message: 'Failed to enqueue email',
+    return { success: true, queued: true, messageId }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    console.error('Email send failed', errorMsg, redactEmail(effectiveRecipient))
+    await logSend(supabase, {
+      template_name: templateName,
+      recipient_email: effectiveRecipient,
+      status: 'failed',
+      error_message: errorMsg.slice(0, 1000),
     })
-    return { success: false, reason: 'enqueue_failed', status: 500 }
+    const status = error instanceof EmailAPIError ? error.status : 500
+    return { success: false, reason: 'send_failed', status: status ?? 500, error: errorMsg }
   }
-
-  return { success: true, queued: true, messageId }
 }
