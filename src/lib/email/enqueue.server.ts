@@ -70,10 +70,26 @@ export async function enqueueTransactionalEmail(p: EnqueueParams): Promise<Enque
   }
 
   try {
-    const result = await sendTemplateEmail(templateName, effectiveRecipient, {
-      templateData,
-      idempotencyKey,
-    })
+    let result
+    try {
+      result = await sendTemplateEmail(templateName, effectiveRecipient, {
+        templateData,
+        idempotencyKey,
+      })
+    } catch (error) {
+      // 429: esperamos lo indicado por el servicio y reintentamos una vez.
+      if (error instanceof EmailAPIError && error.status === 429) {
+        const waitSecs = Math.min(error.retryAfterSeconds ?? 5, 30)
+        await new Promise((r) => setTimeout(r, waitSecs * 1000))
+        result = await sendTemplateEmail(templateName, effectiveRecipient, {
+          templateData,
+          idempotencyKey,
+        })
+      } else {
+        throw error
+      }
+    }
+
 
     if (!result.sent) {
       await logSend(supabase, {
