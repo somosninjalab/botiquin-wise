@@ -27,6 +27,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
 import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicSearchPricesRouteImport } from './routes/api/public/search-prices'
 import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -134,6 +135,11 @@ const AdminInsightsRoute = AdminInsightsRouteImport.update({
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSearchPricesRoute = ApiPublicSearchPricesRouteImport.update({
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/medicamento/$slug'
     | '/api/public/chat'
     | '/api/public/search-prices'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/medicamento/$slug'
     | '/api/public/chat'
     | '/api/public/search-prices'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/medicamento/$slug'
     | '/api/public/chat'
     | '/api/public/search-prices'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
@@ -490,6 +502,7 @@ export interface RootRouteChildren {
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
   ApiPublicChatRoute: typeof ApiPublicChatRoute
   ApiPublicSearchPricesRoute: typeof ApiPublicSearchPricesRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksAnnounceNuevaVersionRoute: typeof ApiPublicHooksAnnounceNuevaVersionRoute
   ApiPublicHooksBackfillEmbeddingsRoute: typeof ApiPublicHooksBackfillEmbeddingsRoute
@@ -635,6 +648,13 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/suppression'
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/search-prices': {
@@ -796,6 +816,7 @@ const rootRouteChildren: RootRouteChildren = {
   MedicamentoSlugRoute: MedicamentoSlugRoute,
   ApiPublicChatRoute: ApiPublicChatRoute,
   ApiPublicSearchPricesRoute: ApiPublicSearchPricesRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksAnnounceNuevaVersionRoute:
     ApiPublicHooksAnnounceNuevaVersionRoute,
