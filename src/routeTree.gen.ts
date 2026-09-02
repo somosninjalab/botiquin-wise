@@ -23,16 +23,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
-import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
 import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicSearchPricesRouteImport } from './routes/api/public/search-prices'
 import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
@@ -117,11 +113,6 @@ const MedicamentoSlugRoute = MedicamentoSlugRouteImport.update({
   path: '/medicamento/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
-  id: '/email/unsubscribe',
-  path: '/email/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminPreciosRoute = AdminPreciosRouteImport.update({
   id: '/precios',
   path: '/precios',
@@ -131,11 +122,6 @@ const AdminInsightsRoute = AdminInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
   getParentRoute: () => AdminRoute,
-} as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   id: '/lovable/email/events',
@@ -152,22 +138,10 @@ const ApiPublicChatRoute = ApiPublicChatRouteImport.update({
   path: '/api/public/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
     path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
@@ -262,12 +236,10 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -281,9 +253,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -301,12 +271,10 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -320,9 +288,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -341,12 +307,10 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/insights': typeof AdminInsightsRoute
   '/admin/precios': typeof AdminPreciosRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/medicamento/$slug': typeof MedicamentoSlugRoute
   '/api/public/chat': typeof ApiPublicChatRoute
   '/api/public/search-prices': typeof ApiPublicSearchPricesRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/announce-nueva-version': typeof ApiPublicHooksAnnounceNuevaVersionRoute
   '/api/public/hooks/backfill-embeddings': typeof ApiPublicHooksBackfillEmbeddingsRoute
   '/api/public/hooks/discover-on-demand': typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -360,9 +324,7 @@ export interface FileRoutesById {
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -382,12 +344,10 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/insights'
     | '/admin/precios'
-    | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/api/public/chat'
     | '/api/public/search-prices'
     | '/lovable/email/events'
-    | '/lovable/email/suppression'
     | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
@@ -401,9 +361,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -421,12 +379,10 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/insights'
     | '/admin/precios'
-    | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/api/public/chat'
     | '/api/public/search-prices'
     | '/lovable/email/events'
-    | '/lovable/email/suppression'
     | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
@@ -440,9 +396,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -460,12 +414,10 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/insights'
     | '/admin/precios'
-    | '/email/unsubscribe'
     | '/medicamento/$slug'
     | '/api/public/chat'
     | '/api/public/search-prices'
     | '/lovable/email/events'
-    | '/lovable/email/suppression'
     | '/api/public/hooks/announce-nueva-version'
     | '/api/public/hooks/backfill-embeddings'
     | '/api/public/hooks/discover-on-demand'
@@ -479,9 +431,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -498,12 +448,10 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
-  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MedicamentoSlugRoute: typeof MedicamentoSlugRoute
   ApiPublicChatRoute: typeof ApiPublicChatRoute
   ApiPublicSearchPricesRoute: typeof ApiPublicSearchPricesRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
-  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksAnnounceNuevaVersionRoute: typeof ApiPublicHooksAnnounceNuevaVersionRoute
   ApiPublicHooksBackfillEmbeddingsRoute: typeof ApiPublicHooksBackfillEmbeddingsRoute
   ApiPublicHooksDiscoverOnDemandRoute: typeof ApiPublicHooksDiscoverOnDemandRoute
@@ -517,9 +465,7 @@ export interface RootRouteChildren {
   ApiPublicHooksWeeklyReminderRoute: typeof ApiPublicHooksWeeklyReminderRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
-  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
-  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -622,13 +568,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedicamentoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/email/unsubscribe': {
-      id: '/email/unsubscribe'
-      path: '/email/unsubscribe'
-      fullPath: '/email/unsubscribe'
-      preLoaderRoute: typeof EmailUnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/precios': {
       id: '/admin/precios'
       path: '/precios'
@@ -642,13 +581,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/insights'
       preLoaderRoute: typeof AdminInsightsRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/events': {
       id: '/lovable/email/events'
@@ -671,25 +603,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
       fullPath: '/lovable/email/transactional/preview'
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/webhook': {
@@ -812,12 +730,10 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
-  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MedicamentoSlugRoute: MedicamentoSlugRoute,
   ApiPublicChatRoute: ApiPublicChatRoute,
   ApiPublicSearchPricesRoute: ApiPublicSearchPricesRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
-  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksAnnounceNuevaVersionRoute:
     ApiPublicHooksAnnounceNuevaVersionRoute,
   ApiPublicHooksBackfillEmbeddingsRoute: ApiPublicHooksBackfillEmbeddingsRoute,
@@ -832,9 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksWeeklyReminderRoute: ApiPublicHooksWeeklyReminderRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
-  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
-  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
