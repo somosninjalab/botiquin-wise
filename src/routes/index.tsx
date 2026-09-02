@@ -109,6 +109,7 @@ const API_PHARMACY_NAMES: Record<string, string> = {
   gopharma: "GoPharma",
   farmabien: "Farmabien",
   nuevosiglo: "Farmacias Nuevo Siglo",
+  gama: "Gama en Línea",
 };
 
 const searchSchema = z.object({
