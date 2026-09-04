@@ -31,6 +31,7 @@ const BRAND: Record<string, { bg: string; fg: string; letter: string }> = {
   gopharma:  { bg: "#0EA5E9", fg: "#FFFFFF", letter: "G" },
   nuevosiglo: { bg: "#1D4ED8", fg: "#FFFFFF", letter: "N" },
   gama: { bg: "#DC2626", fg: "#FFFFFF", letter: "G" },
+  badan: { bg: "#059669", fg: "#FFFFFF", letter: "B" },
 };
 
 export function PharmacyLogo({ slug, name, size = 36, className }: Props) {

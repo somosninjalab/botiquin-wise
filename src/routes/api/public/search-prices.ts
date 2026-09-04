@@ -24,6 +24,7 @@ const SOURCES = new Set([
   "farmabien",
   "nuevosiglo",
   "gama",
+  "badan",
 ]);
 
 // Caché en memoria: evita repetir consultas idénticas al proveedor,

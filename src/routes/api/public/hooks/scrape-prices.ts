@@ -18,6 +18,7 @@ const SOURCE_TO_PHARM: Record<string, string> = {
   farmago: "farmago",
   farmaciasaas: "saas",
   tufarmaciaactual: "actual",
+  badan: "badan",
   // farmadon → no pharmacy in DB, ignored
 };
 
