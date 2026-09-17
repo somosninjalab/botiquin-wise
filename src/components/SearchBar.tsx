@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Clock, X, ScanBarcode } from "lucide-react";
+import { Search, Clock, X, Camera } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { BarcodeScannerDialog } from "@/components/BarcodeScannerDialog";
+import { PhotoIdentifyDialog } from "@/components/PhotoIdentifyDialog";
 
 const RECENT_KEY = "am.recent_searches";
 const MAX_RECENT = 5;
@@ -83,7 +83,7 @@ export function SearchBar({
             if (liveUpdate && onSearch) onSearch(v);
           }}
           onFocus={() => setFocused(true)}
-          placeholder="Atamel, Losartán, Glucophage… o escanea el código de barras"
+          placeholder="Atamel, Losartán, Glucophage… o busca con una foto"
           className={`pl-10 bg-card ${size === "lg" ? "h-14 text-base" : "h-11 text-base"}`}
           maxLength={200}
           type="search"
@@ -95,22 +95,22 @@ export function SearchBar({
           aria-label="Buscar medicamento"
         />
       </div>
-      <BarcodeScannerDialog
+      <PhotoIdentifyDialog
         open={scanOpen}
         onOpenChange={setScanOpen}
-        onDetected={(code) => { setQ(code); runSearch(code); }}
+        onIdentified={(term) => { setQ(term); runSearch(term); }}
       />
       <Button
         type="button"
         onClick={() => setScanOpen(true)}
-        aria-label="Escanear código de barras"
-        title="Escanear código de barras"
+        aria-label="Buscar con una foto"
+        title="Buscar con una foto"
         className={`bg-accent text-accent-foreground hover:bg-accent/90 shrink-0 ${
           size === "lg" ? "h-14 px-3 sm:px-4 text-base" : "h-11 px-3 text-sm"
         }`}
       >
-        <ScanBarcode className={size === "lg" ? "h-5 w-5" : "h-4 w-4"} />
-        <span className="hidden sm:inline ml-2">Escanear</span>
+        <Camera className={size === "lg" ? "h-5 w-5" : "h-4 w-4"} />
+        <span className="hidden sm:inline ml-2">Foto</span>
       </Button>
       <Button
         type="submit"
