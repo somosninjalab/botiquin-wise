@@ -110,7 +110,6 @@ export function SearchBar({
         }`}
       >
         <Camera className={size === "lg" ? "h-5 w-5" : "h-4 w-4"} />
-        <span className="hidden sm:inline ml-2">Foto</span>
       </Button>
       <Button
         type="submit"
