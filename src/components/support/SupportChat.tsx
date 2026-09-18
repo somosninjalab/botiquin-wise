@@ -65,15 +65,11 @@ export function SupportChat() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="SOS - Abrir chat de soporte"
-          title="SOS - ¿Necesitas ayuda?"
-          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-3 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-2xl transition-transform animate-bounce hover:scale-110 active:scale-95 md:bottom-6 md:left-6 md:h-16 md:w-16"
+          aria-label="Abrir chat de soporte"
+          title="¿Necesitas ayuda?"
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-3 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-md backdrop-blur transition-colors hover:bg-accent hover:text-accent-foreground md:bottom-6 md:left-6 md:h-11 md:w-11"
         >
-          <span className="absolute inset-0 rounded-full bg-destructive opacity-75 animate-ping" />
-          <span className="relative flex flex-col items-center justify-center leading-none">
-            <Siren className="h-5 w-5 md:h-6 md:w-6" />
-            <span className="text-[9px] md:text-[10px] font-black tracking-wider mt-0.5">SOS</span>
-          </span>
+          <Siren className="h-4 w-4 md:h-[18px] md:w-[18px]" />
         </button>
       )}
 
