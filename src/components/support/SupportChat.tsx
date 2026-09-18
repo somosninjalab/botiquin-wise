@@ -67,8 +67,7 @@ export function SupportChat() {
           onClick={() => setOpen(true)}
           aria-label="SOS - Abrir chat de soporte"
           title="SOS - ¿Necesitas ayuda?"
-          className="fixed left-3 md:left-6 z-40 h-14 w-14 md:h-16 md:w-16 rounded-full bg-destructive text-destructive-foreground shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform animate-bounce"
-          style={{ bottom: `calc(72px + env(safe-area-inset-bottom))` }}
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-3 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-2xl transition-transform animate-bounce hover:scale-110 active:scale-95 md:bottom-6 md:left-6 md:h-16 md:w-16"
         >
           <span className="absolute inset-0 rounded-full bg-destructive opacity-75 animate-ping" />
           <span className="relative flex flex-col items-center justify-center leading-none">
