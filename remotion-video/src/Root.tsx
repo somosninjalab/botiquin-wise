@@ -9,6 +9,7 @@ import { MilestonesStory } from "./MilestonesStory";
 import { ThanksVideo, THANKS_DURATION } from "./ThanksVideo";
 import { AboutVideo, ABOUT_DURATION } from "./AboutVideo";
 import { ReturnVideo, RETURN_DURATION } from "./ReturnVideo";
+import { Milestones2026Video, MILESTONES_2026_DURATION } from "./Milestones2026Video";
 
 const VerticalWrap = () => {
   // Letterbox the 1920x1080 MainVideo inside 1080x1920.
@@ -101,6 +102,14 @@ export const RemotionRoot = () => (
     id="return-story"
     component={ReturnVideo}
     durationInFrames={RETURN_DURATION}
+    fps={30}
+    width={1080}
+    height={1920}
+  />
+  <Composition
+    id="milestones-2026"
+    component={Milestones2026Video}
+    durationInFrames={MILESTONES_2026_DURATION}
     fps={30}
     width={1080}
     height={1920}
