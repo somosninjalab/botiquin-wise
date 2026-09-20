@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Search, ShoppingCart, Bell, Star } from "lucide-react";
+import { Home, Search, ShoppingCart, Bell, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrder } from "@/lib/order-store";
 
@@ -30,10 +30,10 @@ export function MobileBottomNav() {
       match: (p: string) => p.startsWith("/mis-alertas"),
     },
     {
-      to: "/populares",
-      label: "Populares",
-      icon: Star,
-      match: (p: string) => p.startsWith("/populares"),
+      to: "/contacto",
+      label: "Contáctanos",
+      icon: Mail,
+      match: (p: string) => p.startsWith("/contacto"),
     },
   ] as Array<{ to: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number }>;
 
