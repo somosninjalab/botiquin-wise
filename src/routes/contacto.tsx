@@ -160,8 +160,6 @@ function ContactoPage() {
               maxLength={40}
             />
           </div>
-        </div>
-        <p className="text-xs text-muted-foreground">Con uno de los dos basta para responderte.</p>
 
         <div className="space-y-2">
           <Label htmlFor="c-subject">Asunto</Label>
