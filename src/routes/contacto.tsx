@@ -94,14 +94,10 @@ function ContactoPage() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-        <p className="font-semibold text-foreground">Este formulario no es para pedir medicamentos.</p>
-        <p className="mt-1">
-          Es para información sobre el proyecto, colaboraciones, publicidad, alianzas y farmacias que
-          quieran estar dentro de las opciones del comparador. Para buscar precios usa el buscador de
-          la página principal.
-        </p>
-      </div>
+      <p className="mt-3 text-sm text-muted-foreground">
+        Para buscar precios usa el buscador. Aquí escríbenos por colaboraciones, publicidad,
+        alianzas o si eres farmacia.
+      </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div className="space-y-2">
@@ -165,7 +161,7 @@ function ContactoPage() {
             />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">Con uno de los dos basta para responderte.</p>
+
 
         <div className="space-y-2">
           <Label htmlFor="c-subject">Asunto</Label>
