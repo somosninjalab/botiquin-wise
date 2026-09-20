@@ -48,11 +48,13 @@ export function MobileBottomNav() {
           const active = it.match(pathname);
           const Icon = it.icon;
           return (
-            <li key={it.label}>
+            <li key={it.label} className="flex items-center justify-center px-1 py-1.5">
               <Link
                 to={it.to}
-                className={`flex flex-col items-center justify-center gap-1 py-2.5 min-h-14 text-[11px] font-semibold transition-colors ${
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                className={`flex flex-col items-center justify-center gap-0.5 w-full max-w-[68px] rounded-2xl py-1.5 text-[11px] font-semibold transition-colors ${
+                  active
+                    ? "bg-primary/12 text-primary shadow-sm ring-1 ring-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 <span className="relative">
