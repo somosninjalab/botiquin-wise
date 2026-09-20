@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { useOrder, removeFromOrder, setQty, clearOrder, type OrderItem } from "@/lib/order-store";
-import { searchMedications, priceToVes, formatBs, formatUSD, type MedicationRow, type PriceRow } from "@/lib/medications";
+import { searchMedications, priceToVes, formatBs, formatUSD, fetchOrderPrices, API_PHARMACY_LIST, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { AudiencePickerDialog, tryAddWithAudienceCheck } from "@/components/AudiencePickerDialog";
 
