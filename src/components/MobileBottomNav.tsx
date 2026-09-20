@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Search, ShoppingCart, Bell, Mail } from "lucide-react";
+import { Home, Search, ShoppingCart, Bell, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrder } from "@/lib/order-store";
 
@@ -32,7 +32,7 @@ export function MobileBottomNav() {
     {
       to: "/contacto",
       label: "Contáctanos",
-      icon: Mail,
+      icon: Send,
       match: (p: string) => p.startsWith("/contacto"),
     },
   ] as Array<{ to: string; label: string; icon: typeof Home; match: (p: string) => boolean; badge?: number }>;
