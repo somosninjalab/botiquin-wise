@@ -9,7 +9,7 @@ Crear un video vertical 9:16, dinámico y de máximo 15 segundos, para celebrar 
   - Más de 10 mil personas registradas.
   - Más de 130 mil medicamentos buscados.
   - Más de 1 millón de dólares ahorrados.
-- Reforzar: “La primera plataforma de comparación de precios de medicinas”.
+- Reforzar: “La primera plataforma de Venezuela 🇻🇪 para comparar precios de medicinas”.
 - Cierre exacto y claro: “Antes de comprar medicinas, Alerta Medicina”.
 - Mostrar `alertamedicina.com` como remate visual.
 
@@ -17,6 +17,7 @@ Crear un video vertical 9:16, dinámico y de máximo 15 segundos, para celebrar 
 
 - Formato 1080 × 1920, 30 fps, duración aproximada de 15 segundos.
 - Branding verde, naranja y fondo claro ya usado por Alerta Medicina.
+- La bandera de Venezuela aparecerá como emoji junto al mensaje de liderazgo nacional.
 - Tipografía grande, cifras protagonistas, tarjetas y líneas de movimiento inspiradas en comparación de precios.
 - Entradas rápidas con escala y desplazamiento; transiciones consistentes tipo barrido/deslizamiento.
 - Sonidos breves de impacto y confirmación, sin narración, para que el mensaje funcione también sin audio.
