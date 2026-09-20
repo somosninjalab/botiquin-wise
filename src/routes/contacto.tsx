@@ -160,6 +160,8 @@ function ContactoPage() {
               maxLength={40}
             />
           </div>
+        </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="c-subject">Asunto</Label>
