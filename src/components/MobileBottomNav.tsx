@@ -53,14 +53,16 @@ export function MobileBottomNav() {
                 to={it.to}
                 className={`flex flex-col items-center justify-center gap-0.5 w-full max-w-[68px] rounded-2xl py-1.5 text-[11px] font-semibold transition-colors ${
                   active
-                    ? "bg-primary/12 text-primary shadow-sm ring-1 ring-primary/20"
+                    ? "bg-nav-active/12 text-nav-active shadow-sm ring-1 ring-nav-active/25"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 <span className="relative">
                   <Icon className={`h-5 w-5 ${active ? "" : "opacity-80"}`} strokeWidth={active ? 2.5 : 2} />
                   {it.badge && it.badge > 0 ? (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-nav-active text-nav-active-foreground text-[9px] font-bold flex items-center justify-center">
+
+
                       {it.badge > 99 ? "99+" : it.badge}
                     </span>
                   ) : null}
