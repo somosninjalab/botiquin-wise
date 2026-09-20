@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Mail, Handshake, Megaphone, Building2, Info } from "lucide-react";
+import { Send, Handshake, Megaphone, Building2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,7 +86,7 @@ function ContactoPage() {
     <div className="container mx-auto max-w-2xl px-4 py-8 md:py-12">
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-          <Mail className="h-5 w-5 text-primary" />
+          <Send className="h-5 w-5 text-primary" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Contáctanos</h1>
