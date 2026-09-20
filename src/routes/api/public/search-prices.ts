@@ -32,8 +32,41 @@ const SOURCES = new Set([
 // - "fresco": se responde tal cual.
 // - "vencido pero útil": se responde al instante y se refresca por detrás.
 const CACHE_TTL_MS = 10 * 60 * 1000;
-const STALE_TTL_MS = 6 * 60 * 60 * 1000;
+const STALE_TTL_MS = 60 * 60 * 1000;
+// Límites de memoria: el worker tiene un tope estricto y se reinicia (502)
+// si lo supera. Guardamos pocas entradas, pocos productos y solo los campos
+// que la web usa.
+const MAX_CACHE_ENTRIES = 120;
+const MAX_PRODUCTS_PER_ENTRY = 120;
+const MAX_BARCODE_ENTRIES = 200;
 const cache = new Map<string, { at: number; products: unknown[] }>();
+
+/** Conserva solo los campos que consume la web, para no acumular JSON enorme. */
+function slim(p: any) {
+  return {
+    name: p?.name,
+    brand: p?.brand,
+    price: p?.price,
+    priceUSD: p?.priceUSD,
+    status: p?.status,
+    image: p?.image,
+    url: p?.url,
+    source: p?.source,
+    code: p?.code,
+    sku: p?.sku,
+  };
+}
+
+function pruneCache() {
+  const now = Date.now();
+  for (const [k, v] of cache) if (now - v.at > STALE_TTL_MS) cache.delete(k);
+  if (cache.size > MAX_CACHE_ENTRIES) {
+    const oldest = [...cache.entries()]
+      .sort((a, b) => a[1].at - b[1].at)
+      .slice(0, cache.size - MAX_CACHE_ENTRIES);
+    for (const [k] of oldest) cache.delete(k);
+  }
+}
 
 // Una sola petición al proveedor por término, aunque muchos usuarios
 // busquen lo mismo a la vez.
