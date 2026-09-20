@@ -118,6 +118,10 @@ async function resolveBarcode(code: string): Promise<BarcodeInfo> {
   } catch (err) {
     console.warn(`[search-prices-api] barcode lookup failed for ${code}:`, err);
   }
+  if (barcodeCache.size >= MAX_BARCODE_ENTRIES) {
+    const first = barcodeCache.keys().next().value;
+    if (first !== undefined) barcodeCache.delete(first);
+  }
   barcodeCache.set(code, info);
   return info;
 }
