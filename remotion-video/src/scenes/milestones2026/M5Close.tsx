@@ -14,7 +14,42 @@ export const M5Close = () => {
     <AbsoluteFill style={{ background: `linear-gradient(155deg, ${COLORS.primary} 0%, #08745C 100%)`, padding: "94px 68px", justifyContent: "center", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: -280, right: -280, width: 760, height: 760, borderRadius: "50%", border: "105px solid rgba(255,255,255,0.09)" }} />
       <div style={{ textAlign: "center", position: "relative" }}>
-        <div style={{ fontSize: 112, transform: `scale(${flag}) rotate(${interpolate(flag, [0, 1], [-18, 0])}deg)`, opacity: flag }}>🇻🇪</div>
+        <div
+          aria-label="Bandera de Venezuela"
+          style={{
+            width: 152,
+            height: 112,
+            margin: "0 auto",
+            borderRadius: 24,
+            overflow: "hidden",
+            position: "relative",
+            boxShadow: "0 18px 36px rgba(4,50,40,0.28)",
+            transform: `scale(${flag}) rotate(${interpolate(flag, [0, 1], [-18, 0])}deg)`,
+            opacity: flag,
+          }}
+        >
+          <div style={{ height: "33.34%", background: "#F4D326" }} />
+          <div style={{ height: "33.34%", background: "#174EA6", position: "relative" }}>
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((star) => {
+              const angle = Math.PI + (Math.PI * star) / 7;
+              return (
+                <div
+                  key={star}
+                  style={{
+                    position: "absolute",
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: COLORS.card,
+                    left: 72 + Math.cos(angle) * 43,
+                    top: 27 + Math.sin(angle) * 15,
+                  }}
+                />
+              );
+            })}
+          </div>
+          <div style={{ height: "33.34%", background: "#CF2534" }} />
+        </div>
         <div style={{ marginTop: 20, color: COLORS.card, fontSize: 61, fontWeight: 900, lineHeight: 1.02, opacity: title, transform: `translateY(${interpolate(title, [0, 1], [44, 0])}px)` }}>
           La primera plataforma de Venezuela para comparar precios de medicinas.
         </div>
