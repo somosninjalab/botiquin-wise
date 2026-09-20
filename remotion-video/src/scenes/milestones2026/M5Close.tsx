@@ -58,8 +58,8 @@ export const M5Close = () => {
           Antes de comprar medicinas,
           <span style={{ color: "#FFD7B8" }}> Alerta Medicina.</span>
         </div>
-        <div style={{ margin: "52px auto 0", width: 150, height: 150, borderRadius: "50%", background: COLORS.card, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 24px 60px rgba(4,50,40,0.32)", opacity: close, transform: `scale(${close * pulse})` }}>
-          <Img src={staticFile("logos/actual.png")} style={{ width: 124, height: 124 }} />
+        <div style={{ margin: "52px auto 0", width: 164, height: 164, borderRadius: 34, overflow: "hidden", background: COLORS.card, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 24px 60px rgba(4,50,40,0.32)", opacity: close, transform: `scale(${close * pulse})` }}>
+          <Img src={staticFile("alerta-logo.png")} style={{ width: 164, height: 164, objectFit: "cover" }} />
         </div>
         <div style={{ marginTop: 36, display: "inline-block", color: COLORS.ink, background: COLORS.card, padding: "22px 42px", borderRadius: 18, fontSize: 43, fontWeight: 900, opacity: url, transform: `translateY(${interpolate(url, [0, 1], [35, 0])}px)` }}>
           alertamedicina.com
