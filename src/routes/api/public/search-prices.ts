@@ -9,8 +9,8 @@ import {
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 // Tiempo máximo por intento y tiempo total antes de responder al usuario.
-const SEARCH_TIMEOUT_MS = 75_000;
-const TOTAL_BUDGET_MS = 160_000;
+const SEARCH_TIMEOUT_MS = 35_000;
+const TOTAL_BUDGET_MS = 80_000;
 
 const SOURCES = new Set([
   "farmatodo",
