@@ -250,6 +250,54 @@ export async function searchMedications(q: string, limit = 30) {
   return mapProducts(term, json.products ?? [], limit).meds;
 }
 
+/** Farmacias del comparador, para listados (Mi orden, etc.). */
+export const API_PHARMACY_LIST = Object.values(API_PHARMACIES);
+
+/**
+ * Precios para una lista guardada ("Mi orden").
+ * Los resultados del comparador no viven en la base de datos: sus ids son
+ * `api-...`. Si no están en memoria (p. ej. tras recargar), se vuelven a
+ * consultar por nombre al comparador.
+ */
+export async function fetchOrderPrices(
+  items: { medication_id: string; name: string }[],
+): Promise<PriceRow[]> {
+  if (!items.length) return [];
+  const out: PriceRow[] = [];
+  const apiItems = items.filter((i) => i.medication_id.startsWith("api-"));
+  const dbIds = items.filter((i) => !i.medication_id.startsWith("api-")).map((i) => i.medication_id);
+
+  const queue = [...apiItems];
+  const worker = async () => {
+    while (queue.length) {
+      const it = queue.shift()!;
+      const cached = apiPriceCache.get(it.medication_id);
+      if (cached?.length) {
+        out.push(...cached);
+        continue;
+      }
+      try {
+        const { prices } = await searchMedicationResults(it.name, 40);
+        out.push(...prices.filter((p) => p.medication_id === it.medication_id));
+      } catch {
+        // Si el comparador falla, ese producto queda sin precio.
+      }
+    }
+  };
+  await Promise.all([worker(), worker()]);
+
+  if (dbIds.length) {
+    const { data } = await supabase
+      .from("medication_prices")
+      .select("*")
+      .in("medication_id", dbIds)
+      .order("scraped_at", { ascending: false })
+      .limit(2000);
+    out.push(...((data ?? []) as PriceRow[]));
+  }
+  return out;
+}
+
 export async function getLatestPricesForMedications(medIds: string[]) {
   if (!medIds.length) return [] as PriceRow[];
   if (medIds.every((id) => id.startsWith("api-"))) {
