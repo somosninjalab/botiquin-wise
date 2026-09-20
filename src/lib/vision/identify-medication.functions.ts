@@ -8,8 +8,13 @@ const schema = z.object({
 
 export type IdentifyResult = {
   ok: boolean;
+  /** Término de búsqueda final (nombre + concentración cuando es legible). */
   name?: string;
+  /** Nombre comercial sin concentración. */
+  brand?: string;
   activeIngredient?: string;
+  strength?: string;
+  form?: string;
   presentation?: string;
   confidence?: "alta" | "media" | "baja";
   error?: string;
@@ -40,7 +45,7 @@ export const identifyMedicationFromPhoto = createServerFn({ method: "POST" })
             {
               role: "system",
               content:
-                "Eres un farmacéutico. Miras la foto de un empaque, blíster o frasco de medicamento y devuelves SOLO un JSON con las claves: name (nombre comercial tal como aparece, sin laboratorio), active_ingredient (principio activo si es legible, si no cadena vacía), presentation (ej. '500 mg x 10 tabletas' o cadena vacía), confidence ('alta' | 'media' | 'baja'). Si no es un medicamento o no puedes leerlo, devuelve name vacío y confidence 'baja'. Nada de texto extra.",
+                "Eres un farmacéutico. Miras la foto de un empaque, blíster o frasco de medicamento y lees TODOS los detalles impresos. Devuelves SOLO un JSON con las claves: name (nombre comercial tal como aparece, sin laboratorio y SIN la concentración), active_ingredient (principio activo si es legible, si no cadena vacía), strength (concentración exacta tal como aparece, ej. '500 mg', '100 mg/5 ml', '50 mg/12,5 mg'; cadena vacía si no es legible), form (forma farmacéutica: tabletas, cápsulas, jarabe, suspensión, gotas, crema, ampolla… o cadena vacía), pack (cantidad por empaque, ej. '20 tabletas' o cadena vacía), presentation (resumen, ej. '500 mg x 10 tabletas' o cadena vacía), confidence ('alta' | 'media' | 'baja'). Lee la concentración incluso si está en letra pequeña o en otra cara del empaque visible. Si no es un medicamento o no puedes leerlo, devuelve name vacío y confidence 'baja'. Nada de texto extra.",
             },
             {
               role: "user",
@@ -69,16 +74,29 @@ export const identifyMedicationFromPhoto = createServerFn({ method: "POST" })
 
     try {
       const parsed = JSON.parse(match[0]) as Record<string, unknown>;
-      const name = String(parsed["name"] ?? "").trim();
-      const active = String(parsed["active_ingredient"] ?? "").trim();
-      const term = name || active;
-      if (!term) return { ok: false, error: "No reconocimos el medicamento en la foto." };
-      const conf = String(parsed["confidence"] ?? "media");
+      const str = (k: string) => String(parsed[k] ?? "").trim();
+      const name = str("name");
+      const active = str("active_ingredient");
+      const strength = str("strength");
+      const form = str("form");
+      const pack = str("pack");
+      const base = name || active;
+      if (!base) return { ok: false, error: "No reconocimos el medicamento en la foto." };
+      // Añade la concentración al término si aún no está incluida en el nombre.
+      const normalized = base.toLowerCase().replace(/\s+/g, " ");
+      const strengthKey = strength.toLowerCase().replace(/\s+/g, " ");
+      const term = strength && !normalized.includes(strengthKey) ? `${base} ${strength}` : base;
+      const conf = str("confidence") || "media";
+      const presentation =
+        str("presentation") || [strength, form, pack].filter(Boolean).join(" ") || undefined;
       return {
         ok: true,
         name: term,
+        brand: name || undefined,
         activeIngredient: active || undefined,
-        presentation: String(parsed["presentation"] ?? "").trim() || undefined,
+        strength: strength || undefined,
+        form: form || undefined,
+        presentation,
         confidence: conf === "alta" || conf === "baja" ? conf : "media",
       };
     } catch {
