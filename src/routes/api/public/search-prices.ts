@@ -288,17 +288,12 @@ export const Route = createFileRoute("/api/public/search-prices")({
                 if (retry?.products.length) out = retry;
               }
               if (!out) return null;
-              const products = out.products;
+              const products = out.products.slice(0, MAX_PRODUCTS_PER_ENTRY).map(slim);
               // No guardamos respuestas vacías: así conservamos el último
               // resultado bueno y reintentamos más tarde.
               if (products.length) {
                 cache.set(cacheKey, { at: Date.now(), products });
-                if (cache.size > 800) {
-                  // Purga los más antiguos (nunca borramos por edad: el último
-                  // resultado bueno sirve de respaldo si el proveedor falla).
-                  const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, 200);
-                  for (const [k] of oldest) cache.delete(k);
-                }
+                pruneCache();
               }
               return products;
             } catch (err) {
