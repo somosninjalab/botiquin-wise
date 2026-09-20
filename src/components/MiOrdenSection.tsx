@@ -135,9 +135,13 @@ export function MiOrdenSection({ compact = false }: { compact?: boolean }) {
                     <div className="h-10 w-10 rounded bg-muted" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <Link to="/medicamento/$slug" params={{ slug: it.slug }} className="font-medium hover:underline block truncate">
-                      {it.name}
-                    </Link>
+                    {it.slug.startsWith("api-") ? (
+                      <span className="font-medium block truncate">{it.name}</span>
+                    ) : (
+                      <Link to="/medicamento/$slug" params={{ slug: it.slug }} className="font-medium hover:underline block truncate">
+                        {it.name}
+                      </Link>
+                    )}
                     <div className="text-xs text-muted-foreground truncate">{it.active_ingredient}{it.presentation ? ` • ${it.presentation}` : ""}</div>
                   </div>
                   <div className="flex items-center gap-1">
