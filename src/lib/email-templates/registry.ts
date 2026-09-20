@@ -22,6 +22,7 @@ import { template as searchResults } from './search-results'
 import { template as weeklyReminder } from './weekly-reminder'
 import { template as partnerLead } from './partner-lead'
 import { template as nuevaVersion } from './nueva-version'
+import { template as contacto } from './contacto'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'price-alert': priceAlert,
@@ -29,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'weekly-reminder': weeklyReminder,
   'partner-lead': partnerLead,
   'nueva-version': nuevaVersion,
+  'contacto': contacto,
 }
