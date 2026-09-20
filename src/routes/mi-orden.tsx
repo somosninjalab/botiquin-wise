@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBcvRate } from "@/hooks/useBcvRate";
 import { useOrder, removeFromOrder, setQty, clearOrder, type OrderItem } from "@/lib/order-store";
-import { searchMedications, priceToVes, formatBs, formatUSD, type MedicationRow, type PriceRow } from "@/lib/medications";
+import { searchMedications, priceToVes, formatBs, formatUSD, fetchOrderPrices, API_PHARMACY_LIST, type MedicationRow, type PriceRow } from "@/lib/medications";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { AudiencePickerDialog, tryAddWithAudienceCheck } from "@/components/AudiencePickerDialog";
 
@@ -43,19 +43,18 @@ function MiOrdenPage() {
 
   // Load prices + pharmacies whenever items change
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const { data: ph } = await supabase.from("pharmacies").select("id,name,slug");
-      setPharms((ph ?? []) as Pharm[]);
+      if (cancelled) return;
+      const dbPharms = (ph ?? []) as Pharm[];
+      const merged = [...API_PHARMACY_LIST, ...dbPharms.filter((p) => !API_PHARMACY_LIST.some((a) => a.id === p.id))];
+      setPharms(merged);
       if (!items.length) { setPrices([]); return; }
-      const ids = items.map((i) => i.medication_id);
-      const { data } = await supabase
-        .from("medication_prices")
-        .select("*")
-        .in("medication_id", ids)
-        .order("scraped_at", { ascending: false })
-        .limit(5000);
-      setPrices((data ?? []) as PriceRow[]);
+      const rows = await fetchOrderPrices(items.map((i) => ({ medication_id: i.medication_id, name: i.name })));
+      if (!cancelled) setPrices(rows);
     })();
+    return () => { cancelled = true; };
   }, [items.length, items.map((i) => i.medication_id).join(",")]);
 
   // For each med, latest price per pharmacy in VES
@@ -164,9 +163,13 @@ function MiOrdenPage() {
                     <div className="h-10 w-10 rounded bg-muted" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <Link to="/medicamento/$slug" params={{ slug: it.slug }} className="font-medium hover:underline block truncate">
-                      {it.name}
-                    </Link>
+                    {it.slug.startsWith("api-") ? (
+                      <span className="font-medium block truncate">{it.name}</span>
+                    ) : (
+                      <Link to="/medicamento/$slug" params={{ slug: it.slug }} className="font-medium hover:underline block truncate">
+                        {it.name}
+                      </Link>
+                    )}
                     <div className="text-xs text-muted-foreground truncate">{it.active_ingredient}{it.presentation ? ` • ${it.presentation}` : ""}</div>
                   </div>
                   <div className="flex items-center gap-1">

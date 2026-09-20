@@ -9,8 +9,8 @@ import {
 
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 // Tiempo máximo por intento y tiempo total antes de responder al usuario.
-const SEARCH_TIMEOUT_MS = 75_000;
-const TOTAL_BUDGET_MS = 160_000;
+const SEARCH_TIMEOUT_MS = 35_000;
+const TOTAL_BUDGET_MS = 80_000;
 
 const SOURCES = new Set([
   "farmatodo",
@@ -32,8 +32,41 @@ const SOURCES = new Set([
 // - "fresco": se responde tal cual.
 // - "vencido pero útil": se responde al instante y se refresca por detrás.
 const CACHE_TTL_MS = 10 * 60 * 1000;
-const STALE_TTL_MS = 6 * 60 * 60 * 1000;
+const STALE_TTL_MS = 60 * 60 * 1000;
+// Límites de memoria: el worker tiene un tope estricto y se reinicia (502)
+// si lo supera. Guardamos pocas entradas, pocos productos y solo los campos
+// que la web usa.
+const MAX_CACHE_ENTRIES = 120;
+const MAX_PRODUCTS_PER_ENTRY = 120;
+const MAX_BARCODE_ENTRIES = 200;
 const cache = new Map<string, { at: number; products: unknown[] }>();
+
+/** Conserva solo los campos que consume la web, para no acumular JSON enorme. */
+function slim(p: any) {
+  return {
+    name: p?.name,
+    brand: p?.brand,
+    price: p?.price,
+    priceUSD: p?.priceUSD,
+    status: p?.status,
+    image: p?.image,
+    url: p?.url,
+    source: p?.source,
+    code: p?.code,
+    sku: p?.sku,
+  };
+}
+
+function pruneCache() {
+  const now = Date.now();
+  for (const [k, v] of cache) if (now - v.at > STALE_TTL_MS) cache.delete(k);
+  if (cache.size > MAX_CACHE_ENTRIES) {
+    const oldest = [...cache.entries()]
+      .sort((a, b) => a[1].at - b[1].at)
+      .slice(0, cache.size - MAX_CACHE_ENTRIES);
+    for (const [k] of oldest) cache.delete(k);
+  }
+}
 
 // Una sola petición al proveedor por término, aunque muchos usuarios
 // busquen lo mismo a la vez.
@@ -84,6 +117,10 @@ async function resolveBarcode(code: string): Promise<BarcodeInfo> {
     }
   } catch (err) {
     console.warn(`[search-prices-api] barcode lookup failed for ${code}:`, err);
+  }
+  if (barcodeCache.size >= MAX_BARCODE_ENTRIES) {
+    const first = barcodeCache.keys().next().value;
+    if (first !== undefined) barcodeCache.delete(first);
   }
   barcodeCache.set(code, info);
   return info;
@@ -251,17 +288,12 @@ export const Route = createFileRoute("/api/public/search-prices")({
                 if (retry?.products.length) out = retry;
               }
               if (!out) return null;
-              const products = out.products;
+              const products = out.products.slice(0, MAX_PRODUCTS_PER_ENTRY).map(slim);
               // No guardamos respuestas vacías: así conservamos el último
               // resultado bueno y reintentamos más tarde.
               if (products.length) {
                 cache.set(cacheKey, { at: Date.now(), products });
-                if (cache.size > 800) {
-                  // Purga los más antiguos (nunca borramos por edad: el último
-                  // resultado bueno sirve de respaldo si el proveedor falla).
-                  const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, 200);
-                  for (const [k] of oldest) cache.delete(k);
-                }
+                pruneCache();
               }
               return products;
             } catch (err) {
