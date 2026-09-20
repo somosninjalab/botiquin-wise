@@ -17,6 +17,7 @@ import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
 import { Route as MiOrdenRouteImport } from './routes/mi-orden'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -81,6 +82,11 @@ const LegalRoute = LegalRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactoRoute = ContactoRouteImport.update({
+  id: '/contacto',
+  path: '/contacto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/contacto': typeof ContactoRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/contacto': typeof ContactoRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/contacto': typeof ContactoRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/contacto'
     | '/forgot-password'
     | '/legal'
     | '/mi-orden'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/contacto'
     | '/forgot-password'
     | '/legal'
     | '/mi-orden'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/como-funciona'
+    | '/contacto'
     | '/forgot-password'
     | '/legal'
     | '/mi-orden'
@@ -440,6 +452,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
+  ContactoRoute: typeof ContactoRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LegalRoute: typeof LegalRoute
   MiOrdenRoute: typeof MiOrdenRoute
@@ -524,6 +537,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacto': {
+      id: '/contacto'
+      path: '/contacto'
+      fullPath: '/contacto'
+      preLoaderRoute: typeof ContactoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/como-funciona': {
@@ -722,6 +742,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
+  ContactoRoute: ContactoRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LegalRoute: LegalRoute,
   MiOrdenRoute: MiOrdenRoute,
