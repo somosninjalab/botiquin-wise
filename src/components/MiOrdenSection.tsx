@@ -27,19 +27,18 @@ export function MiOrdenSection({ compact = false }: { compact?: boolean }) {
   const [orderName, setOrderName] = useState("Mi orden");
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const { data: ph } = await supabase.from("pharmacies").select("id,name,slug");
-      setPharms((ph ?? []) as Pharm[]);
+      if (cancelled) return;
+      const dbPharms = (ph ?? []) as Pharm[];
+      const merged = [...API_PHARMACY_LIST, ...dbPharms.filter((p) => !API_PHARMACY_LIST.some((a) => a.id === p.id))];
+      setPharms(merged);
       if (!items.length) { setPrices([]); return; }
-      const ids = items.map((i) => i.medication_id);
-      const { data } = await supabase
-        .from("medication_prices")
-        .select("*")
-        .in("medication_id", ids)
-        .order("scraped_at", { ascending: false })
-        .limit(5000);
-      setPrices((data ?? []) as PriceRow[]);
+      const rows = await fetchOrderPrices(items.map((i) => ({ medication_id: i.medication_id, name: i.name })));
+      if (!cancelled) setPrices(rows);
     })();
+    return () => { cancelled = true; };
   }, [items.length, items.map((i) => i.medication_id).join(",")]);
 
   const latestPerMed = useMemo(() => {
