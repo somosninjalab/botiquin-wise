@@ -5,8 +5,38 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill } from "lucide-react";
+import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill, TrendingUp } from "lucide-react";
 import { getPartnerStats, type PartnerStats } from "@/lib/deck/partner-stats.functions";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  LabelList,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+
+const CHART_PRIMARY = "var(--primary)";
+const CHART_ACCENT = "var(--accent)";
+const CHART_MUTED = "var(--muted-foreground)";
+const CHART_BORDER = "var(--border)";
+const CHART_CARD = "var(--card)";
+const DONUT_COLORS = [
+  "var(--primary)",
+  "var(--accent)",
+  "color-mix(in oklab, var(--primary) 55%, white)",
+  "color-mix(in oklab, var(--accent) 60%, white)",
+  "color-mix(in oklab, var(--muted-foreground) 50%, white)",
+  "color-mix(in oklab, var(--primary) 30%, white)",
+];
 
 export const Route = createFileRoute("/nosotros")({
   head: () => ({
@@ -76,7 +106,11 @@ function NosotrosPage() {
   }
 
   const t = stats.traffic;
-  const maxDay = Math.max(1, ...t.dailySearches.map((d) => d.count));
+  const dailyData = t.dailySearches.map((d) => ({ day: d.date.slice(5).split("-").reverse().join("/"), count: d.count }));
+  const cityData = stats.cities.slice(0, 8).map((c) => ({ name: c.name, count: c.count }));
+  const pathologyData = stats.pathologies.slice(0, 5).map((p) => ({ name: p.category, value: p.hits, chronic: p.chronic }));
+  const otherHits = stats.pathologies.slice(5).reduce((sum, p) => sum + p.hits, 0);
+  if (otherHits > 0) pathologyData.push({ name: "Otras", value: otherHits, chronic: false });
 
   return (
     <div className="deck mx-auto max-w-5xl px-4 py-10 print:py-0">
@@ -107,18 +141,59 @@ function NosotrosPage() {
           <Stat label="Registrados en total" value={fmt(t.totalUsers)} />
         </div>
         {t.dailySearches.length > 1 && (
-          <div className="mt-6 flex h-32 items-end gap-1">
-            {t.dailySearches.map((d) => (
-              <div
-                key={d.date}
-                title={`${d.date}: ${fmt(d.count)}`}
-                className="flex-1 rounded-t bg-primary/70"
-                style={{ height: `${Math.max(4, (d.count / maxDay) * 100)}%` }}
-              />
-            ))}
-          </div>
+          <Card className="mt-6 p-4 print:p-2">
+            <div className="h-56 w-full print:h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dailyData} margin={{ top: 10, right: 12, left: -14, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="consultasGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.45} />
+                      <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0.03} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_BORDER} vertical={false} />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: CHART_MUTED }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval="preserveStartEnd"
+                    minTickGap={40}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: CHART_MUTED }}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [fmt(value), "Consultas"]}
+                    labelFormatter={(label: string) => `Día ${label}`}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: `1px solid ${CHART_BORDER}`,
+                      background: CHART_CARD,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke={CHART_PRIMARY}
+                    strokeWidth={2.5}
+                    fill="url(#consultasGrad)"
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <TrendingUp className="h-3.5 w-3.5 text-primary" />
+              Consultas de precios por día.
+            </p>
+          </Card>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">Consultas por día.</p>
       </Section>
 
       {/* Consultas y conversaciones */}
@@ -133,6 +208,39 @@ function NosotrosPage() {
 
       {/* Ciudades */}
       <Section icon={<MapPin className="h-5 w-5" />} title="Desde dónde nos consultan">
+        {cityData.length > 0 && (
+          <Card className="mb-6 p-4 print:p-2">
+            <div className="h-64 w-full print:h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={cityData} layout="vertical" margin={{ top: 4, right: 48, left: 8, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_BORDER} horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={110}
+                    tick={{ fontSize: 12, fill: CHART_MUTED }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [fmt(value), "Consultas"]}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: `1px solid ${CHART_BORDER}`,
+                      background: CHART_CARD,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Bar dataKey="count" fill={CHART_ACCENT} radius={[0, 8, 8, 0]} barSize={18}>
+                    <LabelList dataKey="count" position="right" formatter={(v: number) => fmt(v)} style={{ fontSize: 12, fill: CHART_MUTED }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Ciudades con más consultas en el período.</p>
+          </Card>
+        )}
         <div className="grid gap-6 md:grid-cols-2">
           <RankList title="Ciudades" rows={stats.cities.map((c) => ({ label: c.name, value: c.count }))} />
           <RankList title="Estados / regiones" rows={stats.regions.map((r) => ({ label: r.name, value: r.count }))} />
@@ -144,6 +252,42 @@ function NosotrosPage() {
         <p className="mb-4 text-sm text-muted-foreground">
           Inferidas de la categoría terapéutica de las medicinas buscadas. Las crónicas aparecen primero.
         </p>
+        {pathologyData.length > 0 && (
+          <Card className="mb-6 p-4 print:p-2">
+            <div className="h-64 w-full print:h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pathologyData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="55%"
+                    outerRadius="85%"
+                    paddingAngle={3}
+                    strokeWidth={0}
+                  >
+                    {pathologyData.map((entry, i) => (
+                      <Cell key={entry.name} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [fmt(value), name]}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: `1px solid ${CHART_BORDER}`,
+                      background: CHART_CARD,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Legend
+                    formatter={(value: string) => <span style={{ fontSize: 12, color: CHART_MUTED }}>{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Reparto de las consultas por categoría terapéutica.</p>
+          </Card>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           {stats.pathologies.map((p) => (
             <div key={p.category} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
