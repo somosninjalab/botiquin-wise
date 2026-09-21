@@ -289,6 +289,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const fetchUpstream = (): Promise<unknown[] | null> => {
           const existing = inflight.get(cacheKey);
           if (existing) return existing;
+          activeFanouts++;
           const p = (async () => {
             try {
               let out = await callUpstream(term);
