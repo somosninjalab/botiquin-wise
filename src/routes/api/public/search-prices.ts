@@ -10,7 +10,12 @@ import {
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 // Tiempo máximo por intento y tiempo total antes de responder al usuario.
 const SEARCH_TIMEOUT_MS = 35_000;
-const TOTAL_BUDGET_MS = 80_000;
+const TOTAL_BUDGET_MS = 45_000;
+// Tope de búsquedas nuevas simultáneas en el mismo worker: cada una mantiene
+// respuestas de hasta 12 farmacias en memoria y el worker tiene un límite
+// estricto (se reinicia con 502 si se supera).
+const MAX_CONCURRENT_FANOUTS = 2;
+let activeFanouts = 0;
 
 const SOURCES = new Set([
   "farmatodo",
