@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill, TrendingUp } from "lucide-react";
+import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill, TrendingUp, Globe } from "lucide-react";
 import { getPartnerStats, type PartnerStats } from "@/lib/deck/partner-stats.functions";
 import {
   ResponsiveContainer,
