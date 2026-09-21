@@ -5,8 +5,35 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill } from "lucide-react";
+import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill, TrendingUp } from "lucide-react";
 import { getPartnerStats, type PartnerStats } from "@/lib/deck/partner-stats.functions";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  LabelList,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+
+const CHART_PRIMARY = "hsl(var(--primary))";
+const CHART_ACCENT = "hsl(var(--accent))";
+const CHART_MUTED = "hsl(var(--muted-foreground))";
+const DONUT_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--accent))",
+  "hsl(var(--primary) / 0.55)",
+  "hsl(var(--accent) / 0.55)",
+  "hsl(var(--muted-foreground) / 0.6)",
+];
 
 export const Route = createFileRoute("/nosotros")({
   head: () => ({
