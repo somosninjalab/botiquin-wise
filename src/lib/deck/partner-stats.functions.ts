@@ -339,9 +339,12 @@ export const getPartnerStats = createServerFn({ method: "POST" })
       })
       .slice(0, 12);
 
+    const web = await fetchWebStats(days);
+
     return {
       days,
       generatedAt: new Date().toISOString(),
+      web,
       traffic: {
         searches: events.length,
         uniqueVisitors: visitors.size,
