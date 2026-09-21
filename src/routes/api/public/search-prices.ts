@@ -10,7 +10,12 @@ import {
 const API_ROOT = "https://admin.clubestarbien.com/api/scraper";
 // Tiempo máximo por intento y tiempo total antes de responder al usuario.
 const SEARCH_TIMEOUT_MS = 35_000;
-const TOTAL_BUDGET_MS = 80_000;
+const TOTAL_BUDGET_MS = 45_000;
+// Tope de búsquedas nuevas simultáneas en el mismo worker: cada una mantiene
+// respuestas de hasta 12 farmacias en memoria y el worker tiene un límite
+// estricto (se reinicia con 502 si se supera).
+const MAX_CONCURRENT_FANOUTS = 2;
+let activeFanouts = 0;
 
 const SOURCES = new Set([
   "farmatodo",
@@ -38,6 +43,8 @@ const STALE_TTL_MS = 60 * 60 * 1000;
 // que la web usa.
 const MAX_CACHE_ENTRIES = 120;
 const MAX_PRODUCTS_PER_ENTRY = 120;
+// Por farmacia: recortamos en cuanto llega la respuesta, antes de acumular.
+const MAX_PRODUCTS_PER_SOURCE = 25;
 const MAX_BARCODE_ENTRIES = 200;
 const cache = new Map<string, { at: number; products: unknown[] }>();
 
@@ -233,13 +240,16 @@ export const Route = createFileRoute("/api/public/search-prices")({
           }
           const json: any = await r.json().catch(() => null);
           const raw = Array.isArray(json?.products) ? json.products : [];
+          // Recortamos y quedamos solo con los campos usados AQUÍ mismo, para
+          // no mantener el JSON completo de 12 farmacias en memoria a la vez.
           return raw
             .filter((p2: any) => p2?.name && p2.name !== "No encontrado" && p2.name !== "Error en consulta")
+            .slice(0, MAX_PRODUCTS_PER_SOURCE)
             // Algunas farmacias devuelven un nombre comercial en "source"
             // (ej. "Farmacias Nuevo Siglo"): normalizamos al identificador.
             .map((p2: any) => {
-              const raw = String(p2?.source ?? "").toLowerCase();
-              return { ...p2, source: SOURCES.has(raw) ? raw : src };
+              const s = String(p2?.source ?? "").toLowerCase();
+              return { ...slim(p2), source: SOURCES.has(s) ? s : src };
             });
         };
 
@@ -270,6 +280,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
           };
           await Promise.all([worker(), worker(), worker()]);
           return anyOk ? { products: all, cached: false } : null;
+
         };
 
 
@@ -278,6 +289,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const fetchUpstream = (): Promise<unknown[] | null> => {
           const existing = inflight.get(cacheKey);
           if (existing) return existing;
+          activeFanouts++;
           const p = (async () => {
             try {
               let out = await callUpstream(term);
@@ -300,6 +312,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
               console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
               return null;
             } finally {
+              activeFanouts--;
               inflight.delete(cacheKey);
             }
           })();
@@ -317,11 +330,21 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, count: products.length, products });
         }
 
-        // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás.
+        // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás
+        // (solo si hay cupo; si no, servimos lo guardado sin refrescar).
         if (hit && age < STALE_TTL_MS) {
-          void fetchUpstream();
+          if (activeFanouts < MAX_CONCURRENT_FANOUTS || inflight.has(cacheKey)) void fetchUpstream();
           const stale = bySource(hit.products as any[]);
           return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+        }
+
+        // Demasiadas búsquedas nuevas a la vez en este worker: rechazamos con
+        // amabilidad en vez de agotar la memoria y tumbar todas las peticiones.
+        if (!inflight.has(cacheKey) && activeFanouts >= MAX_CONCURRENT_FANOUTS) {
+          return Response.json(
+            { ok: false, product: term, barcode: resolvedFrom, count: 0, products: [], busy: true, error: "search busy, retry" },
+            { status: 429, headers: { "Retry-After": "3" } },
+          );
         }
 
         const products = await fetchUpstream();
