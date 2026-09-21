@@ -116,8 +116,8 @@ export const getPartnerStats = createServerFn({ method: "POST" })
     for (const e of events) {
       const city = (e.city ?? "").trim();
       if (city) cityMap.set(city, (cityMap.get(city) ?? 0) + 1);
-      const region = (e.region ?? e.country ?? "").trim();
-      if (region) regionMap.set(region, (regionMap.get(region) ?? 0) + 1);
+      const region = (e.region ?? "").trim();
+      if (region.length > 2) regionMap.set(region, (regionMap.get(region) ?? 0) + 1);
       const q = (e.query ?? "").trim();
       if (q.length > 1) {
         const key = q.toLowerCase();
