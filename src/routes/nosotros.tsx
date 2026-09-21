@@ -103,7 +103,11 @@ function NosotrosPage() {
   }
 
   const t = stats.traffic;
-  const maxDay = Math.max(1, ...t.dailySearches.map((d) => d.count));
+  const dailyData = t.dailySearches.map((d) => ({ day: d.date.slice(5).split("-").reverse().join("/"), count: d.count }));
+  const cityData = stats.cities.slice(0, 8).map((c) => ({ name: c.name, count: c.count }));
+  const pathologyData = stats.pathologies.slice(0, 5).map((p) => ({ name: p.category, value: p.hits, chronic: p.chronic }));
+  const otherHits = stats.pathologies.slice(5).reduce((sum, p) => sum + p.hits, 0);
+  if (otherHits > 0) pathologyData.push({ name: "Otras", value: otherHits, chronic: false });
 
   return (
     <div className="deck mx-auto max-w-5xl px-4 py-10 print:py-0">
@@ -201,6 +205,39 @@ function NosotrosPage() {
 
       {/* Ciudades */}
       <Section icon={<MapPin className="h-5 w-5" />} title="Desde dónde nos consultan">
+        {cityData.length > 0 && (
+          <Card className="mb-6 p-4 print:p-2">
+            <div className="h-64 w-full print:h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={cityData} layout="vertical" margin={{ top: 4, right: 48, left: 8, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={110}
+                    tick={{ fontSize: 12, fill: CHART_MUTED }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [fmt(value), "Consultas"]}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: "1px solid hsl(var(--border))",
+                      background: "hsl(var(--card))",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Bar dataKey="count" fill={CHART_ACCENT} radius={[0, 8, 8, 0]} barSize={18}>
+                    <LabelList dataKey="count" position="right" formatter={(v: number) => fmt(v)} style={{ fontSize: 12, fill: CHART_MUTED }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Ciudades con más consultas en el período.</p>
+          </Card>
+        )}
         <div className="grid gap-6 md:grid-cols-2">
           <RankList title="Ciudades" rows={stats.cities.map((c) => ({ label: c.name, value: c.count }))} />
           <RankList title="Estados / regiones" rows={stats.regions.map((r) => ({ label: r.name, value: r.count }))} />
