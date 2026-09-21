@@ -205,9 +205,9 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 break-inside-avoid overflow-hidden">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-3xl font-extrabold">{value}</p>
+      <p className="mt-1 text-3xl font-extrabold print:text-2xl print:leading-tight break-words">{value}</p>
     </Card>
   );
 }
