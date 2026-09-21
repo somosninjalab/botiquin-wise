@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PopularesRouteImport } from './routes/populares'
+import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
 import { Route as MiOrdenRouteImport } from './routes/mi-orden'
 import { Route as LegalRouteImport } from './routes/legal'
@@ -62,6 +63,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const PopularesRoute = PopularesRouteImport.update({
   id: '/populares',
   path: '/populares',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NosotrosRoute = NosotrosRouteImport.update({
+  id: '/nosotros',
+  path: '/nosotros',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MisAlertasRoute = MisAlertasRouteImport.update({
@@ -237,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/nosotros': typeof NosotrosRoute
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByTo {
   '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/nosotros': typeof NosotrosRoute
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -310,6 +318,7 @@ export interface FileRoutesById {
   '/legal': typeof LegalRoute
   '/mi-orden': typeof MiOrdenRoute
   '/mis-alertas': typeof MisAlertasRoute
+  '/nosotros': typeof NosotrosRoute
   '/populares': typeof PopularesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/nosotros'
     | '/populares'
     | '/reset-password'
     | '/sitemap.xml'
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/nosotros'
     | '/populares'
     | '/reset-password'
     | '/sitemap.xml'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/mi-orden'
     | '/mis-alertas'
+    | '/nosotros'
     | '/populares'
     | '/reset-password'
     | '/sitemap.xml'
@@ -457,6 +469,7 @@ export interface RootRouteChildren {
   LegalRoute: typeof LegalRoute
   MiOrdenRoute: typeof MiOrdenRoute
   MisAlertasRoute: typeof MisAlertasRoute
+  NosotrosRoute: typeof NosotrosRoute
   PopularesRoute: typeof PopularesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -509,6 +522,13 @@ declare module '@tanstack/react-router' {
       path: '/populares'
       fullPath: '/populares'
       preLoaderRoute: typeof PopularesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nosotros': {
+      id: '/nosotros'
+      path: '/nosotros'
+      fullPath: '/nosotros'
+      preLoaderRoute: typeof NosotrosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mis-alertas': {
@@ -747,6 +767,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalRoute: LegalRoute,
   MiOrdenRoute: MiOrdenRoute,
   MisAlertasRoute: MisAlertasRoute,
+  NosotrosRoute: NosotrosRoute,
   PopularesRoute: PopularesRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
