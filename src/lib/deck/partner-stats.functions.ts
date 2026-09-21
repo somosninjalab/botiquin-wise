@@ -57,7 +57,8 @@ export const getPartnerStats = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<PartnerStats> => {
     const expected = process.env["PARTNER_DECK_PASSCODE"];
     if (!expected) throw new Error("La clave de acceso no está configurada.");
-    if (data.passcode.trim() !== expected) throw new Error("Clave incorrecta.");
+    const norm = (v: string) => v.trim().replace(/\s+/g, "").toLowerCase();
+    if (norm(data.passcode) !== norm(expected)) throw new Error("Clave incorrecta.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const days = 30;
