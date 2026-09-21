@@ -203,6 +203,28 @@ function MedicamentoPage() {
   };
   const lowestRow = latestByPharm[0];
 
+  const handleShareWhatsApp = () => {
+    if (!med) return;
+    if (!lowestRow) {
+      toast.error("Aún no hay precios para compartir.");
+      return;
+    }
+    const d = displayPrice(Number(lowestRow.price), lowestRow.currency, bcvRate);
+    const label = `${med.name}${med.presentation ? ` ${med.presentation}` : ""}`;
+    const lines = [
+      `💊 ${label} — mejor precio: ${d.primary} en ${pharmMap[lowestRow.pharmacy_id] ?? "farmacia"}`,
+      ...(d.secondary ? [`(≈ ${d.secondary})`] : []),
+      "",
+      `Ver todos los precios: ${window.location.origin}/medicamento/${med.slug}`,
+      "",
+      "Antes de comprar medicinas, Alerta Medicina.",
+    ];
+    const message = lines.join("\n");
+    void trackShare({ channel: "whatsapp", source: "medication_page", url: window.location.href });
+    // api.whatsapp.com directamente: la redirección de wa.me corrompe emojis multibyte.
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="container mx-auto px-4 py-4 md:py-10 max-w-6xl pb-28 md:pb-10">
       <Link to="/" search={{ q: "", pharm: "all", med: "all", cat: "all", ind: "all" }} className="text-sm text-muted-foreground hover:underline">
