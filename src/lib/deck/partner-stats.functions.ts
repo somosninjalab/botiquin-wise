@@ -63,17 +63,32 @@ export const getPartnerStats = createServerFn({ method: "POST" })
     const days = 30;
     const since = new Date(Date.now() - days * 86400_000).toISOString();
 
-    const [searchRes, convRes, msgRes, newUsersRes, totalUsersRes, sharesRes] = await Promise.all([
-      supabaseAdmin
-        .from("search_events")
-        .select("query, medication_id, user_id, city, region, country, created_at, savings_usd")
-        .gte("created_at", since)
-        .limit(50000),
-      supabaseAdmin
-        .from("chat_conversations")
-        .select("id, user_id, anon_token, city, region")
-        .gte("started_at", since)
-        .limit(50000),
+    // PostgREST devuelve máximo 1000 filas por petición: paginamos.
+    const pageAll = async (
+      table: "search_events" | "chat_conversations",
+      columns: string,
+      dateColumn: string,
+    ): Promise<any[]> => {
+      const out: any[] = [];
+      for (let page = 0; page < 40; page++) {
+        const from = page * 1000;
+        const { data, error } = await supabaseAdmin
+          .from(table)
+          .select(columns)
+          .gte(dateColumn, since)
+          .order(dateColumn, { ascending: true })
+          .range(from, from + 999);
+        if (error) break;
+        const rows = (data ?? []) as any[];
+        out.push(...rows);
+        if (rows.length < 1000) break;
+      }
+      return out;
+    };
+
+    const [events, convs, msgRes, newUsersRes, totalUsersRes, sharesRes] = await Promise.all([
+      pageAll("search_events", "query, medication_id, user_id, city, region, country, created_at, savings_usd", "created_at"),
+      pageAll("chat_conversations", "id, user_id, anon_token, city, region", "started_at"),
       supabaseAdmin
         .from("chat_messages")
         .select("id", { count: "exact", head: true })
@@ -89,9 +104,6 @@ export const getPartnerStats = createServerFn({ method: "POST" })
         .eq("channel", "whatsapp")
         .gte("created_at", since),
     ]);
-
-    const events = searchRes.data ?? [];
-    const convs = convRes.data ?? [];
 
     const cityMap = new Map<string, number>();
     const regionMap = new Map<string, number>();
