@@ -249,6 +249,42 @@ function NosotrosPage() {
         <p className="mb-4 text-sm text-muted-foreground">
           Inferidas de la categoría terapéutica de las medicinas buscadas. Las crónicas aparecen primero.
         </p>
+        {pathologyData.length > 0 && (
+          <Card className="mb-6 p-4 print:p-2">
+            <div className="h-64 w-full print:h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pathologyData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="55%"
+                    outerRadius="85%"
+                    paddingAngle={3}
+                    strokeWidth={0}
+                  >
+                    {pathologyData.map((entry, i) => (
+                      <Cell key={entry.name} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [fmt(value), name]}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: "1px solid hsl(var(--border))",
+                      background: "hsl(var(--card))",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Legend
+                    formatter={(value: string) => <span style={{ fontSize: 12, color: CHART_MUTED }}>{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Reparto de las consultas por categoría terapéutica.</p>
+          </Card>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           {stats.pathologies.map((p) => (
             <div key={p.category} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
