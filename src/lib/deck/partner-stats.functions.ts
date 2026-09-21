@@ -38,6 +38,20 @@ export type PartnerStats = {
     savingsUsd: number;
     dailySearches: Array<{ date: string; count: number }>;
   };
+  web: {
+    source: "live" | "snapshot";
+    periodStart: string;
+    periodEnd: string;
+    visitors: number;
+    pageviews: number;
+    pagesPerVisit: number;
+    avgSessionSec: number;
+    bounceRatePct: number;
+    mobilePct: number;
+    topPages: Array<{ name: string; count: number }>;
+    sources: Array<{ name: string; count: number }>;
+    countries: Array<{ name: string; count: number }>;
+  };
   cities: Array<{ name: string; count: number }>;
   regions: Array<{ name: string; count: number }>;
   pathologies: Array<{ category: string; hits: number; chronic: boolean }>;
