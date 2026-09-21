@@ -88,7 +88,7 @@ function RootComponent() {
         <main className="flex-1 pb-20 md:pb-0">
           <Outlet />
         </main>
-        <footer className="border-t border-border/60 px-16 pt-8 pb-24 text-center text-sm text-muted-foreground md:px-0 md:py-8">
+        <footer className="border-t border-border/60 px-16 pt-8 pb-24 text-center text-sm text-muted-foreground md:px-0 md:py-8 print:hidden">
           <div className="container mx-auto flex flex-col items-center gap-2 px-0 md:px-4">
             <div>¡Alerta: Medicina! · Comparador gratuito de precios de medicamentos</div>
             <div className="text-xs">

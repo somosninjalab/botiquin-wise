@@ -215,7 +215,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 function RankList({ title, rows }: { title: string; rows: Array<{ label: string; value: number }> }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
-    <Card className="p-5">
+    <Card className="p-5 break-inside-avoid">
       <h3 className="mb-3 font-semibold">{title}</h3>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">Sin datos.</p>
