@@ -171,7 +171,7 @@ function toItems(arr: any[], nameMap?: Record<string, string>) {
 
 async function fetchWebStats(days: number): Promise<WebStats> {
   try {
-    const token = process.env["LOVABLE_ACCESS_TOKEN"];
+    const token = process.env["PLATFORM_ACCESS_TOKEN"];
     if (!token) return WEB_SNAPSHOT;
     const projectId = process.env["VITE_SUPABASE_PROJECT_ID"] || "29cb77fa-e781-4931-bd63-2ff7e180ffda";
     const end = new Date();
