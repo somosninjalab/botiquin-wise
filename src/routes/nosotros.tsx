@@ -196,6 +196,28 @@ function NosotrosPage() {
         )}
       </Section>
 
+      {/* Tráfico web */}
+      <Section icon={<Globe className="h-5 w-5" />} title="Tráfico del sitio web">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Visitas reales al sitio y cómo se comportan, del {fmtDate(stats.web.periodStart)} al {fmtDate(stats.web.periodEnd)}.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Stat label="Visitas (personas)" value={fmt(stats.web.visitors)} />
+          <Stat label="Páginas vistas" value={fmt(stats.web.pageviews)} />
+          <Stat label="Páginas por visita" value={dec(stats.web.pagesPerVisit)} />
+          <Stat label="Duración media" value={fmtDur(stats.web.avgSessionSec)} />
+          <Stat label="Tasa de rebote" value={pct(stats.web.bounceRatePct)} />
+          <Stat label="Desde el móvil" value={pct(stats.web.mobilePct)} />
+        </div>
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <RankList title="De dónde llegan" rows={stats.web.sources.map((s) => ({ label: s.name, value: s.count }))} />
+          <RankList title="Países" rows={stats.web.countries.map((c) => ({ label: c.name, value: c.count }))} />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Rebote bajo y casi 5 páginas por visita: quien llega usa la plataforma de verdad, no solo la mira.
+        </p>
+      </Section>
+
       {/* Consultas y conversaciones */}
       <Section icon={<MessageCircle className="h-5 w-5" />} title="Conversación con la gente">
         <div className="grid gap-4 sm:grid-cols-4">
