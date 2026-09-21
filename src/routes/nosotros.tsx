@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill, TrendingUp } from "lucide-react";
+import { Lock, Printer, MapPin, Activity, Search, MessageCircle, Users, Pill, TrendingUp, Globe } from "lucide-react";
 import { getPartnerStats, type PartnerStats } from "@/lib/deck/partner-stats.functions";
 import {
   ResponsiveContainer,
@@ -54,6 +54,10 @@ export const Route = createFileRoute("/nosotros")({
 });
 
 const fmt = (n: number) => new Intl.NumberFormat("es-VE").format(n);
+const pct = (n: number) => `${n.toFixed(1).replace(".", ",")}%`;
+const dec = (n: number) => n.toFixed(2).replace(".", ",");
+const fmtDur = (s: number) => `${Math.floor(s / 60)} min ${Math.round(s % 60)} s`;
+const fmtDate = (iso: string) => iso.slice(5).split("-").reverse().join("/");
 
 function NosotrosPage() {
   const fetchStats = useServerFn(getPartnerStats);
@@ -194,6 +198,28 @@ function NosotrosPage() {
             </p>
           </Card>
         )}
+      </Section>
+
+      {/* Tráfico web */}
+      <Section icon={<Globe className="h-5 w-5" />} title="Tráfico del sitio web">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Visitas reales al sitio y cómo se comportan, del {fmtDate(stats.web.periodStart)} al {fmtDate(stats.web.periodEnd)}.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Stat label="Visitas (personas)" value={fmt(stats.web.visitors)} />
+          <Stat label="Páginas vistas" value={fmt(stats.web.pageviews)} />
+          <Stat label="Páginas por visita" value={dec(stats.web.pagesPerVisit)} />
+          <Stat label="Duración media" value={fmtDur(stats.web.avgSessionSec)} />
+          <Stat label="Tasa de rebote" value={pct(stats.web.bounceRatePct)} />
+          <Stat label="Desde el móvil" value={pct(stats.web.mobilePct)} />
+        </div>
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <RankList title="De dónde llegan" rows={stats.web.sources.map((s) => ({ label: s.name, value: s.count }))} />
+          <RankList title="Países" rows={stats.web.countries.map((c) => ({ label: c.name, value: c.count }))} />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Rebote bajo y casi 5 páginas por visita: quien llega usa la plataforma de verdad, no solo la mira.
+        </p>
       </Section>
 
       {/* Consultas y conversaciones */}
