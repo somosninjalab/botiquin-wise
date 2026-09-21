@@ -1,7 +1,5 @@
-# Video de hitos 9:16
+# Tareas
 
-- [x] Crear composición dinámica de máximo 15 segundos.
-- [x] Presentar 10 mil registros, 130 mil búsquedas y US$1 millón ahorrado.
-- [x] Decir “la primera plataforma de Venezuela” y mostrar 🇻🇪.
-- [x] Cerrar con “Antes de comprar medicinas, Alerta Medicina” y alertamedicina.com.
-- [x] Revisar fotogramas clave y renderizar el MP4 final.
+- [x] Quitar del inicio la sección "Soy una farmacia / Soy una droguería" (ya existe Contáctanos).
+- [ ] Atender búsquedas de precios por WhatsApp (conectar número y responder en el chat).
+- [ ] Presentación privada "Nosotros" con tráfico 30 días, consultas, ciudades, patologías y medicinas más buscadas, para alianzas.
