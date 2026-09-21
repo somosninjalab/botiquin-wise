@@ -207,7 +207,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <Card className="p-5 break-inside-avoid overflow-hidden">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-3xl font-extrabold print:text-2xl print:leading-tight break-words">{value}</p>
+      <p className="mt-1 text-3xl font-extrabold whitespace-nowrap print:text-xl print:leading-tight">{value}</p>
     </Card>
   );
 }
