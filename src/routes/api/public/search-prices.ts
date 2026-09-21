@@ -312,6 +312,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
               console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
               return null;
             } finally {
+              activeFanouts--;
               inflight.delete(cacheKey);
             }
           })();
