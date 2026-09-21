@@ -46,7 +46,7 @@ export function AssistantBubble() {
       {!open && (
         <>
           {/* Desktop: floating circle */}
-          <div className="hidden md:flex fixed bottom-6 right-6 z-40 flex-col items-end gap-2">
+          <div className="hidden md:flex fixed bottom-6 right-6 z-40 flex-col items-end gap-2 print:hidden">
             {nudged && (
               <button
                 onClick={() => {
@@ -72,7 +72,7 @@ export function AssistantBubble() {
 
           {/* Mobile: bubble flotante sobre la bottom-nav (lado derecho) */}
           <div
-            className="md:hidden fixed right-3 z-40 flex flex-col items-end gap-2"
+            className="md:hidden fixed right-3 z-40 flex flex-col items-end gap-2 print:hidden"
             style={{ bottom: `calc(72px + env(safe-area-inset-bottom))` }}
           >
             {nudged && (

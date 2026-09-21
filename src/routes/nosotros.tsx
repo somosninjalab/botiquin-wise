@@ -205,9 +205,9 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 break-inside-avoid overflow-hidden">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-3xl font-extrabold">{value}</p>
+      <p className="mt-1 text-3xl font-extrabold whitespace-nowrap print:text-xl print:leading-tight">{value}</p>
     </Card>
   );
 }
@@ -215,7 +215,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 function RankList({ title, rows }: { title: string; rows: Array<{ label: string; value: number }> }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
-    <Card className="p-5">
+    <Card className="p-5 break-inside-avoid">
       <h3 className="mb-3 font-semibold">{title}</h3>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">Sin datos.</p>

@@ -15,7 +15,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-md print:hidden">
       <div className="container mx-auto flex h-20 md:h-24 items-center justify-between px-4 gap-2">
         <Link to="/" className="flex items-center gap-2 font-bold text-base sm:text-lg md:text-xl min-w-0 flex-1 md:flex-initial">
           <img src={logoUrl} alt="" className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 rounded-xl shadow-[var(--shadow-soft)] shrink-0" />
