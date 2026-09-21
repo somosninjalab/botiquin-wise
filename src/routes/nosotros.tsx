@@ -54,6 +54,10 @@ export const Route = createFileRoute("/nosotros")({
 });
 
 const fmt = (n: number) => new Intl.NumberFormat("es-VE").format(n);
+const pct = (n: number) => `${n.toFixed(1).replace(".", ",")}%`;
+const dec = (n: number) => n.toFixed(2).replace(".", ",");
+const fmtDur = (s: number) => `${Math.floor(s / 60)} min ${Math.round(s % 60)} s`;
+const fmtDate = (iso: string) => iso.slice(5).split("-").reverse().join("/");
 
 function NosotrosPage() {
   const fetchStats = useServerFn(getPartnerStats);
