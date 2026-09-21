@@ -151,7 +151,7 @@ function NosotrosPage() {
                       <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0.03} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_BORDER} vertical={false} />
                   <XAxis
                     dataKey="day"
                     tick={{ fontSize: 11, fill: CHART_MUTED }}
@@ -171,8 +171,8 @@ function NosotrosPage() {
                     labelFormatter={(label: string) => `Día ${label}`}
                     contentStyle={{
                       borderRadius: 12,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
+                      border: `1px solid ${CHART_BORDER}`,
+                      background: CHART_CARD,
                       fontSize: 12,
                     }}
                   />
@@ -213,7 +213,7 @@ function NosotrosPage() {
             <div className="h-64 w-full print:h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cityData} layout="vertical" margin={{ top: 4, right: 48, left: 8, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_BORDER} horizontal={false} />
                   <XAxis type="number" hide />
                   <YAxis
                     type="category"
@@ -227,8 +227,8 @@ function NosotrosPage() {
                     formatter={(value: number) => [fmt(value), "Consultas"]}
                     contentStyle={{
                       borderRadius: 12,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
+                      border: `1px solid ${CHART_BORDER}`,
+                      background: CHART_CARD,
                       fontSize: 12,
                     }}
                   />
@@ -274,8 +274,8 @@ function NosotrosPage() {
                     formatter={(value: number, name: string) => [fmt(value), name]}
                     contentStyle={{
                       borderRadius: 12,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
+                      border: `1px solid ${CHART_BORDER}`,
+                      background: CHART_CARD,
                       fontSize: 12,
                     }}
                   />
