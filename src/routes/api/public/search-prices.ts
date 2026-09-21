@@ -43,6 +43,8 @@ const STALE_TTL_MS = 60 * 60 * 1000;
 // que la web usa.
 const MAX_CACHE_ENTRIES = 120;
 const MAX_PRODUCTS_PER_ENTRY = 120;
+// Por farmacia: recortamos en cuanto llega la respuesta, antes de acumular.
+const MAX_PRODUCTS_PER_SOURCE = 25;
 const MAX_BARCODE_ENTRIES = 200;
 const cache = new Map<string, { at: number; products: unknown[] }>();
 
