@@ -137,7 +137,7 @@ export const getPartnerStats = createServerFn({ method: "POST" })
       const city = (c.city ?? "").trim();
       if (city) cityMap.set(city, (cityMap.get(city) ?? 0) + 1);
       const region = (c.region ?? "").trim();
-      if (region) regionMap.set(region, (regionMap.get(region) ?? 0) + 1);
+      if (region.length > 2) regionMap.set(region, (regionMap.get(region) ?? 0) + 1);
     }
 
     // Medicinas y patologías
