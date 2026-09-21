@@ -24,15 +24,18 @@ import {
   Legend,
 } from "recharts";
 
-const CHART_PRIMARY = "hsl(var(--primary))";
-const CHART_ACCENT = "hsl(var(--accent))";
-const CHART_MUTED = "hsl(var(--muted-foreground))";
+const CHART_PRIMARY = "var(--primary)";
+const CHART_ACCENT = "var(--accent)";
+const CHART_MUTED = "var(--muted-foreground)";
+const CHART_BORDER = "var(--border)";
+const CHART_CARD = "var(--card)";
 const DONUT_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--accent))",
-  "hsl(var(--primary) / 0.55)",
-  "hsl(var(--accent) / 0.55)",
-  "hsl(var(--muted-foreground) / 0.6)",
+  "var(--primary)",
+  "var(--accent)",
+  "color-mix(in oklab, var(--primary) 55%, white)",
+  "color-mix(in oklab, var(--accent) 60%, white)",
+  "color-mix(in oklab, var(--muted-foreground) 50%, white)",
+  "color-mix(in oklab, var(--primary) 30%, white)",
 ];
 
 export const Route = createFileRoute("/nosotros")({
