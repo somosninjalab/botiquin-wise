@@ -942,7 +942,8 @@ function SearchResults(props: {
       "Antes de comprar medicinas, Alerta Medicina.",
     ].join("\n");
     void trackShare({ channel: "whatsapp", source: "search_results", url: window.location.href });
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    // api.whatsapp.com directamente: la redirección de wa.me corrompe emojis multibyte.
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
 
   const handleSendEmail = async () => {
