@@ -385,6 +385,15 @@ function MedicamentoPage() {
         <Button onClick={addThisToOrder} variant={inOrder ? "outline" : "secondary"}>
           {inOrder ? <><Check className="h-4 w-4 mr-2" /> En tu orden — agregar otro</> : <><ShoppingCart className="h-4 w-4 mr-2" /> Agregar a mi orden</>}
         </Button>
+        <Button
+          onClick={handleShareWhatsApp}
+          disabled={!lowestRow}
+          variant="outline"
+          className="gap-2 text-[#25D366] hover:text-[#25D366] border-[#25D366]/40"
+          title="Compartir este precio por WhatsApp"
+        >
+          <MessageCircle className="h-4 w-4" /> Compartir por WhatsApp
+        </Button>
       </div>
 
       {/* Histórico */}
@@ -423,6 +432,15 @@ function MedicamentoPage() {
         </Button>
         <Button onClick={addThisToOrder} variant={inOrder ? "outline" : "secondary"} className="flex-1 h-11">
           {inOrder ? <><Check className="h-4 w-4 mr-1.5" /> En orden</> : <><ShoppingCart className="h-4 w-4 mr-1.5" /> A mi orden</>}
+        </Button>
+        <Button
+          onClick={handleShareWhatsApp}
+          disabled={!lowestRow}
+          variant="outline"
+          className="h-11 px-3 shrink-0 text-[#25D366] hover:text-[#25D366] border-[#25D366]/40"
+          title="Compartir por WhatsApp"
+        >
+          <MessageCircle className="h-5 w-5" />
         </Button>
       </div>
     </div>
