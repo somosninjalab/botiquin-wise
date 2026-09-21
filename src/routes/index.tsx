@@ -58,7 +58,6 @@ import { SlidersHorizontal } from "lucide-react";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { PriceAlertsFeed } from "@/components/PriceAlertsFeed";
 import { MiOrdenSection } from "@/components/MiOrdenSection";
-import { PartnerLeadSection } from "@/components/PartnerLeadSection";
 import { ShoppingCart } from "lucide-react";
 import {
   priceToVes,
@@ -646,9 +645,6 @@ function Index() {
               ))}
             </div>
           </section>
-
-          {/* Sección para farmacias y droguerías interesadas */}
-          <PartnerLeadSection />
         </>
       )}
     </div>
