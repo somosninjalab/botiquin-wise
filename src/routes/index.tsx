@@ -81,7 +81,8 @@ import { useBcvRate } from "@/hooks/useBcvRate";
 import { HeroExplainer } from "@/components/HeroExplainer";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown } from "lucide-react";
-import { Mail, FileDown } from "lucide-react";
+import { Mail, FileDown, MessageCircle } from "lucide-react";
+import { trackShare } from "@/lib/track-share";
 import { exportSearchResultsPdf } from "@/lib/export-results-pdf";
 import { useServerFn } from "@tanstack/react-start";
 import { sendSearchResultsEmail } from "@/lib/email/send-search-results.functions";
@@ -1020,6 +1021,17 @@ function SearchResults(props: {
               {q && <span className="text-muted-foreground font-normal"> para "{q}"</span>}
             </h2>
             <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShareWhatsApp}
+              disabled={loading || totalResults === 0}
+              className="h-8 gap-1.5 text-[#25D366] hover:text-[#25D366]"
+              title="Compartir estos precios por WhatsApp"
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">WhatsApp</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
