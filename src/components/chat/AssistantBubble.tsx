@@ -70,10 +70,11 @@ export function AssistantBubble() {
             </button>
           </div>
 
-          {/* Mobile: bubble flotante sobre la bottom-nav (lado derecho) */}
+          {/* Mobile: bubble flotante sobre la bottom-nav (lado derecho).
+              En /medicamento/* sube para no tapar la barra de CTAs fijas. */}
           <div
             className="md:hidden fixed right-3 z-40 flex flex-col items-end gap-2 print:hidden"
-            style={{ bottom: `calc(72px + env(safe-area-inset-bottom))` }}
+            style={{ bottom: `calc(${location.pathname.startsWith("/medicamento/") ? 136 : 72}px + env(safe-area-inset-bottom))` }}
           >
             {nudged && (
               <button

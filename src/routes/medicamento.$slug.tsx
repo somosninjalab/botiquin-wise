@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellOff, ExternalLink, Pill, ShoppingCart, Check } from "lucide-react";
+import { Bell, BellOff, ExternalLink, MessageCircle, Pill, ShoppingCart, Check } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,7 @@ import { useBcvRate } from "@/hooks/useBcvRate";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { addToOrder, useOrder } from "@/lib/order-store";
 import { getMedicationMeta } from "@/lib/medication-meta.functions";
+import { trackShare } from "@/lib/track-share";
 
 export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
@@ -202,6 +203,31 @@ function MedicamentoPage() {
   };
   const lowestRow = latestByPharm[0];
 
+  const handleShareWhatsApp = () => {
+    if (!med) return;
+    if (!lowestRow) {
+      toast.error("Aún no hay precios para compartir.");
+      return;
+    }
+    const d = displayPrice(Number(lowestRow.price), lowestRow.currency, bcvRate);
+    const label =
+      med.presentation && !med.name.toLowerCase().includes(med.presentation.toLowerCase())
+        ? `${med.name} ${med.presentation}`
+        : med.name;
+    const lines = [
+      `💊 ${label} — mejor precio: ${d.primary} en ${pharmMap[lowestRow.pharmacy_id] ?? "farmacia"}`,
+      ...(d.secondary ? [`(≈ ${d.secondary})`] : []),
+      "",
+      `Ver todos los precios: ${window.location.origin}/medicamento/${med.slug}`,
+      "",
+      "Antes de comprar medicinas, Alerta Medicina.",
+    ];
+    const message = lines.join("\n");
+    void trackShare({ channel: "whatsapp", source: "medication_page", url: window.location.href });
+    // api.whatsapp.com directamente: la redirección de wa.me corrompe emojis multibyte.
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="container mx-auto px-4 py-4 md:py-10 max-w-6xl pb-28 md:pb-10">
       <Link to="/" search={{ q: "", pharm: "all", med: "all", cat: "all", ind: "all" }} className="text-sm text-muted-foreground hover:underline">
@@ -362,6 +388,15 @@ function MedicamentoPage() {
         <Button onClick={addThisToOrder} variant={inOrder ? "outline" : "secondary"}>
           {inOrder ? <><Check className="h-4 w-4 mr-2" /> En tu orden — agregar otro</> : <><ShoppingCart className="h-4 w-4 mr-2" /> Agregar a mi orden</>}
         </Button>
+        <Button
+          onClick={handleShareWhatsApp}
+          disabled={!lowestRow}
+          variant="outline"
+          className="gap-2 text-[#25D366] hover:text-[#25D366] border-[#25D366]/40"
+          title="Compartir este precio por WhatsApp"
+        >
+          <MessageCircle className="h-4 w-4" /> Compartir por WhatsApp
+        </Button>
       </div>
 
       {/* Histórico */}
@@ -400,6 +435,15 @@ function MedicamentoPage() {
         </Button>
         <Button onClick={addThisToOrder} variant={inOrder ? "outline" : "secondary"} className="flex-1 h-11">
           {inOrder ? <><Check className="h-4 w-4 mr-1.5" /> En orden</> : <><ShoppingCart className="h-4 w-4 mr-1.5" /> A mi orden</>}
+        </Button>
+        <Button
+          onClick={handleShareWhatsApp}
+          disabled={!lowestRow}
+          variant="outline"
+          className="h-11 px-3 shrink-0 text-[#25D366] hover:text-[#25D366] border-[#25D366]/40"
+          title="Compartir por WhatsApp"
+        >
+          <MessageCircle className="h-5 w-5" />
         </Button>
       </div>
     </div>
