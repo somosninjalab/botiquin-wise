@@ -134,18 +134,59 @@ function NosotrosPage() {
           <Stat label="Registrados en total" value={fmt(t.totalUsers)} />
         </div>
         {t.dailySearches.length > 1 && (
-          <div className="mt-6 flex h-32 items-end gap-1">
-            {t.dailySearches.map((d) => (
-              <div
-                key={d.date}
-                title={`${d.date}: ${fmt(d.count)}`}
-                className="flex-1 rounded-t bg-primary/70"
-                style={{ height: `${Math.max(4, (d.count / maxDay) * 100)}%` }}
-              />
-            ))}
-          </div>
+          <Card className="mt-6 p-4 print:p-2">
+            <div className="h-56 w-full print:h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dailyData} margin={{ top: 10, right: 12, left: -14, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="consultasGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.45} />
+                      <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0.03} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: CHART_MUTED }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval="preserveStartEnd"
+                    minTickGap={40}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: CHART_MUTED }}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [fmt(value), "Consultas"]}
+                    labelFormatter={(label: string) => `Día ${label}`}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: "1px solid hsl(var(--border))",
+                      background: "hsl(var(--card))",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    stroke={CHART_PRIMARY}
+                    strokeWidth={2.5}
+                    fill="url(#consultasGrad)"
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <TrendingUp className="h-3.5 w-3.5 text-primary" />
+              Consultas de precios por día.
+            </p>
+          </Card>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">Consultas por día.</p>
       </Section>
 
       {/* Consultas y conversaciones */}
