@@ -916,6 +916,34 @@ function SearchResults(props: {
     }
   };
 
+  const handleShareWhatsApp = () => {
+    // Resumen simple: top 5 medicinas con mejor precio encontrado.
+    const flat = grouped
+      .flatMap(([, arr]) => arr)
+      .filter((m) => lowestByMed.has(m.id))
+      .slice(0, 5);
+    if (!flat.length) {
+      toast.error("Aún no hay precios para compartir.");
+      return;
+    }
+    const lines = flat.map((m, i) => {
+      const lo = lowestByMed.get(m.id)!;
+      const d = displayPrice(Number(lo.price), lo.currency, bcvRate);
+      return `${i + 1}. ${m.name || (m.brand_names ?? [])[0]} — ${d.primary} en ${pharmaciesMap[lo.pharmacy_id] ?? "farmacia"}`;
+    });
+    const message = [
+      `💊 Precios de "${q || "medicinas"}" en Alerta Medicina:`,
+      "",
+      ...lines,
+      "",
+      `Ver todos: ${window.location.origin}/?q=${encodeURIComponent(q)}`,
+      "",
+      "Antes de comprar medicinas, Alerta Medicina.",
+    ].join("\n");
+    void trackShare({ channel: "whatsapp", source: "search_results", url: window.location.href });
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  };
+
   const handleSendEmail = async () => {
     if (!user) {
       toast.error("Inicia sesión para recibir los resultados por correo.");
