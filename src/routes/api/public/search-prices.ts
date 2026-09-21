@@ -330,11 +330,21 @@ export const Route = createFileRoute("/api/public/search-prices")({
           return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, count: products.length, products });
         }
 
-        // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás.
+        // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás
+        // (solo si hay cupo; si no, servimos lo guardado sin refrescar).
         if (hit && age < STALE_TTL_MS) {
-          void fetchUpstream();
+          if (activeFanouts < MAX_CONCURRENT_FANOUTS || inflight.has(cacheKey)) void fetchUpstream();
           const stale = bySource(hit.products as any[]);
           return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
+        }
+
+        // Demasiadas búsquedas nuevas a la vez en este worker: rechazamos con
+        // amabilidad en vez de agotar la memoria y tumbar todas las peticiones.
+        if (!inflight.has(cacheKey) && activeFanouts >= MAX_CONCURRENT_FANOUTS) {
+          return Response.json(
+            { ok: false, product: term, barcode: resolvedFrom, count: 0, products: [], busy: true, error: "search busy, retry" },
+            { status: 429, headers: { "Retry-After": "3" } },
+          );
         }
 
         const products = await fetchUpstream();
