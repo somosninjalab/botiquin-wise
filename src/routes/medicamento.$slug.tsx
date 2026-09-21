@@ -210,7 +210,10 @@ function MedicamentoPage() {
       return;
     }
     const d = displayPrice(Number(lowestRow.price), lowestRow.currency, bcvRate);
-    const label = `${med.name}${med.presentation ? ` ${med.presentation}` : ""}`;
+    const label =
+      med.presentation && !med.name.toLowerCase().includes(med.presentation.toLowerCase())
+        ? `${med.name} ${med.presentation}`
+        : med.name;
     const lines = [
       `💊 ${label} — mejor precio: ${d.primary} en ${pharmMap[lowestRow.pharmacy_id] ?? "farmacia"}`,
       ...(d.secondary ? [`(≈ ${d.secondary})`] : []),
