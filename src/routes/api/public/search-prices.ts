@@ -280,6 +280,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
           };
           await Promise.all([worker(), worker(), worker()]);
           return anyOk ? { products: all, cached: false } : null;
+
         };
 
 
