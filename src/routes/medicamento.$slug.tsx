@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellOff, ExternalLink, Pill, ShoppingCart, Check } from "lucide-react";
+import { Bell, BellOff, ExternalLink, MessageCircle, Pill, ShoppingCart, Check } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,7 @@ import { useBcvRate } from "@/hooks/useBcvRate";
 import { PharmacyLogo } from "@/components/PharmacyLogo";
 import { addToOrder, useOrder } from "@/lib/order-store";
 import { getMedicationMeta } from "@/lib/medication-meta.functions";
+import { trackShare } from "@/lib/track-share";
 
 export const Route = createFileRoute("/medicamento/$slug")({
   component: MedicamentoPage,
