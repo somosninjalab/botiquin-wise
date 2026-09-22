@@ -15,7 +15,12 @@ const TOTAL_BUDGET_MS = 45_000;
 // respuestas de hasta 12 farmacias en memoria y el worker tiene un límite
 // estricto (se reinicia con 502 si se supera).
 const MAX_CONCURRENT_FANOUTS = 2;
+// Las consultas a UNA sola farmacia son baratas en memoria (máx. 25 productos),
+// así que pueden ir muchas a la vez: es lo que usa la web para mostrar
+// resultados a medida que llegan.
+const MAX_CONCURRENT_SINGLE = 8;
 let activeFanouts = 0;
+let activeSingles = 0;
 
 const SOURCES = new Set([
   "farmatodo",
@@ -210,7 +215,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const u = new URL(`${API_ROOT}/${src}`);
           u.searchParams.set("product", searchTerm);
           let r: Response | null = null;
-          for (let attempt = 0; attempt < 2; attempt++) {
+          for (let attempt = 0; attempt < 3; attempt++) {
             if (Date.now() > deadline) break;
             const left = Math.max(5_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
             // El regulador adaptativo decide cuándo puede salir esta llamada.
@@ -228,7 +233,11 @@ export const Route = createFileRoute("/api/public/search-prices")({
               break;
             }
             if (r) reportThrottled();
-            const wait = Math.min(800 * 2 ** attempt, 3000);
+            // El proveedor indica cuántos segundos esperar cuando está saturado.
+            const retryAfter = Number(r?.headers.get("retry-after") ?? 0);
+            const wait = retryAfter > 0
+              ? Math.min(retryAfter * 1000, 6_000)
+              : Math.min(1_200 * 2 ** attempt, 5_000);
             if (Date.now() + wait > deadline) break;
             await new Promise((rs) => setTimeout(rs, wait));
           }
@@ -289,7 +298,8 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const fetchUpstream = (): Promise<unknown[] | null> => {
           const existing = inflight.get(cacheKey);
           if (existing) return existing;
-          activeFanouts++;
+          if (source) activeSingles++;
+          else activeFanouts++;
           const p = (async () => {
             try {
               let out = await callUpstream(term);
@@ -312,7 +322,8 @@ export const Route = createFileRoute("/api/public/search-prices")({
               console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
               return null;
             } finally {
-              activeFanouts--;
+              if (source) activeSingles--;
+              else activeFanouts--;
               inflight.delete(cacheKey);
             }
           })();
@@ -333,14 +344,20 @@ export const Route = createFileRoute("/api/public/search-prices")({
         // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás
         // (solo si hay cupo; si no, servimos lo guardado sin refrescar).
         if (hit && age < STALE_TTL_MS) {
-          if (activeFanouts < MAX_CONCURRENT_FANOUTS || inflight.has(cacheKey)) void fetchUpstream();
+          const hasRoom = source
+            ? activeSingles < MAX_CONCURRENT_SINGLE
+            : activeFanouts < MAX_CONCURRENT_FANOUTS;
+          if (hasRoom || inflight.has(cacheKey)) void fetchUpstream();
           const stale = bySource(hit.products as any[]);
           return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
         }
 
         // Demasiadas búsquedas nuevas a la vez en este worker: rechazamos con
         // amabilidad en vez de agotar la memoria y tumbar todas las peticiones.
-        if (!inflight.has(cacheKey) && activeFanouts >= MAX_CONCURRENT_FANOUTS) {
+        const atCapacity = source
+          ? activeSingles >= MAX_CONCURRENT_SINGLE
+          : activeFanouts >= MAX_CONCURRENT_FANOUTS;
+        if (!inflight.has(cacheKey) && atCapacity) {
           return Response.json(
             { ok: false, product: term, barcode: resolvedFrom, count: 0, products: [], busy: true, error: "search busy, retry" },
             { status: 429, headers: { "Retry-After": "3" } },

@@ -229,12 +229,17 @@ export async function searchMedicationResults(q: string, limit = 120) {
 export async function searchMedicationsBySource(q: string, source: string, limit = 40) {
   const term = q.replace(/[,()]/g, " ").trim();
   if (!term) return { meds: [] as MedicationRow[], prices: [] as PriceRow[] };
-  const res = await fetch(
-    `/api/public/search-prices?q=${encodeURIComponent(term)}&source=${encodeURIComponent(source)}&limit=${limit}`,
-  );
-  const json = (await res.json().catch(() => null)) as
-    | { ok?: boolean; products?: ApiProduct[]; error?: string }
+  const url = `/api/public/search-prices?q=${encodeURIComponent(term)}&source=${encodeURIComponent(source)}&limit=${limit}`;
+  let res = await fetch(url);
+  let json = (await res.json().catch(() => null)) as
+    | { ok?: boolean; products?: ApiProduct[]; error?: string; busy?: boolean }
     | null;
+  // Si el servidor está ocupado, esperamos y volvemos a intentar (2 veces).
+  for (let attempt = 0; attempt < 2 && (res.status === 429 || json?.busy); attempt++) {
+    await new Promise((r) => setTimeout(r, 1500 + attempt * 1500));
+    res = await fetch(url);
+    json = (await res.json().catch(() => null)) as typeof json;
+  }
   if (!res.ok || !json?.ok) {
     throw new Error(json?.error || `No respondió ${API_PHARMACIES[source]?.name ?? source}`);
   }
