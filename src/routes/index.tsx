@@ -1061,12 +1061,12 @@ function SearchResults(props: {
               variant="outline"
               size="sm"
               onClick={handleShareWhatsApp}
-              disabled={loading || totalResults === 0}
+              disabled={sharingWhatsApp || loading || totalResults === 0}
               className="h-8 gap-1.5 text-[#25D366] hover:text-[#25D366]"
-              title="Compartir estos precios por WhatsApp"
+              title="Compartir estos precios en PDF por WhatsApp"
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">WhatsApp</span>
+              <span className="hidden sm:inline">{sharingWhatsApp ? "Preparando…" : "WhatsApp"}</span>
             </Button>
             <Button
               variant="outline"
