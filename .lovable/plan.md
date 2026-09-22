@@ -5,6 +5,7 @@ Crear un video vertical de 15 segundos que enseñe, desde un teléfono, cómo en
 ## Contenido
 
 - Gancho inmediato: “¿Quieres saber cómo pagar menos por tus medicinas en Venezuela?”.
+- Respuesta inmediata: “Usando Alerta Medicina”.
 - Paso 1: abrir el navegador y entrar en `alertamedicina.com`.
 - Paso 2: buscar un medicamento real (Atamel).
 - Paso 3: revisar las coincidencias exactas y destacar el mejor precio disponible.
