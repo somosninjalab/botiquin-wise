@@ -268,7 +268,7 @@ function Index() {
           await runOne(source);
         }
       };
-      await Promise.all([worker(), worker()]);
+      await Promise.all([worker(), worker(), worker(), worker()]);
       if (cancelled) return;
       if (failed === API_SOURCE_IDS.length) {
         setSearchError("El comparador no respondió a tiempo");
