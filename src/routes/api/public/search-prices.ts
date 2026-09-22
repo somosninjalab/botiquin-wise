@@ -294,7 +294,8 @@ export const Route = createFileRoute("/api/public/search-prices")({
         const fetchUpstream = (): Promise<unknown[] | null> => {
           const existing = inflight.get(cacheKey);
           if (existing) return existing;
-          activeFanouts++;
+          if (source) activeSingles++;
+          else activeFanouts++;
           const p = (async () => {
             try {
               let out = await callUpstream(term);
@@ -317,7 +318,8 @@ export const Route = createFileRoute("/api/public/search-prices")({
               console.warn(`[search-prices-api] fetch failed for "${q}":`, err);
               return null;
             } finally {
-              activeFanouts--;
+              if (source) activeSingles--;
+              else activeFanouts--;
               inflight.delete(cacheKey);
             }
           })();
@@ -338,14 +340,20 @@ export const Route = createFileRoute("/api/public/search-prices")({
         // Caché vencido pero aún útil → respondemos ya y refrescamos por detrás
         // (solo si hay cupo; si no, servimos lo guardado sin refrescar).
         if (hit && age < STALE_TTL_MS) {
-          if (activeFanouts < MAX_CONCURRENT_FANOUTS || inflight.has(cacheKey)) void fetchUpstream();
+          const hasRoom = source
+            ? activeSingles < MAX_CONCURRENT_SINGLE
+            : activeFanouts < MAX_CONCURRENT_FANOUTS;
+          if (hasRoom || inflight.has(cacheKey)) void fetchUpstream();
           const stale = bySource(hit.products as any[]);
           return Response.json({ ok: true, product: term, barcode: resolvedFrom, source: source || null, cached: true, stale: true, count: stale.length, products: stale });
         }
 
         // Demasiadas búsquedas nuevas a la vez en este worker: rechazamos con
         // amabilidad en vez de agotar la memoria y tumbar todas las peticiones.
-        if (!inflight.has(cacheKey) && activeFanouts >= MAX_CONCURRENT_FANOUTS) {
+        const atCapacity = source
+          ? activeSingles >= MAX_CONCURRENT_SINGLE
+          : activeFanouts >= MAX_CONCURRENT_FANOUTS;
+        if (!inflight.has(cacheKey) && atCapacity) {
           return Response.json(
             { ok: false, product: term, barcode: resolvedFrom, count: 0, products: [], busy: true, error: "search busy, retry" },
             { status: 429, headers: { "Retry-After": "3" } },
