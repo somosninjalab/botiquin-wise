@@ -893,6 +893,10 @@ function SearchResults(props: {
   }, [optionsSource]);
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
+  // Para compartir/exportar solo van las coincidencias exactas; si la
+  // búsqueda no produjo ese grupo (p. ej. vista general), se comparte todo.
+  const exactGroups = grouped.filter(([cat]) => cat === "Coincidencia exacta");
+  const shareGrouped = exactGroups.length ? exactGroups : grouped;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { user } = useAuth();
   const sendEmail = useServerFn(sendSearchResultsEmail);
