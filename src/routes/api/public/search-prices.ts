@@ -15,7 +15,12 @@ const TOTAL_BUDGET_MS = 45_000;
 // respuestas de hasta 12 farmacias en memoria y el worker tiene un límite
 // estricto (se reinicia con 502 si se supera).
 const MAX_CONCURRENT_FANOUTS = 2;
+// Las consultas a UNA sola farmacia son baratas en memoria (máx. 25 productos),
+// así que pueden ir muchas a la vez: es lo que usa la web para mostrar
+// resultados a medida que llegan.
+const MAX_CONCURRENT_SINGLE = 8;
 let activeFanouts = 0;
+let activeSingles = 0;
 
 const SOURCES = new Set([
   "farmatodo",
