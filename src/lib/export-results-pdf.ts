@@ -117,8 +117,11 @@ export async function exportSearchResultsPdf(opts: {
       doc.setTextColor(TEXT.r, TEXT.g, TEXT.b);
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text(doc.splitTextToSize(med.name, pageW - margin * 2), margin, y);
-      y += 14;
+      // Los nombres largos ocupan varias líneas: avanzamos según cuántas sean
+      // para que no se solapen con la fila de la farmacia.
+      const nameLines: string[] = doc.splitTextToSize(med.name, pageW - margin * 2);
+      doc.text(nameLines, margin, y);
+      y += 14 + (nameLines.length - 1) * 13;
 
       for (const r of rows) {
         newPageIfNeeded(18);
