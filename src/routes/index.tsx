@@ -893,6 +893,10 @@ function SearchResults(props: {
   }, [optionsSource]);
 
   const totalResults = grouped.reduce((acc, [, arr]) => acc + arr.length, 0);
+  // Para compartir/exportar solo van las coincidencias exactas; si la
+  // búsqueda no produjo ese grupo (p. ej. vista general), se comparte todo.
+  const exactGroups = grouped.filter(([cat]) => cat === "Coincidencia exacta");
+  const shareGrouped = exactGroups.length ? exactGroups : grouped;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const { user } = useAuth();
   const sendEmail = useServerFn(sendSearchResultsEmail);
@@ -905,7 +909,7 @@ function SearchResults(props: {
     try {
       await exportSearchResultsPdf({
         query: q,
-        grouped,
+        grouped: shareGrouped,
         latestByMedPharm,
         pharmaciesMap,
         bcvRate,
@@ -920,7 +924,7 @@ function SearchResults(props: {
 
   const handleShareWhatsApp = async () => {
     // Resumen simple: top 5 medicinas con mejor precio encontrado.
-    const flat = grouped
+    const flat = shareGrouped
       .flatMap(([, arr]) => arr)
       .filter((m) => lowestByMed.has(m.id))
       .slice(0, 5);
@@ -950,7 +954,7 @@ function SearchResults(props: {
     try {
       const file = (await exportSearchResultsPdf({
         query: q,
-        grouped,
+        grouped: shareGrouped,
         latestByMedPharm,
         pharmaciesMap,
         bcvRate,
