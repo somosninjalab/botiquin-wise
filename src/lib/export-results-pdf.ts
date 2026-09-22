@@ -17,8 +17,10 @@ export async function exportSearchResultsPdf(opts: {
   latestByMedPharm: Map<string, PriceRow>;
   pharmaciesMap: Record<string, string>;
   bcvRate: number | null;
-}) {
-  const { query, grouped, latestByMedPharm, pharmaciesMap, bcvRate } = opts;
+  /** "save" descarga el archivo; "file" lo devuelve para compartirlo. */
+  output?: "save" | "file";
+}): Promise<File | void> {
+  const { query, grouped, latestByMedPharm, pharmaciesMap, bcvRate, output = "save" } = opts;
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "pt", format: "a4" });
 
@@ -155,5 +157,9 @@ export async function exportSearchResultsPdf(opts: {
 
   addFooter();
   const slug = (query || "resultados").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40);
-  doc.save(`alerta-medicina-${slug}.pdf`);
+  const filename = `alerta-medicina-${slug}.pdf`;
+  if (output === "file") {
+    return new File([doc.output("blob")], filename, { type: "application/pdf" });
+  }
+  doc.save(filename);
 }
