@@ -8,14 +8,14 @@
 //     y aplicamos un enfriamiento global (circuit breaker suave)
 // ============================================================================
 
-const MAX_CONCURRENCY = 6;
+const MAX_CONCURRENCY = 4;
 const MIN_CONCURRENCY = 1;
-const MIN_GAP_FLOOR_MS = 150;
+const MIN_GAP_FLOOR_MS = 250;
 const MIN_GAP_CEIL_MS = 6_000;
 
 const state = {
-  concurrency: 5,
-  gapMs: 250,
+  concurrency: 3,
+  gapMs: 400,
   active: 0,
   lastStartAt: 0,
   cooldownUntil: 0,
