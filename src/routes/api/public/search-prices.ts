@@ -215,7 +215,7 @@ export const Route = createFileRoute("/api/public/search-prices")({
           const u = new URL(`${API_ROOT}/${src}`);
           u.searchParams.set("product", searchTerm);
           let r: Response | null = null;
-          for (let attempt = 0; attempt < 2; attempt++) {
+          for (let attempt = 0; attempt < 3; attempt++) {
             if (Date.now() > deadline) break;
             const left = Math.max(5_000, Math.min(SEARCH_TIMEOUT_MS, deadline - Date.now()));
             // El regulador adaptativo decide cuándo puede salir esta llamada.
@@ -233,7 +233,11 @@ export const Route = createFileRoute("/api/public/search-prices")({
               break;
             }
             if (r) reportThrottled();
-            const wait = Math.min(800 * 2 ** attempt, 3000);
+            // El proveedor indica cuántos segundos esperar cuando está saturado.
+            const retryAfter = Number(r?.headers.get("retry-after") ?? 0);
+            const wait = retryAfter > 0
+              ? Math.min(retryAfter * 1000, 6_000)
+              : Math.min(1_200 * 2 ** attempt, 5_000);
             if (Date.now() + wait > deadline) break;
             await new Promise((rs) => setTimeout(rs, wait));
           }
