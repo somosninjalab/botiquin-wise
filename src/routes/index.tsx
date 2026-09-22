@@ -909,7 +909,7 @@ function SearchResults(props: {
     try {
       await exportSearchResultsPdf({
         query: q,
-        grouped,
+        grouped: shareGrouped,
         latestByMedPharm,
         pharmaciesMap,
         bcvRate,
@@ -924,7 +924,7 @@ function SearchResults(props: {
 
   const handleShareWhatsApp = async () => {
     // Resumen simple: top 5 medicinas con mejor precio encontrado.
-    const flat = grouped
+    const flat = shareGrouped
       .flatMap(([, arr]) => arr)
       .filter((m) => lowestByMed.has(m.id))
       .slice(0, 5);
@@ -954,7 +954,7 @@ function SearchResults(props: {
     try {
       const file = (await exportSearchResultsPdf({
         query: q,
-        grouped,
+        grouped: shareGrouped,
         latestByMedPharm,
         pharmaciesMap,
         bcvRate,
