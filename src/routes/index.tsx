@@ -898,6 +898,7 @@ function SearchResults(props: {
   const sendEmail = useServerFn(sendSearchResultsEmail);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [sharingWhatsApp, setSharingWhatsApp] = useState(false);
 
   const handleExportPdf = async () => {
     setExportingPdf(true);
@@ -917,7 +918,7 @@ function SearchResults(props: {
     }
   };
 
-  const handleShareWhatsApp = () => {
+  const handleShareWhatsApp = async () => {
     // Resumen simple: top 5 medicinas con mejor precio encontrado.
     const flat = grouped
       .flatMap(([, arr]) => arr)
@@ -942,6 +943,40 @@ function SearchResults(props: {
       "Antes de comprar medicinas, Alerta Medicina.",
     ].join("\n");
     void trackShare({ channel: "whatsapp", source: "search_results", url: window.location.href });
+
+    // Preferimos compartir el PDF completo (con enlaces de compra) cuando el
+    // dispositivo lo permite; si no, enviamos el resumen en texto.
+    setSharingWhatsApp(true);
+    try {
+      const file = (await exportSearchResultsPdf({
+        query: q,
+        grouped,
+        latestByMedPharm,
+        pharmaciesMap,
+        bcvRate,
+        output: "file",
+      })) as File | undefined;
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (file && typeof nav.share === "function" && nav.canShare?.({ files: [file] })) {
+        await nav.share({ files: [file], text: message, title: "Precios en Alerta Medicina" });
+        return;
+      }
+      // Escritorio o navegador sin compartir archivos: descargamos el PDF y
+      // abrimos WhatsApp con el resumen para adjuntarlo.
+      if (file) {
+        const url = URL.createObjectURL(file);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        toast.success("Descargamos el PDF: adjúntalo en el chat de WhatsApp.");
+      }
+    } catch (err) {
+      if ((err as DOMException)?.name === "AbortError") return;
+    } finally {
+      setSharingWhatsApp(false);
+    }
     // api.whatsapp.com directamente: la redirección de wa.me corrompe emojis multibyte.
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
