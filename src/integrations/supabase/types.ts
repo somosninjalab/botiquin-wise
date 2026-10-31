@@ -653,6 +653,7 @@ export type Database = {
       }
       search_events: {
         Row: {
+          anon_id: string | null
           category: string | null
           city: string | null
           country: string | null
@@ -666,6 +667,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          anon_id?: string | null
           category?: string | null
           city?: string | null
           country?: string | null
@@ -679,6 +681,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          anon_id?: string | null
           category?: string | null
           city?: string | null
           country?: string | null

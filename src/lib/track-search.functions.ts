@@ -10,6 +10,7 @@ const InputSchema = z.object({
   category: z.string().max(100).optional().nullable(),
   result_count: z.number().int().min(0).max(100000).optional().nullable(),
   savings_usd: z.number().min(0).max(1000000).optional().nullable(),
+  anon_id: z.string().regex(/^[a-zA-Z0-9-]{8,64}$/).optional().nullable(),
 })
 
 // In-memory cache per worker instance to avoid hitting ipapi.co on every search.
@@ -100,6 +101,7 @@ export const trackSearchServer = createServerFn({ method: 'POST' })
         result_count: data.result_count ?? null,
         savings_usd: data.savings_usd ?? 0,
         user_id: resolvedUserId,
+        anon_id: data.anon_id ?? null,
         city: geo.city,
         region: geo.region,
         country: geo.country,
