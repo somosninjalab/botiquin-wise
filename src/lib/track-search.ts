@@ -36,6 +36,15 @@ async function getGeo() {
   return geoCache;
 }
 
+function getAnonId(): string | null {
+  try {
+    const k = "am_anon_id";
+    let v = localStorage.getItem(k);
+    if (!v) { v = crypto.randomUUID(); localStorage.setItem(k, v); }
+    return v;
+  } catch { return null; }
+}
+
 export async function trackSearch(args: TrackArgs) {
   try {
     const geo = await getGeo();
@@ -51,6 +60,7 @@ export async function trackSearch(args: TrackArgs) {
         category: args.category ?? null,
         result_count: args.result_count ?? null,
         savings_usd: args.savings_usd ?? 0,
+        anon_id: getAnonId(),
       },
     });
   } catch {
