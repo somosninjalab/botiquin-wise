@@ -9,105 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PopularesRouteImport } from './routes/populares'
-import { Route as NosotrosRouteImport } from './routes/nosotros'
-import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
-import { Route as MiOrdenRouteImport } from './routes/mi-orden'
-import { Route as LegalRouteImport } from './routes/legal'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as ContactoRouteImport } from './routes/contacto'
-import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
-import { Route as BuscarRouteImport } from './routes/buscar'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
-import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BuscarRouteImport } from './routes/buscar'
+import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as ContactoRouteImport } from './routes/contacto'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as MiOrdenRouteImport } from './routes/mi-orden'
+import { Route as MisAlertasRouteImport } from './routes/mis-alertas'
+import { Route as NosotrosRouteImport } from './routes/nosotros'
+import { Route as PopularesRouteImport } from './routes/populares'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AdminInsightsRouteImport } from './routes/admin.insights'
-import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
-import { Route as ApiPublicSearchPricesRouteImport } from './routes/api/public/search-prices'
+import { Route as AdminPreciosRouteImport } from './routes/admin.precios'
+import { Route as MedicamentoSlugRouteImport } from './routes/medicamento.$slug'
 import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
-import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
-import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
-import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
-import { Route as ApiPublicHooksProcessPriceAlertsRouteImport } from './routes/api/public/hooks/process-price-alerts'
-import { Route as ApiPublicHooksNightlyGrowRouteImport } from './routes/api/public/hooks/nightly-grow'
-import { Route as ApiPublicHooksInsightsSnapshotRouteImport } from './routes/api/public/hooks/insights-snapshot'
-import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
-import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
-import { Route as ApiPublicHooksBackfillEmbeddingsRouteImport } from './routes/api/public/hooks/backfill-embeddings'
+import { Route as ApiPublicSearchPricesRouteImport } from './routes/api/public/search-prices'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicHooksAnnounceNuevaVersionRouteImport } from './routes/api/public/hooks/announce-nueva-version'
+import { Route as ApiPublicHooksBackfillEmbeddingsRouteImport } from './routes/api/public/hooks/backfill-embeddings'
+import { Route as ApiPublicHooksDiscoverOnDemandRouteImport } from './routes/api/public/hooks/discover-on-demand'
+import { Route as ApiPublicHooksEnrichMedsRouteImport } from './routes/api/public/hooks/enrich-meds'
+import { Route as ApiPublicHooksInsightsSnapshotRouteImport } from './routes/api/public/hooks/insights-snapshot'
+import { Route as ApiPublicHooksNightlyGrowRouteImport } from './routes/api/public/hooks/nightly-grow'
+import { Route as ApiPublicHooksProcessPriceAlertsRouteImport } from './routes/api/public/hooks/process-price-alerts'
+import { Route as ApiPublicHooksScrapePricesRouteImport } from './routes/api/public/hooks/scrape-prices'
+import { Route as ApiPublicHooksSeedCimaRouteImport } from './routes/api/public/hooks/seed-cima'
+import { Route as ApiPublicHooksTranslateMedsRouteImport } from './routes/api/public/hooks/translate-meds'
+import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
-const UnsubscribeRoute = UnsubscribeRouteImport.update({
-  id: '/unsubscribe',
-  path: '/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PopularesRoute = PopularesRouteImport.update({
-  id: '/populares',
-  path: '/populares',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NosotrosRoute = NosotrosRouteImport.update({
-  id: '/nosotros',
-  path: '/nosotros',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MisAlertasRoute = MisAlertasRouteImport.update({
-  id: '/mis-alertas',
-  path: '/mis-alertas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MiOrdenRoute = MiOrdenRouteImport.update({
-  id: '/mi-orden',
-  path: '/mi-orden',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalRoute = LegalRouteImport.update({
-  id: '/legal',
-  path: '/legal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactoRoute = ContactoRouteImport.update({
-  id: '/contacto',
-  path: '/contacto',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
-  id: '/como-funciona',
-  path: '/como-funciona',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BuscarRoute = BuscarRouteImport.update({
-  id: '/buscar',
-  path: '/buscar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -115,34 +55,84 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MedicamentoSlugRoute = MedicamentoSlugRouteImport.update({
-  id: '/medicamento/$slug',
-  path: '/medicamento/$slug',
+const BuscarRoute = BuscarRouteImport.update({
+  id: '/buscar',
+  path: '/buscar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminPreciosRoute = AdminPreciosRouteImport.update({
-  id: '/precios',
-  path: '/precios',
-  getParentRoute: () => AdminRoute,
+const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactoRoute = ContactoRouteImport.update({
+  id: '/contacto',
+  path: '/contacto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MiOrdenRoute = MiOrdenRouteImport.update({
+  id: '/mi-orden',
+  path: '/mi-orden',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MisAlertasRoute = MisAlertasRouteImport.update({
+  id: '/mis-alertas',
+  path: '/mis-alertas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NosotrosRoute = NosotrosRouteImport.update({
+  id: '/nosotros',
+  path: '/nosotros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PopularesRoute = PopularesRouteImport.update({
+  id: '/populares',
+  path: '/populares',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminInsightsRoute = AdminInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
   getParentRoute: () => AdminRoute,
 } as any)
-const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
-  id: '/lovable/email/events',
-  path: '/lovable/email/events',
-  getParentRoute: () => rootRouteImport,
+const AdminPreciosRoute = AdminPreciosRouteImport.update({
+  id: '/precios',
+  path: '/precios',
+  getParentRoute: () => AdminRoute,
 } as any)
-const ApiPublicSearchPricesRoute = ApiPublicSearchPricesRouteImport.update({
-  id: '/api/public/search-prices',
-  path: '/api/public/search-prices',
+const MedicamentoSlugRoute = MedicamentoSlugRouteImport.update({
+  id: '/medicamento/$slug',
+  path: '/medicamento/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicChatRoute = ApiPublicChatRouteImport.update({
@@ -150,73 +140,20 @@ const ApiPublicChatRoute = ApiPublicChatRouteImport.update({
   path: '/api/public/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
+const ApiPublicSearchPricesRoute = ApiPublicSearchPricesRouteImport.update({
+  id: '/api/public/search-prices',
+  path: '/api/public/search-prices',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksWeeklyReminderRoute =
-  ApiPublicHooksWeeklyReminderRouteImport.update({
-    id: '/api/public/hooks/weekly-reminder',
-    path: '/api/public/hooks/weekly-reminder',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksTranslateMedsRoute =
-  ApiPublicHooksTranslateMedsRouteImport.update({
-    id: '/api/public/hooks/translate-meds',
-    path: '/api/public/hooks/translate-meds',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksSeedCimaRoute = ApiPublicHooksSeedCimaRouteImport.update({
-  id: '/api/public/hooks/seed-cima',
-  path: '/api/public/hooks/seed-cima',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHooksScrapePricesRoute =
-  ApiPublicHooksScrapePricesRouteImport.update({
-    id: '/api/public/hooks/scrape-prices',
-    path: '/api/public/hooks/scrape-prices',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksProcessPriceAlertsRoute =
-  ApiPublicHooksProcessPriceAlertsRouteImport.update({
-    id: '/api/public/hooks/process-price-alerts',
-    path: '/api/public/hooks/process-price-alerts',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksNightlyGrowRoute =
-  ApiPublicHooksNightlyGrowRouteImport.update({
-    id: '/api/public/hooks/nightly-grow',
-    path: '/api/public/hooks/nightly-grow',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksInsightsSnapshotRoute =
-  ApiPublicHooksInsightsSnapshotRouteImport.update({
-    id: '/api/public/hooks/insights-snapshot',
-    path: '/api/public/hooks/insights-snapshot',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksEnrichMedsRoute =
-  ApiPublicHooksEnrichMedsRouteImport.update({
-    id: '/api/public/hooks/enrich-meds',
-    path: '/api/public/hooks/enrich-meds',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDiscoverOnDemandRoute =
-  ApiPublicHooksDiscoverOnDemandRouteImport.update({
-    id: '/api/public/hooks/discover-on-demand',
-    path: '/api/public/hooks/discover-on-demand',
+const ApiPublicHooksAnnounceNuevaVersionRoute =
+  ApiPublicHooksAnnounceNuevaVersionRouteImport.update({
+    id: '/api/public/hooks/announce-nueva-version',
+    path: '/api/public/hooks/announce-nueva-version',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksBackfillEmbeddingsRoute =
@@ -225,10 +162,73 @@ const ApiPublicHooksBackfillEmbeddingsRoute =
     path: '/api/public/hooks/backfill-embeddings',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksAnnounceNuevaVersionRoute =
-  ApiPublicHooksAnnounceNuevaVersionRouteImport.update({
-    id: '/api/public/hooks/announce-nueva-version',
-    path: '/api/public/hooks/announce-nueva-version',
+const ApiPublicHooksDiscoverOnDemandRoute =
+  ApiPublicHooksDiscoverOnDemandRouteImport.update({
+    id: '/api/public/hooks/discover-on-demand',
+    path: '/api/public/hooks/discover-on-demand',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksEnrichMedsRoute =
+  ApiPublicHooksEnrichMedsRouteImport.update({
+    id: '/api/public/hooks/enrich-meds',
+    path: '/api/public/hooks/enrich-meds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksInsightsSnapshotRoute =
+  ApiPublicHooksInsightsSnapshotRouteImport.update({
+    id: '/api/public/hooks/insights-snapshot',
+    path: '/api/public/hooks/insights-snapshot',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksNightlyGrowRoute =
+  ApiPublicHooksNightlyGrowRouteImport.update({
+    id: '/api/public/hooks/nightly-grow',
+    path: '/api/public/hooks/nightly-grow',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksProcessPriceAlertsRoute =
+  ApiPublicHooksProcessPriceAlertsRouteImport.update({
+    id: '/api/public/hooks/process-price-alerts',
+    path: '/api/public/hooks/process-price-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksScrapePricesRoute =
+  ApiPublicHooksScrapePricesRouteImport.update({
+    id: '/api/public/hooks/scrape-prices',
+    path: '/api/public/hooks/scrape-prices',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksSeedCimaRoute = ApiPublicHooksSeedCimaRouteImport.update({
+  id: '/api/public/hooks/seed-cima',
+  path: '/api/public/hooks/seed-cima',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksTranslateMedsRoute =
+  ApiPublicHooksTranslateMedsRouteImport.update({
+    id: '/api/public/hooks/translate-meds',
+    path: '/api/public/hooks/translate-meds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksWeeklyReminderRoute =
+  ApiPublicHooksWeeklyReminderRouteImport.update({
+    id: '/api/public/hooks/weekly-reminder',
+    path: '/api/public/hooks/weekly-reminder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -496,95 +496,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/unsubscribe': {
-      id: '/unsubscribe'
-      path: '/unsubscribe'
-      fullPath: '/unsubscribe'
-      preLoaderRoute: typeof UnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/populares': {
-      id: '/populares'
-      path: '/populares'
-      fullPath: '/populares'
-      preLoaderRoute: typeof PopularesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/nosotros': {
-      id: '/nosotros'
-      path: '/nosotros'
-      fullPath: '/nosotros'
-      preLoaderRoute: typeof NosotrosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mis-alertas': {
-      id: '/mis-alertas'
-      path: '/mis-alertas'
-      fullPath: '/mis-alertas'
-      preLoaderRoute: typeof MisAlertasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mi-orden': {
-      id: '/mi-orden'
-      path: '/mi-orden'
-      fullPath: '/mi-orden'
-      preLoaderRoute: typeof MiOrdenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal': {
-      id: '/legal'
-      path: '/legal'
-      fullPath: '/legal'
-      preLoaderRoute: typeof LegalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacto': {
-      id: '/contacto'
-      path: '/contacto'
-      fullPath: '/contacto'
-      preLoaderRoute: typeof ContactoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/como-funciona': {
-      id: '/como-funciona'
-      path: '/como-funciona'
-      fullPath: '/como-funciona'
-      preLoaderRoute: typeof ComoFuncionaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/buscar': {
-      id: '/buscar'
-      path: '/buscar'
-      fullPath: '/buscar'
-      preLoaderRoute: typeof BuscarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -594,26 +510,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/medicamento/$slug': {
-      id: '/medicamento/$slug'
-      path: '/medicamento/$slug'
-      fullPath: '/medicamento/$slug'
-      preLoaderRoute: typeof MedicamentoSlugRouteImport
+    '/buscar': {
+      id: '/buscar'
+      path: '/buscar'
+      fullPath: '/buscar'
+      preLoaderRoute: typeof BuscarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/precios': {
-      id: '/admin/precios'
-      path: '/precios'
-      fullPath: '/admin/precios'
-      preLoaderRoute: typeof AdminPreciosRouteImport
-      parentRoute: typeof AdminRoute
+    '/como-funciona': {
+      id: '/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacto': {
+      id: '/contacto'
+      path: '/contacto'
+      fullPath: '/contacto'
+      preLoaderRoute: typeof ContactoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mi-orden': {
+      id: '/mi-orden'
+      path: '/mi-orden'
+      fullPath: '/mi-orden'
+      preLoaderRoute: typeof MiOrdenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mis-alertas': {
+      id: '/mis-alertas'
+      path: '/mis-alertas'
+      fullPath: '/mis-alertas'
+      preLoaderRoute: typeof MisAlertasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nosotros': {
+      id: '/nosotros'
+      path: '/nosotros'
+      fullPath: '/nosotros'
+      preLoaderRoute: typeof NosotrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/populares': {
+      id: '/populares'
+      path: '/populares'
+      fullPath: '/populares'
+      preLoaderRoute: typeof PopularesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/insights': {
       id: '/admin/insights'
@@ -622,18 +608,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInsightsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/lovable/email/events': {
-      id: '/lovable/email/events'
-      path: '/lovable/email/events'
-      fullPath: '/lovable/email/events'
-      preLoaderRoute: typeof LovableEmailEventsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/precios': {
+      id: '/admin/precios'
+      path: '/precios'
+      fullPath: '/admin/precios'
+      preLoaderRoute: typeof AdminPreciosRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/api/public/search-prices': {
-      id: '/api/public/search-prices'
-      path: '/api/public/search-prices'
-      fullPath: '/api/public/search-prices'
-      preLoaderRoute: typeof ApiPublicSearchPricesRouteImport
+    '/medicamento/$slug': {
+      id: '/medicamento/$slug'
+      path: '/medicamento/$slug'
+      fullPath: '/medicamento/$slug'
+      preLoaderRoute: typeof MedicamentoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/chat': {
@@ -643,88 +629,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+    '/api/public/search-prices': {
+      id: '/api/public/search-prices'
+      path: '/api/public/search-prices'
+      fullPath: '/api/public/search-prices'
+      preLoaderRoute: typeof ApiPublicSearchPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/weekly-reminder': {
-      id: '/api/public/hooks/weekly-reminder'
-      path: '/api/public/hooks/weekly-reminder'
-      fullPath: '/api/public/hooks/weekly-reminder'
-      preLoaderRoute: typeof ApiPublicHooksWeeklyReminderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/translate-meds': {
-      id: '/api/public/hooks/translate-meds'
-      path: '/api/public/hooks/translate-meds'
-      fullPath: '/api/public/hooks/translate-meds'
-      preLoaderRoute: typeof ApiPublicHooksTranslateMedsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/seed-cima': {
-      id: '/api/public/hooks/seed-cima'
-      path: '/api/public/hooks/seed-cima'
-      fullPath: '/api/public/hooks/seed-cima'
-      preLoaderRoute: typeof ApiPublicHooksSeedCimaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/scrape-prices': {
-      id: '/api/public/hooks/scrape-prices'
-      path: '/api/public/hooks/scrape-prices'
-      fullPath: '/api/public/hooks/scrape-prices'
-      preLoaderRoute: typeof ApiPublicHooksScrapePricesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/process-price-alerts': {
-      id: '/api/public/hooks/process-price-alerts'
-      path: '/api/public/hooks/process-price-alerts'
-      fullPath: '/api/public/hooks/process-price-alerts'
-      preLoaderRoute: typeof ApiPublicHooksProcessPriceAlertsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/nightly-grow': {
-      id: '/api/public/hooks/nightly-grow'
-      path: '/api/public/hooks/nightly-grow'
-      fullPath: '/api/public/hooks/nightly-grow'
-      preLoaderRoute: typeof ApiPublicHooksNightlyGrowRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/insights-snapshot': {
-      id: '/api/public/hooks/insights-snapshot'
-      path: '/api/public/hooks/insights-snapshot'
-      fullPath: '/api/public/hooks/insights-snapshot'
-      preLoaderRoute: typeof ApiPublicHooksInsightsSnapshotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/enrich-meds': {
-      id: '/api/public/hooks/enrich-meds'
-      path: '/api/public/hooks/enrich-meds'
-      fullPath: '/api/public/hooks/enrich-meds'
-      preLoaderRoute: typeof ApiPublicHooksEnrichMedsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/discover-on-demand': {
-      id: '/api/public/hooks/discover-on-demand'
-      path: '/api/public/hooks/discover-on-demand'
-      fullPath: '/api/public/hooks/discover-on-demand'
-      preLoaderRoute: typeof ApiPublicHooksDiscoverOnDemandRouteImport
+    '/api/public/hooks/announce-nueva-version': {
+      id: '/api/public/hooks/announce-nueva-version'
+      path: '/api/public/hooks/announce-nueva-version'
+      fullPath: '/api/public/hooks/announce-nueva-version'
+      preLoaderRoute: typeof ApiPublicHooksAnnounceNuevaVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/backfill-embeddings': {
@@ -734,11 +657,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksBackfillEmbeddingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/announce-nueva-version': {
-      id: '/api/public/hooks/announce-nueva-version'
-      path: '/api/public/hooks/announce-nueva-version'
-      fullPath: '/api/public/hooks/announce-nueva-version'
-      preLoaderRoute: typeof ApiPublicHooksAnnounceNuevaVersionRouteImport
+    '/api/public/hooks/discover-on-demand': {
+      id: '/api/public/hooks/discover-on-demand'
+      path: '/api/public/hooks/discover-on-demand'
+      fullPath: '/api/public/hooks/discover-on-demand'
+      preLoaderRoute: typeof ApiPublicHooksDiscoverOnDemandRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/enrich-meds': {
+      id: '/api/public/hooks/enrich-meds'
+      path: '/api/public/hooks/enrich-meds'
+      fullPath: '/api/public/hooks/enrich-meds'
+      preLoaderRoute: typeof ApiPublicHooksEnrichMedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/insights-snapshot': {
+      id: '/api/public/hooks/insights-snapshot'
+      path: '/api/public/hooks/insights-snapshot'
+      fullPath: '/api/public/hooks/insights-snapshot'
+      preLoaderRoute: typeof ApiPublicHooksInsightsSnapshotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/nightly-grow': {
+      id: '/api/public/hooks/nightly-grow'
+      path: '/api/public/hooks/nightly-grow'
+      fullPath: '/api/public/hooks/nightly-grow'
+      preLoaderRoute: typeof ApiPublicHooksNightlyGrowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/process-price-alerts': {
+      id: '/api/public/hooks/process-price-alerts'
+      path: '/api/public/hooks/process-price-alerts'
+      fullPath: '/api/public/hooks/process-price-alerts'
+      preLoaderRoute: typeof ApiPublicHooksProcessPriceAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/scrape-prices': {
+      id: '/api/public/hooks/scrape-prices'
+      path: '/api/public/hooks/scrape-prices'
+      fullPath: '/api/public/hooks/scrape-prices'
+      preLoaderRoute: typeof ApiPublicHooksScrapePricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/seed-cima': {
+      id: '/api/public/hooks/seed-cima'
+      path: '/api/public/hooks/seed-cima'
+      fullPath: '/api/public/hooks/seed-cima'
+      preLoaderRoute: typeof ApiPublicHooksSeedCimaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/translate-meds': {
+      id: '/api/public/hooks/translate-meds'
+      path: '/api/public/hooks/translate-meds'
+      fullPath: '/api/public/hooks/translate-meds'
+      preLoaderRoute: typeof ApiPublicHooksTranslateMedsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/weekly-reminder': {
+      id: '/api/public/hooks/weekly-reminder'
+      path: '/api/public/hooks/weekly-reminder'
+      fullPath: '/api/public/hooks/weekly-reminder'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
